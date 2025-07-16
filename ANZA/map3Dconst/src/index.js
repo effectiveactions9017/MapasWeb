@@ -22,7 +22,7 @@ map.on('style.load', () => {
         (layer) => layer.type === 'symbol' && layer.layout['text-field']
     ).id;
 
-    fetch('../src/data/test_dataset.geojson') // cambiar por ruta relativa
+    fetch('../src/data/resultado_completo_final.geojson') // cambiar por ruta relativa
         .then(response => response.json())
         .then(data => {
             geojsonData = data;
