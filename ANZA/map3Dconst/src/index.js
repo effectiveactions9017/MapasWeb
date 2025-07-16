@@ -3,7 +3,7 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiZWZmZWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21iOWY1e
 const map = new mapboxgl.Map({
     // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
     style: 'mapbox://styles/mapbox/streets-v11',
-    center: [-76.63290738, 7.88156614], 
+    center: [-75.853719, 6.303246], 
     zoom: 16.5,
     pitch: 60,
     bearing: -17.6,
@@ -40,7 +40,7 @@ map.on('style.load', () => {
                 minzoom: 15,
                 paint: {
                     'fill-extrusion-color': '#FFBD33',
-                    'fill-extrusion-height': ['get', 'max'],
+                    'fill-extrusion-height': ['get', 'altura_m'],
                     'fill-extrusion-base': 0,
                     'fill-extrusion-opacity': 0.7
                 }
