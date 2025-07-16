@@ -69,7 +69,7 @@ map.on('style.load', () => {
             map.on('click', '3d-buildings', (e) => {
                 const feature = e.features[0];
                 const codigoCon = feature.properties.CODIGO_CON;
-                const altura = feature.properties.max;
+                const altura = feature.properties.altura_m;
                 const pisos = feature.properties.no_pisos;
 
                 const alturaRedondeada = Math.round(altura * 10) / 10;
