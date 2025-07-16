@@ -62,7 +62,7 @@ map.on('style.load', () => {
             map.on('mousemove', 'buildings', (e) => {
                 const feature = e.features[0];
                 const year = feature.properties.const_year;
-                const area = feature.properties.area_in_me;
+                const area = feature.properties.area_in_meters;
                 const areaRedondeada = Math.round(area, 0);
 
                 const popupContent = 
