@@ -3,7 +3,7 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiZWZmZWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21iOWY1e
 const map = new mapboxgl.Map({
     // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
     style: 'mapbox://styles/mapbox/streets-v11',
-    center: [-76.63290738, 7.88156614], 
+    center: [-76.63290738, 7.88156614 ], 
     zoom: 16.5,
     pitch: 60,
     bearing: -17.6,
