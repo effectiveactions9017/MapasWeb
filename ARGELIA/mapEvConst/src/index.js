@@ -23,7 +23,7 @@ map.on('style.load', () => {
         (layer) => layer.type === 'symbol' && layer.layout['text-field']
     ).id;
 
-    fetch('../src/data/resultado_completo_final.geojson')
+    fetch('../src/data/resultado_completo_final2.geojson')
         .then(response => response.json())
         .then(data => {
             geojsonData = data;
