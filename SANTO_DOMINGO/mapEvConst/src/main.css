@@ -1,0 +1,127 @@
+body { margin: 0; padding: 0; }
+
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+
+/* Estilo para el pop-up */
+.custom-popup .mapboxgl-popup-content {
+    font-size: 0.8rem;
+    padding: 10px 15px;
+    background-color: rgb(10, 61, 70);
+    color: #fff;
+    border-radius: 8px;
+    max-width: 250px;
+}
+
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+    border-bottom-color: rgb(10, 61, 70);
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+    border-top-color: rgb(10, 61, 70);
+}
+
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+    border-right-color: rgb(10, 61, 70);
+}
+
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+    border-left-color: rgb(10, 61, 70);
+}
+
+/* Contenedor para la leyenda y el slider */
+.legend-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    width: 50%;
+}
+
+.legend {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: rgb(255, 255, 255);
+    text-align: center;
+    margin-bottom: 3px;
+}
+
+/* Barra de colores */
+.color-bar {
+    height: 15px;
+    background: linear-gradient(
+        to right,
+        #D53E4F,  /* 1985 */
+        #F46D43,  /* 1990 */
+        #FDAE61,  /* 1995 */
+        #FEE08B,  /* 2000 */
+        #FFFFBF,  /* 2005 */
+        #E6F598,  /* 2010 */
+        #ABDDA4,  /* 2015 */
+        #66C2A5,  /* 2020 */
+        #3288BD   /* 2024 */
+    );
+    opacity: 0.85;
+    margin-bottom: 5px;
+}
+
+/* Etiquetas para los números de la leyenda */
+.legend-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: rgb(255, 255, 255);
+}
+
+.legend-labels div {
+    width: 45%;
+    left: 0;
+}
+
+.legend-text {
+    position: absolute;
+    top: 65px;
+    right: 0;
+    transform: translateX(-50%);
+    text-align: right;
+    font-size: 0.9rem;
+    color: rgb(255, 255, 255);
+}
+
+/* Números debajo de la barra de colores */
+.grid {
+    display: flex;
+    justify-content: space-between;
+}
+
+.txt-xs {
+    font-size: 0.8rem;
+}
+
+/* Slider y etiqueta de año */
+#year-label {
+    position: absolute;
+    top: 65px; /* Ajusta según necesites para la distancia vertical */
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: white;
+    z-index: 10;
+    font-size: 2rem;
+}
+
+#year-slider {
+    position: absolute;
+    top: 47px;
+    left: 10px;
+    width: calc(100% - 25px);
+    z-index: 10;
+    height: 1px;
+}
