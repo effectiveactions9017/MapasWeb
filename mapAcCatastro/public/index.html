@@ -1,47 +1,57 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clasificación de Plusvalía - Apartadó</title>
 
-    <!-- Mapbox -->
+<head>
+    <meta charset="utf-8">
+    <title>Pre-barrido masivo catastral</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+
+    <!-- Mapbox CSS -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
-    <!-- Turf -->
+    <!-- Geocoder -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet"
+          href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"/>
+
+    <!-- Turf.js -->
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js"></script>
 
-    <!-- Fuente -->
+    <!-- Fuentes -->
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap" rel="stylesheet">
 
-    <!-- CSS (RUTA ABSOLUTA) -->
-    <link rel="stylesheet" href="/MapasWeb/mapAcCatastro/src/main.css?v=30">
+    <!-- CSS -->
+    <link rel="stylesheet" href="../src/main.css">
 </head>
 
 <body>
 
-    <!-- Mapa -->
+    <!-- Contenedor del mapa -->
     <div id="map"></div>
 
-    <!-- Leyenda -->
-    <div class="legend-plus">
-        <div class="legend-title">Clasificación de Plusvalía<br>Apartadó</div>
-
-        <div class="item"><span class="c_muyalta"></span>Muy Alta</div>
-        <div class="item"><span class="c_alta"></span>Alta</div>
-        <div class="item"><span class="c_media"></span>Media</div>
-        <div class="item"><span class="c_baja"></span>Baja</div>
-        <div class="item"><span class="c_muybaja"></span>Muy Baja</div>
-
-        <div style="margin-top:8px;font-size:9px;text-align:right;color:#00bcd4;">
-            © EffectiveActions
-        </div>
+    <!-- Leyenda vieja (la que salía antes) -->
+    <div class="legend-container">
+        <div class="legend-title">Pre-barrido catastral<br>Construcciones</div>
+        <ul class="legend-list">
+            <li><span class="legend-color c_viejas"></span> Preexistente</li>
+            <li><span class="legend-color c_nuevas"></span> Nueva</li>
+            <li><span class="legend-color c_aumento"></span> Aumento de área</li>
+            <li><span class="legend-color dem_p"></span> Demolición parcial</li>
+            <li><span class="legend-color dem_t"></span> Demolición total</li>
+        </ul>
+        <a style="font-size:9px; color: #00bcd4;">© EffectiveActions</a>
     </div>
 
-    <!-- JS (RUTA ABSOLUTA) -->
-    <script src="/MapasWeb/mapAcCatastro/src/index.js?v=30"></script>
+    <!-- Caja de información -->
+    <div class="info-box">
+        <h3>Información de la construcción</h3>
+        <div class="info-content">Busca una construcción para ver detalles</div>
+    </div>
+
+    <!-- Script JavaScript -->
+    <script src="../src/index.js"></script>
 
 </body>
+
 </html>
