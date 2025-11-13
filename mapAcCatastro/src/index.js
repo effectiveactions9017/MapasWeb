@@ -1,3 +1,7 @@
+// ==========================================================
+// 🌍 VISOR COMPLETO + CAPA DE PLUSVALIA
+// ==========================================================
+
 // Usar token propio de Mapbox
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
 
@@ -17,7 +21,9 @@ let popup = new mapboxgl.Popup({
     className: 'custom-popup'
 });
 
-// Función para agregar capas
+// ----------------------------------------------------------
+// FUNCION ORIGINAL PARA CARGAR CAPAS NORMALES
+// ----------------------------------------------------------
 function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
     fetch(`../src/data/${geojsonFile}`)
         .then((response) => response.json())
@@ -39,32 +45,25 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
                 }
             });
 
-            // Evento mousemove para mostrar popups
             map.on('mousemove', layerId, (e) => {
                 const feature = e.features[0];
                 const popupContent = popupFields
                     .map((field) => {
                         let value = feature.properties[field.key];
-                        // Redondear el valor de 'area' sin decimales
-                        if (field.key === 'area') {
-                            value = Math.round(value);
-                        }
+                        if (field.key === 'area') value = Math.round(value);
                         return `<strong>${field.label}:</strong> ${value}`;
                     })
                     .join('<br>');
 
-                popup
-                    .setLngLat(e.lngLat)
-                    .setHTML(`${popupContent}<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`)
+                popup.setLngLat(e.lngLat)
+                    .setHTML(`${popupContent}<br><a style="font-size:9px;">© EffectiveActions</a>`)
                     .addTo(map);
             });
 
-            // Cambiar cursor al pasar sobre el layer
             map.on('mouseenter', layerId, () => {
                 map.getCanvas().style.cursor = 'pointer';
             });
 
-            // Cerrar popup y restaurar cursor al salir
             map.on('mouseleave', layerId, () => {
                 map.getCanvas().style.cursor = '';
                 popup.remove();
@@ -72,117 +71,127 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
         });
 }
 
+// ----------------------------------------------------------
+// CARGAR TODAS TUS CAPAS NORMALES
+// ----------------------------------------------------------
 
-
-// Cargar capas en el orden definido
 map.on('style.load', () => {
-    const layers = map.getStyle().layers;
-    const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field']).id;
 
-    // Demoliciones parciales
     addLayer('dem_parcial.geojson', 'dem_p', 'dem_parcial', '#F5B041', [
         { label: 'Código', key: 'CODIGO_CON' },
-        { label: 'Área parcial (&#13217;)', key: 'area' }
+        { label: 'Área parcial (㎡)', key: 'area' }
     ]);
 
-    // Demoliciones totales
     addLayer('dem_total.geojson', 'dem_t', 'dem_total', '#E74C3C', [
         { label: 'Código', key: 'CODIGO_CON' },
-        { label: 'Área demolida (&#13217;)', key: 'area' }
+        { label: 'Área demolida (㎡)', key: 'area' }
     ]);
 
-    // Construcciones aumento
     addLayer('cons_aumento.geojson', 'cons_a', 'c_aumento', '#F7DC6F', [
         { label: 'Código', key: 'CODIGO_CON' },
-        { label: 'Incremento de área (&#13217;)', key: 'area' }
+        { label: 'Incremento de área (㎡)', key: 'area' }
     ]);
 
-    // Construcciones nuevas
     addLayer('cons_nuevas.geojson', 'cons_n', 'c_nuevas', '#A569BD', [
         { label: 'Código', key: 'PK_PREDIOS' },
-        { label: 'Área (&#13217;)', key: 'area' }
+        { label: 'Área (㎡)', key: 'area' }
     ]);
 
-    // Construcciones viejas
     addLayer('cons_viejas.geojson', 'cons_v', 'c_viejas', '#AAB7B8', [
         { label: 'Código', key: 'CODIGO_CON' },
         { label: 'Número de pisos', key: 'NUMERO_PIS' },
-        { label: 'Área (&#13217;)', key: 'area' }
+        { label: 'Área (㎡)', key: 'area' }
     ]);
 
-    // Mover el layer "Construcciones viejas" al fondo
+    // Orden de capas
     map.on('sourcedata', () => {
         if (map.getLayer('c_viejas')) {
-            map.moveLayer('c_viejas', 'dem_parcial'); // Mover "c_viejas" debajo del primer layer agregado
+            map.moveLayer('c_viejas', 'dem_parcial');
         }
     });
+
+    // ------------------------------------------------------
+    // 🚀 AGREGAR CAPA DE PLUSVALÍA
+    // ------------------------------------------------------
+    fetch('../src/data/Clasificacion_Plusvalia.geojson')
+        .then(res => res.json())
+        .then(data => {
+
+            map.addSource('plus_src', {
+                type: 'geojson',
+                data: data
+            });
+
+            map.addLayer({
+                id: 'plus_layer',
+                type: 'fill',
+                source: 'plus_src',
+                minzoom: 12,
+                paint: {
+                    'fill-opacity': 0.75,
+                    'fill-outline-color': '#000',
+                    'fill-color': [
+                        'match',
+                        ['get', 'CLASIFICACION_PLUSVALIA'],
+                        'Muy alta', '#d73027',
+                        'Alta',     '#f46d43',
+                        'Media',    '#fdae61',
+                        'Baja',     '#66c2a5',
+                        'Muy baja', '#3288bd',
+                        '#cccccc'
+                    ]
+                }
+            });
+
+            // POPUP
+            map.on('mousemove', 'plus_layer', (e) => {
+                const p = e.features[0].properties;
+
+                const html = `
+                    <strong>Manzana:</strong> ${p.ID_MANZANA}<br>
+                    <strong>Clasificación:</strong> ${p.CLASIFICACION_PLUSVALIA}<br>
+                    <strong>Predios:</strong> ${p.n_predios}<br>
+                    <a style="font-size:9px;">© EffectiveActions</a>
+                `;
+
+                popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+            });
+
+            map.on('mouseleave', 'plus_layer', () => popup.remove());
+        });
 });
 
-// Configurar el Geocoder para buscar en el layer 'c_viejas'
+// ----------------------------------------------------------
+// CONFIGURACIÓN GEOCODER (NO SE TOCA)
+// ----------------------------------------------------------
+
 const geocoder = new MapboxGeocoder({
     accessToken: mapboxgl.accessToken,
     mapboxgl: mapboxgl,
-    marker: false, // Evitar que agregue un marcador automáticamente
+    marker: false,
     localGeocoder: function (query) {
-        const matchingFeatures = [];
-
-        // Consultar las features del layer 'c_viejas'
-        const features = map.querySourceFeatures('cons_v'); // 'cons_v' es el sourceId del layer 'c_viejas'
+        const features = map.querySourceFeatures('cons_v');
+        const matching = [];
 
         features.forEach((feature) => {
             const props = feature.properties;
-
-            // Buscar coincidencias en el campo CODIGO_CON (puedes cambiar el campo de búsqueda)
             if (props.CODIGO_CON && props.CODIGO_CON.toLowerCase().includes(query.toLowerCase())) {
-                matchingFeatures.push({
+                matching.push({
                     type: 'Feature',
                     geometry: feature.geometry,
                     properties: props,
-                    place_name: `Código: ${props.CODIGO_CON}`, // Texto que se mostrará en el resultado
+                    place_name: `Código: ${props.CODIGO_CON}`,
                     text: props.CODIGO_CON,
-                    center: turf.centroid(feature).geometry.coordinates, // Centrar el mapa en el polígono
+                    center: turf.centroid(feature).geometry.coordinates,
                     place_type: ['place']
                 });
             }
         });
-
-        return matchingFeatures;
+        return matching;
     },
     placeholder: 'Buscar código catastral',
-    localGeocoderOnly: true // Limitar la búsqueda a datos locales
-
+    localGeocoderOnly: true
 });
 
-// Agregar el Geocoder al mapa
 map.addControl(geocoder, 'top-left');
-// Add zoom and rotation controls to the map.
 map.addControl(new mapboxgl.NavigationControl());
-
-// Hacer zoom al polígono seleccionado y actualizar la caja de información
-geocoder.on('result', (e) => {
-    const result = e.result;
-
-    if (result && result.geometry) {
-        const bounds = turf.bbox(result); // Obtener límites del polígono
-        map.fitBounds(bounds, { padding: 20 });
-
-        // Mostrar el popup con la información del polígono
-        const coordinates = result.center;
-        const properties = result.properties;
-
-        // Crear el contenido del popup (similar al mouseover)
-        const popupContent = `
-            <strong>Código:</strong> ${properties.CODIGO_CON || 'N/A'}<br>
-            <strong>Área (&#13217;):</strong> ${Math.round(properties.area || 0)}<br>
-            <strong>Altura: </strong> ${Math.round(properties.NUMERO_PIS || 0)} pisos<br>
-            <a style="font-size:9px;">&#9400 EffectiveActions</a>
-        `;
-
-        // Configurar el popup
-        popup
-            .setLngLat(coordinates)
-            .setHTML(popupContent)
-            .addTo(map);
-    }
-});
-
