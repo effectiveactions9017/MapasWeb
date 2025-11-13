@@ -42,4 +42,31 @@ map.on('style.load', () => {
                 'Muy Alta', '#e74c3c',     // rojo
                 'Alta',     '#e67e22',     // naranja
                 'Media',    '#f1c40f',     // amarillo
-                'Baja',
+                'Baja',     '#2ecc71',     // verde
+                'Muy Baja', '#3498db',     // azul
+
+                '#bdc3c7'  // si no coincide
+            ],
+            'fill-opacity': 0.75,
+            'fill-outline-color': '#ffffff'
+        }
+    });
+
+    // POPUP
+    map.on('mousemove', 'layer_plusvalia', (e) => {
+        const feature = e.features[0];
+
+        popup
+            .setLngLat(e.lngLat)
+            .setHTML(`
+                <strong>Clasificación:</strong> ${feature.properties.CLASIFICACION_PLUSVALIA}<br>
+                <a style="font-size:9px;">&#9400 EffectiveActions</a>
+            `)
+            .addTo(map);
+    });
+
+    map.on('mouseleave', 'layer_plusvalia', () => {
+        popup.remove();
+    });
+
+});
