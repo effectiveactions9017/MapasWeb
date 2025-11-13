@@ -1,7 +1,7 @@
-// Token de Mapbox
+// TOKEN DE MAPBOX
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
 
-// Crear mapa
+// CREAR MAPA
 const map = new mapboxgl.Map({
     style: 'mapbox://styles/mapbox/dark-v11',
     center: [-76.62000, 7.88400],
@@ -10,26 +10,24 @@ const map = new mapboxgl.Map({
     antialias: true
 });
 
-// Popup
+// POPUP
 let popup = new mapboxgl.Popup({
     closeButton: false,
     closeOnClick: false,
     className: 'custom-popup'
 });
 
-// =========================================
-//      CARGAR Y CLASIFICAR PLUSVALÍA
-// =========================================
-
+// CARGAR CAPA DE PLUSVALÍA
 map.on('style.load', () => {
 
-    // Fuente (archivo sin tilde)
+    // Asegúrate que este archivo está en WGS84 y sin tildes:
+    // /src/data/Clasificacion_Plusvalia.geojson
     map.addSource('c_plusvalia', {
         type: 'geojson',
         data: '../src/data/Clasificacion_Plusvalia.geojson'
     });
 
-    // Capa categorizada por CLASIFICACION_PLUSVALIA
+    // Capa con clasificación categórica
     map.addLayer({
         id: 'layer_plusvalia',
         source: 'c_plusvalia',
@@ -39,28 +37,28 @@ map.on('style.load', () => {
                 'match',
                 ['get', 'CLASIFICACION_PLUSVALIA'],
 
-                'Muy Alta', '#e74c3c',     // rojo
-                'Alta',     '#e67e22',     // naranja
-                'Media',    '#f1c40f',     // amarillo
-                'Baja',     '#2ecc71',     // verde
-                'Muy Baja', '#3498db',     // azul
+                'Muy Alta', '#e74c3c',
+                'Alta',     '#e67e22',
+                'Media',    '#f1c40f',
+                'Baja',     '#2ecc71',
+                'Muy Baja', '#3498db',
 
-                '#bdc3c7'  // si no coincide
+                '#bdc3c7'  // default
             ],
             'fill-opacity': 0.75,
             'fill-outline-color': '#ffffff'
         }
     });
 
-    // POPUP
+    // POPUP DINÁMICO
     map.on('mousemove', 'layer_plusvalia', (e) => {
-        const feature = e.features[0];
+        const f = e.features[0];
 
         popup
             .setLngLat(e.lngLat)
             .setHTML(`
-                <strong>Clasificación:</strong> ${feature.properties.CLASIFICACION_PLUSVALIA}<br>
-                <a style="font-size:9px;">&#9400 EffectiveActions</a>
+                <strong>Clasificación:</strong> ${f.properties.CLASIFICACION_PLUSVALIA}<br>
+                <a style="font-size:9px;">© EffectiveActions</a>
             `)
             .addTo(map);
     });
