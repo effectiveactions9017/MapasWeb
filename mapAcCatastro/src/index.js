@@ -30,7 +30,7 @@ map.on('style.load', () => {
 
     map.addSource('plusvalia', {
         type: 'geojson',
-        data: '../src/data/Clasificacion_Plusvalia.geojson'
+        data: '/MapasWeb/mapAcCatastro/src/data/Clasificacion_Plusvalia.geojson'
     });
 
     map.addLayer({
