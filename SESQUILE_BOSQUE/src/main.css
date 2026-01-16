@@ -37,10 +37,5 @@ body * {
   white-space: nowrap;
 }
 
-.label.left {
-  left: 20px;
-}
-
-.label.right {
-  right: 20px;
-}
+.label.left { left: 20px; }
+.label.right { right: 20px; }
