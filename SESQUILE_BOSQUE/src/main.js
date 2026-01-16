@@ -30,7 +30,7 @@ const afterMap = new mapboxgl.Map({
 beforeMap.on("load", () => {
   beforeMap.addSource("bosque2017", {
     type: "raster",
-    url: "mapbox://TU_USUARIO.TILESET_2017", // ← luego lo cambiamos
+    url: "mapbox://effectiveactions9017.24tn4qga",
     tileSize: 256
   });
 
@@ -48,7 +48,7 @@ beforeMap.on("load", () => {
 afterMap.on("load", () => {
   afterMap.addSource("bosque2024", {
     type: "raster",
-    url: "mapbox://TU_USUARIO.TILESET_2024", // ← luego lo cambiamos
+    url: "mapbox://effectiveactions9017.01eo8fcc",
     tileSize: 256
   });
 
