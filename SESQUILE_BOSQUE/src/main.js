@@ -1,5 +1,5 @@
-// Token Mapbox (mismo del código guía)
-mapboxgl.accessToken = 'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
+// Token Mapbox (TU TOKEN PERSONAL)
+mapboxgl.accessToken = 'pk.eyJ1IjoiZWZmZWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21raGliOTM1MGl3ejNkb25kOWF6ZzRleCJ9.S_kG8hu35MYRvWrNyKdfWA';
 
 // Centro aproximado de Sesquilé
 const center = [-73.80, 5.05];
