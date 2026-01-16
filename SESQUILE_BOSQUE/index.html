@@ -1,13 +1,32 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Sesquilé – Bosque (Swipe)</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-  </head>
-  <body>
-    <h1>Sesquilé – Bosque (Swipe)</h1>
-    <p>OK: carpeta y index.html creados.</p>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <title>Sesquilé – Cambio de Bosques</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+
+  <!-- Mapbox -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.1/mapbox-gl.css" rel="stylesheet">
+  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.css" rel="stylesheet">
+
+  <!-- CSS propio -->
+  <link rel="stylesheet" href="../src/main.css">
+</head>
+
+<body>
+  <div id="comparison-container">
+    <div id="before" class="map"></div>
+    <div id="after" class="map"></div>
+
+    <div class="label left">2017</div>
+    <div class="label right">2024</div>
+  </div>
+
+  <!-- JS -->
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.1/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.js"></script>
+  <script src="../src/main.js"></script>
+</body>
 </html>
+
 
