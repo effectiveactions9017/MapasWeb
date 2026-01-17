@@ -1,70 +1,53 @@
-// Token Mapbox (TU TOKEN PERSONAL)
 mapboxgl.accessToken = 'pk.eyJ1IjoiZWZmZWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21raGliOTM1MGl3ejNkb25kOWF6ZzRleCJ9.S_kG8hu35MYRvWrNyKdfWA';
 
-// Centro aproximado de Sesquilé
-const center = [-73.80, 5.05];
+const center = [-73.80, 5.05]; // Sesquilé (ajusta si quieres)
 
-// -------- MAPA 2017 --------
 const beforeMap = new mapboxgl.Map({
   container: "before",
   style: "mapbox://styles/mapbox/light-v11",
-  center: center,
-  zoom: 11,
-  minZoom: 9,
-  maxZoom: 15,
-  attributionControl: true
+  center,
+  zoom: 11
 });
 
-// -------- MAPA 2024 --------
 const afterMap = new mapboxgl.Map({
   container: "after",
   style: "mapbox://styles/mapbox/light-v11",
-  center: center,
-  zoom: 11,
-  minZoom: 9,
-  maxZoom: 15,
-  attributionControl: true
+  center,
+  zoom: 11
 });
 
-// ---- BOSQUE 2017 ----
 beforeMap.on("load", () => {
-  beforeMap.addSource("bosque2017", {
+  beforeMap.addSource("bosque2017_color", {
     type: "raster",
-    url: "mapbox://effectiveactions9017.24tn4qga",
+    url: "mapbox://effectiveactions9017.bosques_2017_esriLC_color-asnngk",
     tileSize: 256
   });
 
   beforeMap.addLayer({
-    id: "bosque2017-layer",
+    id: "bosque2017_color_layer",
     type: "raster",
-    source: "bosque2017",
+    source: "bosque2017_color",
     paint: {
       "raster-opacity": 1
     }
   });
 });
 
-// ---- BOSQUE 2024 ----
 afterMap.on("load", () => {
-  afterMap.addSource("bosque2024", {
+  afterMap.addSource("bosque2024_color", {
     type: "raster",
-    url: "mapbox://effectiveactions9017.01eo8fcc",
+    url: "mapbox://effectiveactions9017.bosques_2024_esriLC_color-bb1aar",
     tileSize: 256
   });
 
   afterMap.addLayer({
-    id: "bosque2024-layer",
+    id: "bosque2024_color_layer",
     type: "raster",
-    source: "bosque2024",
+    source: "bosque2024_color",
     paint: {
       "raster-opacity": 1
     }
   });
 });
 
-// ---- SWIPE ----
-new mapboxgl.Compare(
-  beforeMap,
-  afterMap,
-  "#comparison-container"
-);
+new mapboxgl.Compare(beforeMap, afterMap, "#comparison-container");
