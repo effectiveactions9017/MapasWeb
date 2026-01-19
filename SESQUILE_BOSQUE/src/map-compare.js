@@ -20,14 +20,14 @@ const afterMap = new mapboxgl.Map({
   maxZoom: 14
 });
 
-// Inserta raster arriba del fondo (debajo de labels)
 function firstLabelLayerId(map) {
-  const layers = map.getStyle().layers || [];
+  const layers = map.getStyle()?.layers || [];
   const label = layers.find(l => l.type === 'symbol' && l.layout && l.layout['text-field']);
   return label ? label.id : null;
 }
 
-function addRaster(map, sourceId, layerId, tilesetUrl) {
+function ensureRaster(map, sourceId, layerId, tilesetUrl) {
+  // 1) Source
   if (!map.getSource(sourceId)) {
     map.addSource(sourceId, {
       type: 'raster',
@@ -36,41 +36,61 @@ function addRaster(map, sourceId, layerId, tilesetUrl) {
     });
   }
 
+  // 2) Layer
   const beforeId = firstLabelLayerId(map);
 
   if (!map.getLayer(layerId)) {
-    map.addLayer(
-      {
-        id: layerId,
-        type: 'raster',
-        source: sourceId,
-        paint: { 'raster-opacity': 1 }
-      },
-      beforeId
-    );
+    const layerDef = {
+      id: layerId,
+      type: 'raster',
+      source: sourceId,
+      paint: { 'raster-opacity': 1 }
+    };
+
+    // Si no hay "label layer", agrega sin beforeId (igual debe verse)
+    if (beforeId) {
+      map.addLayer(layerDef, beforeId);
+    } else {
+      map.addLayer(layerDef);
+    }
+  } else {
+    // Si ya existe, intenta dejarla justo debajo de labels
+    if (beforeId) {
+      try { map.moveLayer(layerId, beforeId); } catch (e) {}
+    }
   }
 }
 
-let ready1 = false, ready2 = false, compare = null;
-
-// usar style.load para asegurar que existan layers del estilo
-beforeMap.on('style.load', () => {
-  addRaster(beforeMap, 'bosques2017', 'bosques2017-layer', TILESET_2017);
-});
-afterMap.on('style.load', () => {
-  addRaster(afterMap, 'bosques2024', 'bosques2024-layer', TILESET_2024);
-});
-
-beforeMap.on('load', () => {
-  ready1 = true;
-  if (ready1 && ready2 && !compare) compare = new mapboxgl.Compare(beforeMap, afterMap, '#comparison-container');
-});
-
-afterMap.on('load', () => {
-  ready2 = true;
-  if (ready1 && ready2 && !compare) compare = new mapboxgl.Compare(beforeMap, afterMap, '#comparison-container');
-});
-
-// Debug: si algo falla, se ve en consola
+// Debug
 beforeMap.on('error', (e) => console.log('BEFORE error:', e?.error || e));
 afterMap.on('error', (e) => console.log('AFTER error:', e?.error || e));
+
+// ✅ Cargar + proteger contra recargas del estilo
+function wire(map, sourceId, layerId, tilesetUrl) {
+  map.on('style.load', () => {
+    // Primer intento apenas carga el estilo
+    ensureRaster(map, sourceId, layerId, tilesetUrl);
+  });
+
+  map.on('idle', () => {
+    // Segundo intento cuando el mapa está "quieto" (labels ya existen)
+    if (map.isStyleLoaded()) {
+      ensureRaster(map, sourceId, layerId, tilesetUrl);
+    }
+  });
+}
+
+wire(beforeMap, 'bosques2017', 'bosques2017-layer', TILESET_2017);
+wire(afterMap,  'bosques2024', 'bosques2024-layer',  TILESET_2024);
+
+// Compare (una sola vez)
+let ready1 = false, ready2 = false, compare = null;
+
+function tryCompare() {
+  if (ready1 && ready2 && !compare) {
+    compare = new mapboxgl.Compare(beforeMap, afterMap, '#comparison-container');
+  }
+}
+
+beforeMap.on('load', () => { ready1 = true; tryCompare(); });
+afterMap.on('load',  () => { ready2 = true; tryCompare(); });
