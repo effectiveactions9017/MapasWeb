@@ -2,21 +2,29 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Swipe between maps</title>
+  <title>Comparación temporal – Sesquilé</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.1/mapbox-gl.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.css" type="text/css">
+  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.css" rel="stylesheet">
   <link rel="stylesheet" href="../src/main.css">
-  <link rel="icon" href="data:,">
 
   <style>
-    #comparison-container { position: relative; width: 100%; height: 100vh; }
-    .map { position: absolute; top: 0; bottom: 0; width: 100%; }
-    .label { pointer-events: none; }
+    #comparison-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+    }
+    .map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
+
   <div id="comparison-container">
     <div id="before" class="map"></div>
     <div id="after" class="map"></div>
@@ -27,6 +35,7 @@
 
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.1/mapbox-gl.js"></script>
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.js"></script>
-  <script src="../src/map-compare.js" defer></script>
+  <script src="../src/map-compare.js"></script>
+
 </body>
 </html>
