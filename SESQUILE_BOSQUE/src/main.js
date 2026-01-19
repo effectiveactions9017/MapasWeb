@@ -1,6 +1,5 @@
 // ===============================
 // Mapbox – Sesquilé | Cambio Bosques
-// Basado 100% en el ejemplo FUNCIONAL
 // ===============================
 
 mapboxgl.accessToken =
@@ -12,14 +11,14 @@ const beforeMap = new mapboxgl.Map({
   style: 'mapbox://styles/mapbox/light-v11',
   center: [-73.80, 5.05],
   zoom: 11,
-  maxZoom: 15,
   minZoom: 6,
-  customAttribution: '&#9400 EffectiveActions, datos: ESRI Land Cover',
+  maxZoom: 15,
   bounds: [
-    [-74.10, 4.80],   // ⬅️ bounds AMPLIADOS (clave)
+    [-74.10, 4.80],
     [-73.50, 5.30]
   ],
-  fitBoundsOptions: { padding: 15 }
+  fitBoundsOptions: { padding: 15 },
+  customAttribution: '© EffectiveActions | ESRI Land Cover'
 });
 
 // -------- AFTER (2024)
@@ -28,14 +27,14 @@ const afterMap = new mapboxgl.Map({
   style: 'mapbox://styles/mapbox/light-v11',
   center: [-73.80, 5.05],
   zoom: 11,
-  maxZoom: 15,
   minZoom: 6,
-  customAttribution: '&#9400 EffectiveActions, datos: ESRI Land Cover',
+  maxZoom: 15,
   bounds: [
-    [-74.10, 4.80],   // ⬅️ MISMO bounds
+    [-74.10, 4.80],
     [-73.50, 5.30]
   ],
-  fitBoundsOptions: { padding: 15 }
+  fitBoundsOptions: { padding: 15 },
+  customAttribution: '© EffectiveActions | ESRI Land Cover'
 });
 
 // -------- Raster layers
