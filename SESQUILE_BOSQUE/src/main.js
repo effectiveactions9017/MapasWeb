@@ -7,14 +7,14 @@ const bounds = [
   [-73.50, 5.30]
 ];
 
-// IDs EXACTOS (sin "mapbox://")
+// IDs de tileset (SIN "mapbox://")
 const TS2017 = "effectiveactions9017.bosques_2017_esriLC_color-7e6vbh";
 const TS2024 = "effectiveactions9017.bosques_2024_esriLC_color-7dr8hx";
 
-// construye tiles v4 correctos
-function tilesV4(tilesetId) {
+// Forzar PNG (no WEBP) usando pngraw
+function tilesPngRaw(tilesetId) {
   return [
-    `https://api.mapbox.com/v4/${tilesetId}/{z}/{x}/{y}.png?access_token=${mapboxgl.accessToken}`
+    `https://api.mapbox.com/v4/${tilesetId}/{z}/{x}/{y}.pngraw?access_token=${mapboxgl.accessToken}`
   ];
 }
 
@@ -45,7 +45,7 @@ const afterMap = new mapboxgl.Map({
 beforeMap.on("load", () => {
   beforeMap.addSource("bosques2017", {
     type: "raster",
-    tiles: tilesV4(TS2017),
+    tiles: tilesPngRaw(TS2017),
     tileSize: 256
   });
 
@@ -60,7 +60,7 @@ beforeMap.on("load", () => {
 afterMap.on("load", () => {
   afterMap.addSource("bosques2024", {
     type: "raster",
-    tiles: tilesV4(TS2024),
+    tiles: tilesPngRaw(TS2024),
     tileSize: 256
   });
 
