@@ -22,7 +22,7 @@ const beforeMap = new mapboxgl.Map({
   center: [-73.80, 5.05],
   zoom: 11,
   minZoom: 6,
-  maxZoom: 14, // 👈 el tileset llega a 14
+  maxZoom: 14, // tileset llega a 14
   bounds: [
     [-73.92, 4.94],
     [-73.69, 5.15]
@@ -40,7 +40,7 @@ const afterMap = new mapboxgl.Map({
   center: [-73.80, 5.05],
   zoom: 11,
   minZoom: 6,
-  maxZoom: 14, // 👈 el tileset llega a 14
+  maxZoom: 14, // tileset llega a 14
   bounds: [
     [-73.92, 4.94],
     [-73.69, 5.15]
@@ -55,18 +55,23 @@ afterMap.on('error', (e) => console.log('AFTER error:', e?.error || e));
 
 function firstSymbolId(map) {
   const layers = map.getStyle().layers || [];
-  const sym = layers.find(l => l.type === 'symbol' && l.layout && l.layout['text-field']);
-  return sym ? sym.id : (layers.find(l => l.type === 'symbol')?.id || null);
+  const sym = layers.find(
+    (l) => l.type === 'symbol' && l.layout && l.layout['text-field']
+  );
+  return sym ? sym.id : (layers.find((l) => l.type === 'symbol')?.id || null);
 }
 
 function addRaster(map, sourceId, layerId, tilesetUrl) {
+  // OJO: cuando el estilo se recarga, las sources/layers pueden perderse.
+  // Por eso usamos styledata y verificamos existencia antes de agregar.
+
   if (!map.getSource(sourceId)) {
     map.addSource(sourceId, {
       type: 'raster',
       url: tilesetUrl,
       tileSize: 256,
       minzoom: 0,
-      maxzoom: 14 // 👈 igual al tileset
+      maxzoom: 14
     });
   }
 
@@ -82,30 +87,41 @@ function addRaster(map, sourceId, layerId, tilesetUrl) {
           'raster-opacity': 0.9
         }
       },
-      beforeId // 👈 arriba del basemap, debajo de labels
+      beforeId // arriba del basemap, debajo de labels
     );
   }
 }
 
-// Inicializar compare cuando ambos mapas estén listos
+// -------------------------------
+// Comparador (Swipe) - solo una vez
+// -------------------------------
 let beforeReady = false;
 let afterReady = false;
+let compareInitialized = false;
 
 function tryCompare() {
-  if (beforeReady && afterReady) {
+  if (!compareInitialized && beforeReady && afterReady) {
     new mapboxgl.Compare(beforeMap, afterMap, '#comparison-container');
+    compareInitialized = true;
   }
 }
 
-// 👇 CLAVE: style.load (no load)
-beforeMap.on('style.load', () => {
-  addRaster(beforeMap, 'bosques2017', 'bosques2017-layer', TILESET_2017);
+// -------------------------------
+// ✅ FIX Mapbox GL v3: reinyectar capas tras recargas de estilo
+// -------------------------------
+beforeMap.on('styledata', () => {
+  // En styledata ya hay style disponible; si la capa se perdió, la reponemos
+  if (!beforeMap.getLayer('bosques2017-layer')) {
+    addRaster(beforeMap, 'bosques2017', 'bosques2017-layer', TILESET_2017);
+  }
   beforeReady = true;
   tryCompare();
 });
 
-afterMap.on('style.load', () => {
-  addRaster(afterMap, 'bosques2024', 'bosques2024-layer', TILESET_2024);
+afterMap.on('styledata', () => {
+  if (!afterMap.getLayer('bosques2024-layer')) {
+    addRaster(afterMap, 'bosques2024', 'bosques2024-layer', TILESET_2024);
+  }
   afterReady = true;
   tryCompare();
 });
