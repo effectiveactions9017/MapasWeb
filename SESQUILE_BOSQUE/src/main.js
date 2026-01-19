@@ -5,14 +5,14 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5b
 const beforeMap = new mapboxgl.Map({
     container: 'before',
     style: 'mapbox://styles/mapbox/light-v11', // Mapa base
-    center: [-74.11, 0.75], // Coordenadas iniciales (Colombia)
-    zoom: 7,
+    center: [-73.80, 5.05], // Sesquilé
+    zoom: 11,
     maxZoom: 15,
     minZoom: 6,
     customAttribution: '&#9400 EffectiveActions, datos: ESRI Land Cover',
     bounds: [
-        [-75.0818601319999743, 0.0255106350000460],
-        [-73.1380698179999627,1.5677558370000499]
+        [-73.92, 4.94],
+        [-73.69, 5.15]
     ],
     fitBoundingOptions: {
         padding: 15
@@ -23,14 +23,14 @@ const beforeMap = new mapboxgl.Map({
 const afterMap = new mapboxgl.Map({
     container: 'after',
     style: 'mapbox://styles/mapbox/light-v11', // Mapa base
-    center: [-74.11, 0.75], // Coordenadas iniciales (Colombia)
-    zoom: 7,
+    center: [-73.80, 5.05], // Sesquilé
+    zoom: 11,
     maxZoom: 15,
     minZoom: 6,
     customAttribution: '&#9400 EffectiveActions, datos: ESRI Land Cover',
     bounds: [
-        [-75.0818601319999743, 0.0255106350000460],
-        [-73.1380698179999627,1.5677558370000499]
+        [-73.92, 4.94],
+        [-73.69, 5.15]
     ],
     fitBoundingOptions: {
         padding: 15
