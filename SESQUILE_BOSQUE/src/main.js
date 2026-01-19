@@ -18,9 +18,19 @@ const afterMap = new mapboxgl.Map({
   zoom,
 });
 
-// Tilesets (Mapbox)
-const TILESET_2017 = "mapbox://effectiveactions9017.bosques_2017_esriLC_color-6k9wbc";
-const TILESET_2024 = "mapbox://effectiveactions9017.bosques_2024_esriLC_color-aylbnk";
+/* ============================
+   TILES DE BOSQUE (MAPBOX)
+   ============================ */
+
+const TILESET_2017 =
+  "mapbox://effectiveactions9017.bosques_2017_esriLC_color-6k9wbc";
+
+const TILESET_2024 =
+  "mapbox://effectiveactions9017.bosques_2024_esriLC_color-aylbnk";
+
+/* ============================
+   MAPA 2017 (BEFORE)
+   ============================ */
 
 beforeMap.on("load", () => {
   beforeMap.addSource("bosque2017_color", {
@@ -33,9 +43,15 @@ beforeMap.on("load", () => {
     id: "bosque2017_color_layer",
     type: "raster",
     source: "bosque2017_color",
-    paint: { "raster-opacity": 1 },
+    paint: {
+      "raster-opacity": 1,
+    },
   });
 });
+
+/* ============================
+   MAPA 2024 (AFTER)
+   ============================ */
 
 afterMap.on("load", () => {
   afterMap.addSource("bosque2024_color", {
@@ -48,9 +64,14 @@ afterMap.on("load", () => {
     id: "bosque2024_color_layer",
     type: "raster",
     source: "bosque2024_color",
-    paint: { "raster-opacity": 1 },
+    paint: {
+      "raster-opacity": 1,
+    },
   });
 });
 
-// Compare slider
+/* ============================
+   COMPARE
+   ============================ */
+
 new mapboxgl.Compare(beforeMap, afterMap, "#comparison-container");
