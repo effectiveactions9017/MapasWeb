@@ -1,3 +1,5 @@
+console.log("✅ main.js cargó OK");
+alert("✅ main.js cargó OK");
 mapboxgl.accessToken =
   "pk.eyJ1IjoiZWZmZWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21raGliOTM1MGl3ejNkb25kOWF6ZzRleCJ9.S_kG8hu35MYRvWrNyKdfWA";
 
