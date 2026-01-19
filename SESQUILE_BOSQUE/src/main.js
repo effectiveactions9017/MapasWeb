@@ -1,7 +1,7 @@
 mapboxgl.accessToken =
   "pk.eyJ1IjoiZWZmZWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21raGliOTM1MGl3ejNkb25kOWF6ZzRleCJ9.S_kG8hu35MYRvWrNyKdfWA";
 
-const center = [-73.80, 5.05]; // Sesquilé
+const center = [-73.80, 5.05];
 const zoom = 11;
 
 const beforeMap = new mapboxgl.Map({
@@ -18,19 +18,17 @@ const afterMap = new mapboxgl.Map({
   zoom,
 });
 
-/* ============================
-   TILES DE BOSQUE (MAPBOX)
-   ============================ */
+const TILESET_2017 = "mapbox://effectiveactions9017.bosques_2017_esriLC_color-6k9wbc";
+const TILESET_2024 = "mapbox://effectiveactions9017.bosques_2024_esriLC_color-aylbnk";
 
-const TILESET_2017 =
-  "mapbox://effectiveactions9017.bosques_2017_esriLC_color-6k9wbc";
+let beforeReady = false;
+let afterReady = false;
 
-const TILESET_2024 =
-  "mapbox://effectiveactions9017.bosques_2024_esriLC_color-aylbnk";
-
-/* ============================
-   MAPA 2017 (BEFORE)
-   ============================ */
+function maybeInitCompare() {
+  if (beforeReady && afterReady) {
+    new mapboxgl.Compare(beforeMap, afterMap, "#comparison-container");
+  }
+}
 
 beforeMap.on("load", () => {
   beforeMap.addSource("bosque2017_color", {
@@ -43,15 +41,12 @@ beforeMap.on("load", () => {
     id: "bosque2017_color_layer",
     type: "raster",
     source: "bosque2017_color",
-    paint: {
-      "raster-opacity": 1,
-    },
+    paint: { "raster-opacity": 1 },
   });
-});
 
-/* ============================
-   MAPA 2024 (AFTER)
-   ============================ */
+  beforeReady = true;
+  maybeInitCompare();
+});
 
 afterMap.on("load", () => {
   afterMap.addSource("bosque2024_color", {
@@ -64,14 +59,9 @@ afterMap.on("load", () => {
     id: "bosque2024_color_layer",
     type: "raster",
     source: "bosque2024_color",
-    paint: {
-      "raster-opacity": 1,
-    },
+    paint: { "raster-opacity": 1 },
   });
+
+  afterReady = true;
+  maybeInitCompare();
 });
-
-/* ============================
-   COMPARE
-   ============================ */
-
-new mapboxgl.Compare(beforeMap, afterMap, "#comparison-container");
