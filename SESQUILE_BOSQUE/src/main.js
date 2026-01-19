@@ -58,9 +58,9 @@ beforeMap.on('load', () => {
 
 afterMap.on('load', () => {
     // Agregar capa raster para los bosques en 2023
-    afterMap.addSource('bosques2023', {
+    afterMap.addSource('bosques2024', {
         type: 'raster',
-        url: 'mapbox://jorgepatino.axptxglb', // ID del tileset para 2023
+        url: 'effectiveactions9017.1n8mgqb7', // ID del tileset para 2024
         tileSize: 256
     });
 
