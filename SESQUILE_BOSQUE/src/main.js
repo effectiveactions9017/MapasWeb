@@ -19,7 +19,7 @@ const afterMap = new mapboxgl.Map({
 beforeMap.on("load", () => {
   beforeMap.addSource("bosque2017_color", {
     type: "raster",
-    url: "mapbox://effectiveactions9017.bosques_2017_esriLC_color-asnngk",
+    url: "mapbox://effectiveactions9017.bosques_2017_esriLC_color-6k9wbc",
     tileSize: 256
   });
 
@@ -36,7 +36,7 @@ beforeMap.on("load", () => {
 afterMap.on("load", () => {
   afterMap.addSource("bosque2024_color", {
     type: "raster",
-    url: "mapbox://effectiveactions9017.bosques_2024_esriLC_color-bb1aar",
+    url: "mapbox://effectiveactions9017.bosques_2024_esriLC_color-aylbnk",
     tileSize: 256
   });
 
