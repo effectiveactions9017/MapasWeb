@@ -1,9 +1,9 @@
 mapboxgl.accessToken =
   'pk.eyJ1IjoiZWZmZWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21raGliOTM1MGl3ejNkb25kOWF6ZzRleCJ9.S_kG8hu35MYRvWrNyKdfWA';
 
-// Tileset IDs (raster)
-const TILESET_2017 = 'effectiveactions9017.bosques_2017_esriLC_color-7e6vbh';
-const TILESET_2024 = 'effectiveactions9017.bosques_2024_esriLC_color-7dr8hx';
+// Tilesets EXACTOS como en Mapbox Studio
+const TILESET_2017 = 'mapbox://effectiveactions9017.bosques_2017_esriLC_color-7e6vbh';
+const TILESET_2024 = 'mapbox://effectiveactions9017.bosques_2024_esriLC_color-7dr8hx';
 
 const beforeMap = new mapboxgl.Map({
   container: 'before',
@@ -21,16 +21,13 @@ const afterMap = new mapboxgl.Map({
   maxZoom: 14
 });
 
-function addRaster(map, id, tileset) {
+function addRaster(map, id, tilesetUrl) {
   if (map.getSource(id)) return;
 
   map.addSource(id, {
     type: 'raster',
-    tiles: [
-      `https://api.mapbox.com/v4/${tileset}/{z}/{x}/{y}.pngraw?access_token=${mapboxgl.accessToken}`
-    ],
-    tileSize: 256,
-    maxzoom: 14
+    url: tilesetUrl,
+    tileSize: 256
   });
 
   map.addLayer({
@@ -38,23 +35,27 @@ function addRaster(map, id, tileset) {
     type: 'raster',
     source: id,
     paint: {
-      'raster-opacity': 1,
-      'raster-contrast': 0.4,
-      'raster-saturation': 0.8
+      'raster-opacity': 1
     }
   });
 }
 
-let a = false, b = false, compare;
+let ready1 = false;
+let ready2 = false;
+let compare;
 
 beforeMap.on('load', () => {
   addRaster(beforeMap, 'bosques2017', TILESET_2017);
-  a = true;
-  if (a && b && !compare) compare = new mapboxgl.Compare(beforeMap, afterMap, '#comparison-container');
+  ready1 = true;
+  if (ready1 && ready2 && !compare) {
+    compare = new mapboxgl.Compare(beforeMap, afterMap, '#comparison-container');
+  }
 });
 
 afterMap.on('load', () => {
   addRaster(afterMap, 'bosques2024', TILESET_2024);
-  b = true;
-  if (a && b && !compare) compare = new mapboxgl.Compare(beforeMap, afterMap, '#comparison-container');
+  ready2 = true;
+  if (ready1 && ready2 && !compare) {
+    compare = new mapboxgl.Compare(beforeMap, afterMap, '#comparison-container');
+  }
 });
