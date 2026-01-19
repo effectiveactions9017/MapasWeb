@@ -1,7 +1,7 @@
 alert("main.js cargó OK");
 
 mapboxgl.accessToken =
-  "pk.eyJ1IjoiZWZmZWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21raGliOTM1MGl3ejNkb25kOWF6ZzRleCJ9.S_kG8hu35MYRvWrNyKdfWA";
+  "pk.eyJ1IjoiZWZmZWN0aXZlYWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21raGliOTM1MGl3ejNkb25kOWF6ZzRleCJ9.S_kG8hu35MYRvWrNyKdfWA";
 
 const map = new mapboxgl.Map({
   container: "before",
@@ -15,7 +15,10 @@ map.on("load", () => {
 
   map.addSource("bosque2017", {
     type: "raster",
-    url: "mapbox://effectiveactions9017.bosques_2017_esriLC_color-6k9wbc",
+    tiles: [
+      "https://api.mapbox.com/v4/effectiveactions9017.bosques_2017_esriLC_color-6k9wbc/{z}/{x}/{y}.png?access_token=" +
+        mapboxgl.accessToken
+    ],
     tileSize: 256
   });
 
