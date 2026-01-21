@@ -77,7 +77,7 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
 map.on('style.load', () => {
 
     addLayer(
-        'PREDIOS_SESQUILE_URB.geojson',
+        'PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson',
         'predios_ssk',
         'predios_ssk_layer',
         '#2ec4b6',
