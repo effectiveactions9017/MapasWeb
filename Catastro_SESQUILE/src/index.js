@@ -62,7 +62,7 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
             }
 
             // Formatear avalúo con miles (si quieres moneda, agrega "$ ")
-            if (field.key === 'AVALUO2026' && value !== null && value !== undefined && value !== '') {
+            if (field.key === 'AVALUO 2026' && value !== null && value !== undefined && value !== '') {
               const n = Number(value);
               value = isNaN(n) ? value : n.toLocaleString('es-CO');
             }
