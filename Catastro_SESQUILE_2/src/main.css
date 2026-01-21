@@ -1,67 +1,164 @@
-<!DOCTYPE html>
-<html lang="es">
+/* =========================
+   CONFIGURACIÓN GENERAL
+   ========================= */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Libre Franklin', sans-serif;
+}
 
-<head>
-    <meta charset="utf-8">
-    <title>Predios Urbanos Sesquilé</title>
-    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
 
-    <!-- Mapbox CSS -->
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+/* =========================
+   LEYENDA
+   ========================= */
+.legend-container {
+  position: absolute;
+  bottom: 25px;
+  right: 5px;
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 15px;
+  border-radius: 8px;
+  width: 200px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  color: white;
+}
 
-    <!-- Geocoder -->
-    <script
-        src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js">
-    </script>
-    <link
-        rel="stylesheet"
-        href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
-    />
+.legend-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-align: left;
+  color: white;
+}
 
-    <!-- Turf.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js"></script>
+.legend-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-    <!-- Fuentes y estilos adicionales -->
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css" rel="stylesheet">
-    <script async defer src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"></script>
+.legend-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;              /* 🔑 evita que el cuadro colapse */
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: white;
+}
 
-    <!-- CSS personalizado -->
-    <link rel="stylesheet" href="../src/main.css" />
-</head>
+/* 🔑 CLAVE: hace visibles los cuadros de color */
+.legend-color {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 3px;
+  border: 1px solid #ffffff;
+  flex: 0 0 18px;
+}
 
-<body>
+/* =========================
+   COLORES LEYENDA ACTUAL
+   ========================= */
+.legend-color.predios-municipales {
+  background-color: #2ec4b6; /* verde */
+}
 
-    <!-- Contenedor del mapa -->
-    <div id="map"></div>
+.legend-color.predios-sin-info {
+  background-color: #ffb703; /* naranja */
+}
 
-    <!-- LEYENDA -->
-    <div class="legend-container">
-        <div class="legend-title">
-            Predios Urbanos<br>Sesquilé
-        </div>
+.legend-color.predio-seleccionado {
+  background-color: #ffff00; /* resaltado */
+}
 
-        <ul class="legend-list">
-            <li>
-                <span class="legend-color predios"></span>
-                Predio urbano
-            </li>
-        </ul>
+/* =========================
+   CLASES ANTIGUAS (SE CONSERVAN)
+   ========================= */
+.c_viejas   { background-color: #AAB7B8; }
+.c_nuevas   { background-color: #A569BD; }
+.c_aumento  { background-color: #F7DC6F; }
+.dem_p      { background-color: #F5B041; }
+.dem_t      { background-color: #E74C3C; }
 
-        <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
-    </div>
+/* =========================
+   CAJA DE INFORMACIÓN
+   ========================= */
+.info-box {
+  position: absolute;
+  left: 10px;
+  top: 310px;
+  z-index: 10;
+  width: 200px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  display: none;
+}
 
-    <!-- Caja de información -->
-    <div class="info-box">
-        <h3>Información del predio</h3>
-        <div class="info-content">
-            Busca un predio para ver detalles
-        </div>
-    </div>
+.info-box h3 {
+  margin: 0 0 10px 0;
+  font-weight: bold;
+  font-size: 14px;
+}
 
-    <!-- Script JavaScript -->
-    <script src="../src/index.js"></script>
+/* =========================
+   POPUP PERSONALIZADO
+   ========================= */
+.custom-popup .mapboxgl-popup-content {
+  font-size: 0.8rem;
+  padding: 10px 15px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 8px;
+  max-width: 250px;
+}
 
-</body>
-</html>
+.mapboxgl-popup-content a {
+  color: #00bcd4;
+  text-decoration: none;
+}
+
+.mapboxgl-popup-content a:hover {
+  text-decoration: underline;
+}
+
+/* Flechas del popup */
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+  border-bottom-color: rgba(0, 0, 0, 0.8);
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+  border-top-color: rgba(0, 0, 0, 0.8);
+}
+
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+  border-right-color: rgba(0, 0, 0, 0.8);
+}
+
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+  border-left-color: rgba(0, 0, 0, 0.8);
+}
+
+/* =========================
+   GEOCODER
+   ========================= */
+.mapboxgl-ctrl-geocoder {
+  width: 300px !important;
+}
