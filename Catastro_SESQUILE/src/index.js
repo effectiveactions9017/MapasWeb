@@ -137,7 +137,9 @@ geocoder.on('result', (e) => {
 
         const popupContent = `
             <strong>Código:</strong> ${properties.codigo || 'N/A'}<br>
-            <strong>Área (㎡):</strong> ${Math.round(properties.area || 0)}<br>
+            <strong>Destino:</strong> ${properties.DESTINO || 'N/A'}<br>
+            <strong>Nombre:</strong> ${properties.NOMBRE || 'N/A'}<br>
+            <strong>Avalúo 2026:</strong> ${properties['AVALUO2026'] || 'N/A'}<br>
             <a style="font-size:9px;">&#9400 EffectiveActions</a>
         `;
 
@@ -147,3 +149,4 @@ geocoder.on('result', (e) => {
             .addTo(map);
     }
 });
+
