@@ -1,7 +1,9 @@
 // =====================================================
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
-// ✅ Búsqueda local por: codigo (cédula), NOMBRE, NUMERO_DOCUMENTO
-// ✅ Resalta 1 o varios predios (vinculados al mismo codigo o documento)
+// ✅ Búsqueda 100% completa (NO depende de querySourceFeatures)
+// ✅ Busca por: codigo (cédula), NOMBRE, NUMERO_DOCUMENTO
+// ✅ Autocompletar por NOMBRE (opciones únicas + conteo)
+// ✅ Resalta 1 o varios predios (mismo codigo / documento / NOMBRE exacto)
 // =====================================================
 
 // Usar token propio de Mapbox
@@ -24,6 +26,26 @@ let popup = new mapboxgl.Popup({
   className: 'custom-popup'
 });
 
+// ✅ Guardamos TODO el GeoJSON aquí para búsquedas completas
+let PREDIOS_DATA = null;
+
+// =====================================================
+// Helpers (normalización robusta)
+// =====================================================
+function normText(v) {
+  return (v ?? '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD') // separa tildes
+    .replace(/[\u0300-\u036f]/g, '') // quita tildes
+    .replace(/\s+/g, ' ') // espacios múltiples
+    .trim();
+}
+
+function onlyDigits(v) {
+  return (v ?? '').toString().replace(/\D/g, '').trim();
+}
+
 // =====================================================
 // Función para agregar capas (GeoJSON)
 // =====================================================
@@ -31,6 +53,105 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
   fetch(`../src/data/${geojsonFile}`)
     .then((response) => response.json())
     .then((data) => {
+      // ✅ Guardar dataset completo en memoria (para búsquedas 100% completas)
+      if (sourceId === 'predios_ssk') {
+        PREDIOS_DATA = data; // FeatureCollection completo
+      }
+
+      map.addSource(sourceId, {
+        type: 'geojson',
+        data: data
+      });
+
+      map.addLayer({
+        id: layerId,
+        source: sourceId,
+        type: 'fill',
+        minzoom: 12,
+        paint: {
+          'fill-color': color,
+          'fill-opacity': 0.75,
+          'fill-outline-color': '#ffffff'
+       I’ve reviewed the JavaScript you’re using to load the GeoJSON layer, show popups, and perform local search using `MapboxGeocoder`. To fix the issue where some records exist in the dataset but don’t appear in your search results, we need to stop relying on `map.querySourceFeatures()` (which only reliably returns features currently “loaded/rendered” in memory).
+
+✅ **Fix:** store the full GeoJSON in a global variable when it loads, and run search + highlight using that full dataset.
+
+Below is the **complete corrected `main.js`** with:
+- Search by **`codigo`**, **`NOMBRE`**, **`NUMERO_DOCUMENTO`**
+- Autocomplete for names (unique suggestions with count)
+- Highlighting **1 or many polygons** (e.g., if 4 predios share the same `NUMERO_DOCUMENTO`, all 4 are highlighted)
+- Robust matching (removes accents, normalizes spaces, handles numeric document matching)
+
+---
+
+## ✅ CÓDIGO COMPLETO CORREGIDO (main.js)
+
+```js
+// =====================================================
+// ✅ Visor Predial Sesquilé - Mapbox GL JS
+// ✅ Búsqueda 100% completa (NO depende de querySourceFeatures)
+// ✅ Busca por: codigo (cédula), NOMBRE, NUMERO_DOCUMENTO
+// ✅ Autocompletar por NOMBRE (opciones únicas + conteo)
+// ✅ Resalta 1 o varios predios vinculados (mismo código/documento/nombre exacto)
+// =====================================================
+
+// Usar token propio de Mapbox
+mapboxgl.accessToken =
+  'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
+
+const map = new mapboxgl.Map({
+  style: 'mapbox://styles/mapbox/dark-v11',
+  center: [-73.79724, 5.04463], // Sesquilé
+  zoom: 15,
+  pitch: 0,
+  bearing: 0,
+  container: 'map',
+  antialias: true
+});
+
+let popup = new mapboxgl.Popup({
+  closeButton: false,
+  closeOnClick: false,
+  className: 'custom-popup'
+});
+
+// ✅ Guardamos TODO el GeoJSON aquí para búsquedas completas
+let PREDIOS_DATA = null;
+
+// =====================================================
+// Helpers (normalización robusta)
+// =====================================================
+function normText(v) {
+  return (v ?? '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD') // separa tildes
+    .replace(/[\u0300-\u036f]/g, '') // quita tildes
+    .replace(/\s+/g, ' ') // espacios múltiples
+    .trim();
+}
+
+function onlyDigits(v) {
+  return (v ?? '').toString().replace(/\D/g, '').trim();
+}
+
+function formatNumberCO(v) {
+  const n = Number(v);
+  return isNaN(n) ? (v ?? 'N/A') : n.toLocaleString('es-CO');
+}
+
+// =====================================================
+// Función para agregar capas (GeoJSON)
+// =====================================================
+function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
+  fetch(`../src/data/${geojsonFile}`)
+    .then((response) => response.json())
+    .then((data) => {
+      // ✅ Guardar dataset completo en memoria
+      if (sourceId === 'predios_ssk') {
+        PREDIOS_DATA = data; // FeatureCollection completo
+      }
+
       map.addSource(sourceId, {
         type: 'geojson',
         data: data
@@ -61,10 +182,9 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
               value = Math.round(Number(value));
             }
 
-            // Formatear avalúo con miles (si quieres moneda, agrega "$ ")
+            // Formatear avalúo con miles
             if (field.key === 'AVALUO2026' && value !== null && value !== undefined && value !== '') {
-              const n = Number(value);
-              value = isNaN(n) ? value : n.toLocaleString('es-CO');
+              value = formatNumberCO(value);
             }
 
             return `<strong>${field.label}:</strong> ${value ?? 'N/A'}`;
@@ -109,7 +229,7 @@ map.on('style.load', () => {
     ]
   );
 
-  // ✅ Fuente + capas de resaltado (para iluminar 1 o varios predios)
+  // ✅ Fuente + capas de resaltado
   map.addSource('predios_highlight', {
     type: 'geojson',
     data: { type: 'FeatureCollection', features: [] }
@@ -139,167 +259,190 @@ map.on('style.load', () => {
 });
 
 // =====================================================
-// Geocoder local: busca por codigo, NOMBRE, NUMERO_DOCUMENTO
+// Geocoder local (usa PREDIOS_DATA completo)
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
   mapboxgl: mapboxgl,
   marker: false,
-  localGeocoder: function (query) {
-    const matchingFeatures = [];
-    const q = (query || '').toString().toLowerCase().trim();
-    if (!q) return matchingFeatures;
 
-    // OJO: requiere que el source ya exista (cargado por style.load + addLayer)
-    let features = [];
-    try {
-      features = map.querySourceFeatures('predios_ssk');
-    } catch (err) {
-      return matchingFeatures;
+  localGeocoder: function (query) {
+    const qRaw = (query || '').toString().trim();
+    const q = normText(qRaw);
+    if (!q) return [];
+
+    // Esperar dataset completo
+    if (!PREDIOS_DATA || !Array.isArray(PREDIOS_DATA.features)) return [];
+
+    const features = PREDIOS_DATA.features;
+
+    // Si parece texto -> sugerencias únicas de NOMBRE
+    const qDigits = onlyDigits(qRaw);
+    const looksNumeric = qDigits.length >= 4; // umbral para doc/código
+    const isTextQuery = !looksNumeric;
+
+    // -------------------------------------------------
+    // 1) AUTOCOMPLETE POR NOMBRE (opciones únicas + conteo)
+    // -------------------------------------------------
+    if (isTextQuery) {
+      const groups = new Map(); // nombreNorm -> { nombreOriginal, count, feature }
+
+      for (const f of features) {
+        const p = f.properties || {};
+        const nombre = (p.NOMBRE ?? '').toString().trim();
+        if (!nombre) continue;
+
+        const nombreN = normText(nombre);
+
+        // Match tipo contains
+        if (!nombreN.includes(q)) continue;
+
+        if (!groups.has(nombreN)) {
+          groups.set(nombreN, { nombreOriginal: nombre, count: 1, feature: f });
+        } else {
+          groups.get(nombreN).count += 1;
+        }
+      }
+
+      return Array.from(groups.values())
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10)
+        .map((g) => {
+          const centro = turf.centroid(g.feature).geometry.coordinates;
+          return {
+            type: 'Feature',
+            geometry: g.feature.geometry,
+            properties: {
+              ...(g.feature.properties || {}),
+              __matchField: 'NOMBRE',
+              __matchValue: g.nombreOriginal,
+              __groupCount: g.count
+            },
+            place_name: `${g.nombreOriginal} (${g.count} predio${g.count > 1 ? 's' : ''})`,
+            text: g.nombreOriginal,
+            center: centro,
+            place_type: ['place']
+          };
+        });
     }
 
-    features.forEach((feature) => {
-      const props = feature.properties || {};
+    // -------------------------------------------------
+    // 2) BÚSQUEDA POR CÓDIGO / DOCUMENTO (NUMÉRICO)
+    // -------------------------------------------------
+    const out = [];
 
-      const codigo = (props.codigo ?? '').toString().toLowerCase();
-      const nombre = (props.NOMBRE ?? '').toString().toLowerCase();
-      const documento = (props.NUMERO_DOCUMENTO ?? '').toString().toLowerCase();
+    for (const f of features) {
+      const p = f.properties || {};
 
-      const match =
-        (codigo && codigo.includes(q)) ||
-        (nombre && nombre.includes(q)) ||
-        (documento && documento.includes(q));
+      const codigo = (p.codigo ?? '').toString().trim();
+      const documento = (p.NUMERO_DOCUMENTO ?? '').toString().trim();
+      const nombre = (p.NOMBRE ?? '').toString().trim();
 
-      if (match) {
-        const centro = turf.centroid(feature).geometry.coordinates;
+      const codigoN = normText(codigo);
+      const docDigits = onlyDigits(documento);
 
-        const codTxt = (props.codigo ?? '').toString().trim();
-        const nomTxt = (props.NOMBRE ?? '').toString().trim();
-        const docTxt = (props.NUMERO_DOCUMENTO ?? '').toString().trim();
+      // match: si el query numérico está contenido
+      const matchCodigo = codigoN.includes(q);
+      const matchDoc = docDigits.includes(qDigits);
 
-        // Detectar el campo que disparó el match (prioridad: codigo > documento > nombre)
-        let matchField = null;
-        let matchValue = null;
+      if (matchCodigo || matchDoc) {
+        const centro = turf.centroid(f).geometry.coordinates;
 
-        if (codigo && codigo.includes(q)) {
-          matchField = 'codigo';
-          matchValue = codTxt;
-        } else if (documento && documento.includes(q)) {
-          matchField = 'NUMERO_DOCUMENTO';
-          matchValue = docTxt;
-        } else if (nombre && nombre.includes(q)) {
-          matchField = 'NOMBRE';
-          matchValue = nomTxt;
-        }
+        const matchField = matchCodigo ? 'codigo' : 'NUMERO_DOCUMENTO';
+        const matchValue = matchCodigo ? codigo : documento;
 
-        // Guardamos metadata para usarla en geocoder.on('result')
-        const props2 = { ...props, __matchField: matchField, __matchValue: matchValue };
-
-        matchingFeatures.push({
+        out.push({
           type: 'Feature',
-          geometry: feature.geometry,
-          properties: props2,
-
-          place_name: `Código: ${codTxt || 'N/A'} | Nombre: ${nomTxt || 'N/A'} | Doc: ${docTxt || 'N/A'}`,
-          text: codTxt || nomTxt || docTxt || 'Resultado',
+          geometry: f.geometry,
+          properties: { ...p, __matchField: matchField, __matchValue: matchValue },
+          place_name: `Código: ${codigo || 'N/A'} | Nombre: ${nombre || 'N/A'} | Doc: ${documento || 'N/A'}`,
+          text: codigo || documento || 'Resultado',
           center: centro,
           place_type: ['place']
         });
       }
-    });
+    }
 
-    // Limitar resultados para que no se vuelva pesado
-    return matchingFeatures.slice(0, 10);
+    return out.slice(0, 10);
   },
+
   placeholder: 'Buscar por código, nombre o documento',
   localGeocoderOnly: true
 });
 
-// Agregar controles al mapa
+// Controles
 map.addControl(geocoder, 'top-left');
 map.addControl(new mapboxgl.NavigationControl());
 
 // =====================================================
-// Al seleccionar resultado: zoom + resaltar 1 o varios predios vinculados
+// Al seleccionar: resaltar 1 o varios predios (grupo)
 // =====================================================
 geocoder.on('result', (e) => {
   const result = e.result;
   if (!result || !result.geometry) return;
 
-  const properties = result.properties || {};
-  const matchField = properties.__matchField; // 'codigo' | 'NUMERO_DOCUMENTO' | 'NOMBRE'
-  const matchValue = (properties.__matchValue ?? '').toString().trim();
+  if (!PREDIOS_DATA || !Array.isArray(PREDIOS_DATA.features)) return;
+  const features = PREDIOS_DATA.features;
 
-  // Normalizador simple (para comparar sin espacios)
-  const norm = (v) => (v ?? '').toString().toLowerCase().replace(/\s+/g, '').trim();
+  const props = result.properties || {};
+  const matchField = props.__matchField;
+  const matchValue = (props.__matchValue ?? '').toString().trim();
 
-  // Traer todas las features del source
-  let features = [];
-  try {
-    features = map.querySourceFeatures('predios_ssk');
-  } catch (err) {
-    features = [];
-  }
-
-  // ✅ Si el match fue por DOCUMENTO o por CODIGO: resaltar TODOS los predios con el mismo valor exacto
-  // Si fue por NOMBRE: resaltar solo el seleccionado (para no pintar demasiados)
+  // Si no hay match metadata, resaltar solo el seleccionado
   let toHighlight = [];
 
-  if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
-    const mv = norm(matchValue);
+  if (matchField && matchValue) {
+    const mvText = normText(matchValue);
+    const mvDigits = onlyDigits(matchValue);
 
     toHighlight = features.filter((f) => {
       const p = f.properties || {};
-      const v = matchField === 'NUMERO_DOCUMENTO' ? p.NUMERO_DOCUMENTO : p.codigo;
-      return norm(v) === mv;
+      if (matchField === 'codigo') return normText(p.codigo) === mvText;
+      if (matchField === 'NUMERO_DOCUMENTO') return onlyDigits(p.NUMERO_DOCUMENTO) === mvDigits;
+      if (matchField === 'NOMBRE') return normText(p.NOMBRE) === mvText; // exacto
+      return false;
     });
   }
 
-  // Fallback: si no encontró grupo, resalta el seleccionado solamente
   if (!toHighlight.length) toHighlight = [result];
 
-  // ✅ Pintar todos los predios encontrados
   const fc = { type: 'FeatureCollection', features: toHighlight };
-  const hlSource = map.getSource('predios_highlight');
-  if (hlSource) hlSource.setData(fc);
 
-  // ✅ Zoom al conjunto
+  const hl = map.getSource('predios_highlight');
+  if (hl) hl.setData(fc);
+
+  // Zoom al conjunto
   const bounds = turf.bbox(fc);
   map.fitBounds(bounds, { padding: 40 });
 
-  // ✅ Lista de códigos para saber cuáles son
+  // Lista de códigos para saber cuáles son
   const codigos = toHighlight
     .map((f) => (f.properties?.codigo ?? '').toString().trim())
     .filter(Boolean);
 
   const listaCodigos = codigos.length
     ? `<br><strong>Predios vinculados (${codigos.length}):</strong><br>${codigos
-        .slice(0, 10)
-        .join('<br>')}${codigos.length > 10 ? '<br>…' : ''}`
+        .slice(0, 12)
+        .join('<br>')}${codigos.length > 12 ? '<br>…' : ''}`
     : '';
 
-  // Formatear avalúo con miles
   const avaluoTxt =
-    properties.AVALUO2026 !== null && properties.AVALUO2026 !== undefined && properties.AVALUO2026 !== ''
-      ? (() => {
-          const n = Number(properties.AVALUO2026);
-          return isNaN(n) ? properties.AVALUO2026 : n.toLocaleString('es-CO');
-        })()
+    props.AVALUO2026 !== null && props.AVALUO2026 !== undefined && props.AVALUO2026 !== ''
+      ? formatNumberCO(props.AVALUO2026)
       : 'N/A';
 
   const popupContent = `
-    <strong>Código:</strong> ${properties.codigo || 'N/A'}<br>
-    <strong>Destino:</strong> ${properties.DESTINO || 'N/A'}<br>
-    <strong>Nombre:</strong> ${properties.NOMBRE || 'N/A'}<br>
-    <strong>Documento:</strong> ${properties.NUMERO_DOCUMENTO || 'N/A'}<br>
+    <strong>Código:</strong> ${props.codigo || 'N/A'}<br>
+    <strong>Destino:</strong> ${props.DESTINO || 'N/A'}<br>
+    <strong>Nombre:</strong> ${props.NOMBRE || 'N/A'}<br>
+    <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO || 'N/A'}<br>
     <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
-    <strong>Área (㎡):</strong> ${Math.round(properties.shap_Ar || 0)}<br>
+    <strong>Área (㎡):</strong> ${Math.round(props.shap_Ar || 0)}<br>
     ${listaCodigos}
     <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
   `;
 
-  popup
-    .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
-    .setHTML(popupContent)
-    .addTo(map);
+  const center = result.center || turf.centroid(result).geometry.coordinates;
+
+  popup.setLngLat(center).setHTML(popupContent).addTo(map);
 });
