@@ -45,7 +45,12 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
                 const popupContent = popupFields
                     .map((field) => {
                         let value = feature.properties[field.key];
-                        if (field.key === 'area') value = Math.round(value);
+
+                        // Redondear el valor de 'shap_Ar' sin decimales
+                        if (field.key === 'shap_Ar' && value !== null && value !== undefined) {
+                            value = Math.round(value);
+                        }
+
                         return `<strong>${field.label}:</strong> ${value ?? 'N/A'}`;
                     })
                     .join('<br>');
@@ -78,11 +83,12 @@ map.on('style.load', () => {
         '#2ec4b6',
         [
             { label: 'Código', key: 'codigo' },
-            { label: 'Área (㎡)', key: 'area' }
+            { label: 'Destino', key: 'DESTINO' },
+            { label: 'Nombre', key: 'NOMBRE' },
+            { label: 'Avalúo 2026', key: 'AVALUO 2026' }, // con espacio
+            { label: 'Área (㎡)', key: 'shap_Ar' }
         ]
     );
-
-    // ✅ Eliminado bloque viejo de capas inexistentes
 });
 
 // Configurar el Geocoder para buscar en el source 'predios_ssk' usando el campo 'codigo'
@@ -139,7 +145,8 @@ geocoder.on('result', (e) => {
             <strong>Código:</strong> ${properties.codigo || 'N/A'}<br>
             <strong>Destino:</strong> ${properties.DESTINO || 'N/A'}<br>
             <strong>Nombre:</strong> ${properties.NOMBRE || 'N/A'}<br>
-            <strong>Avalúo 2026:</strong> ${properties['AVALUO2026'] || 'N/A'}<br>
+            <strong>Avalúo 2026:</strong> ${properties['AVALUO 2026'] || 'N/A'}<br>
+            <strong>Área (㎡):</strong> ${Math.round(properties.shap_Ar || 0)}<br>
             <a style="font-size:9px;">&#9400 EffectiveActions</a>
         `;
 
@@ -149,4 +156,3 @@ geocoder.on('result', (e) => {
             .addTo(map);
     }
 });
-
