@@ -1,10 +1,9 @@
-// Usar token propio de Mapbox (NO TOCAR)
+// Usar token propio de Mapbox
 mapboxgl.accessToken = 'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
 
-// Mapa base (NO TOCAR token/style)
 const map = new mapboxgl.Map({
     style: 'mapbox://styles/mapbox/dark-v11',
-    center: [-76.62000, 7.88400], // queda igual (luego auto-centra al predial)
+    center: [-76.62000, 7.88400],
     zoom: 14,
     pitch: 0,
     bearing: 0,
@@ -14,150 +13,176 @@ const map = new mapboxgl.Map({
 
 let popup = new mapboxgl.Popup({
     closeButton: false,
-    closeOnClick: false
+    closeOnClick: false,
+    className: 'custom-popup'
 });
 
-// ✅ ÚNICO archivo predial (ruta mínima)
-const PREDIAL_FILE = 'PREDIOS_SESQUILE_URB.geojson';
-const PREDIAL_URL = `./src/data/${PREDIAL_FILE}`;
-
-// Función para agregar la capa predial (mínimo cambio)
-function addPredialLayer() {
-    fetch(PREDIAL_URL)
+// Función para agregar capas
+function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
+    fetch(`../src/data/${geojsonFile}`)
         .then((response) => response.json())
         .then((data) => {
-
-            // Source único
-            map.addSource('predios', {
+            map.addSource(sourceId, {
                 type: 'geojson',
                 data: data
             });
 
-            // Capa fill
             map.addLayer({
-                id: 'predios_fill',
-                source: 'predios',
+                id: layerId,
+                source: sourceId,
                 type: 'fill',
                 minzoom: 12,
                 paint: {
-                    'fill-color': '#2ec4b6',
-                    'fill-opacity': 0.45,
-                    'fill-outline-color': '#ffffff'
+                    'fill-color': color,
+                    'fill-opacity': 0.75,
+                    "fill-outline-color": '#ffffff'
                 }
             });
 
-            // Capa line
-            map.addLayer({
-                id: 'predios_line',
-                source: 'predios',
-                type: 'line',
-                minzoom: 12,
-                paint: {
-                    'line-color': '#ffffff',
-                    'line-width': 0.6
-                }
+            // Evento mousemove para mostrar popups
+            map.on('mousemove', layerId, (e) => {
+                const feature = e.features[0];
+                const popupContent = popupFields
+                    .map((field) => {
+                        let value = feature.properties[field.key];
+                        // Redondear el valor de 'area' sin decimales
+                        if (field.key === 'area') {
+                            value = Math.round(value);
+                        }
+                        return `<strong>${field.label}:</strong> ${value}`;
+                    })
+                    .join('<br>');
+
+                popup
+                    .setLngLat(e.lngLat)
+                    .setHTML(`${popupContent}<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`)
+                    .addTo(map);
             });
 
-            // ✅ Auto-centrar al dataset completo (Turf ya lo tienes en el HTML)
-            const bounds = turf.bbox(data); // [minX, minY, maxX, maxY]
-            map.fitBounds(bounds, { padding: 40 });
+            // Cambiar cursor al pasar sobre el layer
+            map.on('mouseenter', layerId, () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
 
-        })
-        .catch((error) => console.error('Error cargando predial:', error));
+            // Cerrar popup y restaurar cursor al salir
+            map.on('mouseleave', layerId, () => {
+                map.getCanvas().style.cursor = '';
+                popup.remove();
+            });
+        });
 }
 
-// Cargar capa cuando el mapa esté listo
-map.on('load', () => {
-    addPredialLayer();
+
+
+// Cargar capas en el orden definido
+map.on('style.load', () => {
+    const layers = map.getStyle().layers;
+    const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field']).id;
+
+    // Demoliciones parciales
+    addLayer('dem_parcial.geojson', 'dem_p', 'dem_parcial', '#F5B041', [
+        { label: 'Código', key: 'CODIGO_CON' },
+        { label: 'Área parcial (&#13217;)', key: 'area' }
+    ]);
+
+    // Demoliciones totales
+    addLayer('dem_total.geojson', 'dem_t', 'dem_total', '#E74C3C', [
+        { label: 'Código', key: 'CODIGO_CON' },
+        { label: 'Área demolida (&#13217;)', key: 'area' }
+    ]);
+
+    // Construcciones aumento
+    addLayer('cons_aumento.geojson', 'cons_a', 'c_aumento', '#F7DC6F', [
+        { label: 'Código', key: 'CODIGO_CON' },
+        { label: 'Incremento de área (&#13217;)', key: 'area' }
+    ]);
+
+    // Construcciones nuevas
+    addLayer('cons_nuevas.geojson', 'cons_n', 'c_nuevas', '#A569BD', [
+        { label: 'Código', key: 'PK_PREDIOS' },
+        { label: 'Área (&#13217;)', key: 'area' }
+    ]);
+
+    // Construcciones viejas
+    addLayer('cons_viejas.geojson', 'cons_v', 'c_viejas', '#AAB7B8', [
+        { label: 'Código', key: 'CODIGO_CON' },
+        { label: 'Número de pisos', key: 'NUMERO_PIS' },
+        { label: 'Área (&#13217;)', key: 'area' }
+    ]);
+
+    // Mover el layer "Construcciones viejas" al fondo
+    map.on('sourcedata', () => {
+        if (map.getLayer('c_viejas')) {
+            map.moveLayer('c_viejas', 'dem_parcial'); // Mover "c_viejas" debajo del primer layer agregado
+        }
+    });
 });
 
-
-// ✅ Geocoder: buscar por CUALQUIER atributo del predio
+// Configurar el Geocoder para buscar en el layer 'c_viejas'
 const geocoder = new MapboxGeocoder({
     accessToken: mapboxgl.accessToken,
     mapboxgl: mapboxgl,
-    marker: false,
-    placeholder: 'Buscar predio (cédula, nombre, NPN, etc.)',
-    localGeocoderOnly: true,
-
+    marker: false, // Evitar que agregue un marcador automáticamente
     localGeocoder: function (query) {
         const matchingFeatures = [];
-        const q = (query || '').toLowerCase().trim();
-        if (!q) return matchingFeatures;
 
-        // Buscar dentro del source 'predios'
-        const features = map.querySourceFeatures('predios');
+        // Consultar las features del layer 'c_viejas'
+        const features = map.querySourceFeatures('cons_v'); // 'cons_v' es el sourceId del layer 'c_viejas'
 
         features.forEach((feature) => {
-            const props = feature.properties || {};
+            const props = feature.properties;
 
-            // Buscar en TODOS los campos del predio
-            const hit = Object.values(props).some(v =>
-                v !== null && v !== undefined && v.toString().toLowerCase().includes(q)
-            );
-
-            if (hit) {
-                // Un nombre bonito para mostrar en resultados (si existe alguno)
-                const label =
-                    props.CEDULA_CATASTRAL ||
-                    props.CEDULA ||
-                    props.NPN ||
-                    props.MATRICULA ||
-                    props.PROPIETARIO ||
-                    'Predio';
-
+            // Buscar coincidencias en el campo CODIGO_CON (puedes cambiar el campo de búsqueda)
+            if (props.CODIGO_CON && props.CODIGO_CON.toLowerCase().includes(query.toLowerCase())) {
                 matchingFeatures.push({
                     type: 'Feature',
                     geometry: feature.geometry,
-                    properties: feature.properties,
-                    place_name: String(label),
-                    place_type: ['predio'],
-                    center: turf.centroid(feature).geometry.coordinates
+                    properties: props,
+                    place_name: `Código: ${props.CODIGO_CON}`, // Texto que se mostrará en el resultado
+                    text: props.CODIGO_CON,
+                    center: turf.centroid(feature).geometry.coordinates, // Centrar el mapa en el polígono
+                    place_type: ['place']
                 });
             }
         });
 
         return matchingFeatures;
-    }
+    },
+    placeholder: 'Buscar código catastral',
+    localGeocoderOnly: true // Limitar la búsqueda a datos locales
+
 });
 
 // Agregar el Geocoder al mapa
 map.addControl(geocoder, 'top-left');
+// Add zoom and rotation controls to the map.
 map.addControl(new mapboxgl.NavigationControl());
 
-// Al seleccionar resultado: zoom + popup + ficha
+// Hacer zoom al polígono seleccionado y actualizar la caja de información
 geocoder.on('result', (e) => {
     const result = e.result;
-    if (!result || !result.geometry) return;
 
-    // Zoom al polígono
-    const bounds = turf.bbox(result);
-    map.fitBounds(bounds, { padding: 40 });
+    if (result && result.geometry) {
+        const bounds = turf.bbox(result); // Obtener límites del polígono
+        map.fitBounds(bounds, { padding: 20 });
 
-    const properties = result.properties || {};
-    const coordinates = (result.center && result.center.length === 2)
-        ? result.center
-        : turf.centroid(result).geometry.coordinates;
+        // Mostrar el popup con la información del polígono
+        const coordinates = result.center;
+        const properties = result.properties;
 
-    // Mostrar propiedades en la caja derecha (todas)
-    const infoBox = document.querySelector('.info-content');
-    if (infoBox) {
-        const rows = Object.keys(properties)
-            .sort()
-            .map(k => `<div><strong>${k}:</strong> ${properties[k] ?? 'N/A'}</div>`)
-            .join('');
+        // Crear el contenido del popup (similar al mouseover)
+        const popupContent = `
+            <strong>Código:</strong> ${properties.CODIGO_CON || 'N/A'}<br>
+            <strong>Área (&#13217;):</strong> ${Math.round(properties.area || 0)}<br>
+            <strong>Altura: </strong> ${Math.round(properties.NUMERO_PIS || 0)} pisos<br>
+            <a style="font-size:9px;">&#9400 EffectiveActions</a>
+        `;
 
-        infoBox.innerHTML = rows || 'Sin atributos';
+        // Configurar el popup
+        popup
+            .setLngLat(coordinates)
+            .setHTML(popupContent)
+            .addTo(map);
     }
-
-    // Popup simple
-    const popupContent = `
-        <strong>Predio seleccionado</strong><br>
-        <a style="font-size:9px;">&#9400 EffectiveActions</a>
-    `;
-
-    popup
-        .setLngLat(coordinates)
-        .setHTML(popupContent)
-        .addTo(map);
 });
+
