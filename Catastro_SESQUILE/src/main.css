@@ -173,3 +173,26 @@ body {
 .mapboxgl-ctrl-geocoder {
     width: 300px !important;
 }
+/* ====== FIX LEYENDA: que se vean los cuadros ====== */
+.legend-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* espacio entre cuadro y texto */
+}
+
+.legend-color {
+  display: inline-block !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;   /* CLAVE para que no colapse */
+  min-height: 18px !important;  /* CLAVE para que no colapse */
+  border-radius: 3px;
+  border: 1px solid #fff;
+  flex: 0 0 18px; /* CLAVE para flex */
+}
+
+/* Colores de la leyenda */
+.legend-color.predios-municipales { background-color: #2ec4b6; } /* verde */
+.legend-color.predios-sin-info    { background-color: #ffb703; } /* naranja */
+.legend-color.predio-seleccionado { background-color: #ffff00; } /* seleccionado */
+
