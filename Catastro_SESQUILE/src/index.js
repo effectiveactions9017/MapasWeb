@@ -102,7 +102,7 @@ map.on('style.load', () => {
       { label: 'Nombre', key: 'NOMBRE' },
       { label: 'Documento', key: 'NUMERO_DOCUMENTO' },
       { label: 'Avalúo 2026', key: 'AVALUO 2026' },
-      { label: 'Área (㎡)', key: 'shape_Area' }
+      { label: 'Área (㎡)', key: 'Shape_Area' }
     ]
   );
 
@@ -244,7 +244,7 @@ geocoder.on('result', (e) => {
     <strong>Nombre:</strong> ${properties.NOMBRE || 'N/A'}<br>
     <strong>Documento:</strong> ${properties.NUMERO_DOCUMENTO || 'N/A'}<br>
     <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
-    <strong>Área (㎡):</strong> ${Math.round(properties.shape_Area || 0)}<br>
+    <strong>Área (㎡):</strong> ${Math.round(properties.Shape_Area || 0)}<br>
     ${listaCodigos}
     <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
   `;
