@@ -2,6 +2,9 @@
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
 // ✅ Búsqueda local por: codigo (cédula), NOMBRE, NUMERO_DOCUMENTO
 // ✅ Resalta 1 o varios predios (vinculados al mismo codigo o documento)
+// ✅ Colorea predios SIN NOMBRE en otro color
+// ✅ Usa PREDIOS_DATA para búsqueda completa (sin querySourceFeatures)
+// ✅ Evita errores "source/layer already exists"
 // =====================================================
 
 mapboxgl.accessToken =
@@ -23,42 +26,65 @@ let popup = new mapboxgl.Popup({
   className: 'custom-popup'
 });
 
-// ✅ Guardar dataset completo para búsquedas completas (evita fallos de querySourceFeatures)
+// ✅ Guardar dataset completo para búsquedas completas
 let PREDIOS_DATA = null;
 
-function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
+// =====================================================
+// Función para agregar capa GeoJSON
+// =====================================================
+function addLayer(geojsonFile, sourceId, layerId, baseColor, popupFields) {
   fetch(`../src/data/${geojsonFile}`)
     .then((response) => response.json())
     .then((data) => {
-
+      // Guardar dataset completo
       if (sourceId === 'predios_ssk') PREDIOS_DATA = data;
 
-      map.addSource(sourceId, {
-        type: 'geojson',
-        data: data
-      });
+      // ✅ Source seguro (no revienta si ya existe)
+      if (map.getSource(sourceId)) {
+        map.getSource(sourceId).setData(data);
+      } else {
+        map.addSource(sourceId, { type: 'geojson', data: data });
+      }
 
-      map.addLayer({
-        id: layerId,
-        source: sourceId,
-        type: 'fill',
-        minzoom: 12,
-        paint: {
-          'fill-color': color,
-          'fill-opacity': 0.75,
-          'fill-outline-color': '#ffffff'
-        }
-      });
+      // ✅ Layer seguro (no revienta si ya existe)
+      if (!map.getLayer(layerId)) {
+        map.addLayer({
+          id: layerId,
+          source: sourceId,
+          type: 'fill',
+          minzoom: 12,
+          paint: {
+            // ✅ Color condicional: sin NOMBRE = naranja, con NOMBRE = baseColor
+            'fill-color': [
+              'case',
+              ['==', ['coalesce', ['get', 'NOMBRE'], ''], ''],
+              '#ffb703',     // 🟠 sin nombre
+              baseColor      // 🟢 con nombre (el que le pases)
+            ],
+            'fill-opacity': 0.75,
+            'fill-outline-color': '#ffffff'
+          }
+        });
+      }
+
+      // -------------------------------------------------
+      // Eventos de popup (evitar duplicarlos si recargas)
+      // -------------------------------------------------
+      // Para evitar duplicados, removemos listeners previos si existían
+      try { map.off('mousemove', layerId); } catch (e) {}
+      try { map.off('mouseenter', layerId); } catch (e) {}
+      try { map.off('mouseleave', layerId); } catch (e) {}
 
       map.on('mousemove', layerId, (e) => {
-        const feature = e.features[0];
+        const feature = e.features && e.features[0];
+        if (!feature) return;
 
         const popupContent = popupFields
           .map((field) => {
-            let value = feature.properties[field.key];
+            let value = feature.properties?.[field.key];
 
-            // ✅ área (m²)
-            if (field.key === 'shape_Area' && value !== null && value !== undefined) {
+            // ✅ área (m²) - tu campo es Shape_Area (OJO mayúscula)
+            if (field.key === 'Shape_Area' && value !== null && value !== undefined) {
               value = Math.round(Number(value));
             }
 
@@ -90,12 +116,15 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
     .catch((err) => console.error('Error cargando GeoJSON:', err));
 }
 
+// =====================================================
+// Cargar capa predial + capas de resaltado
+// =====================================================
 map.on('style.load', () => {
   addLayer(
     'PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson',
     'predios_ssk',
     'predios_ssk_layer',
-    '#2ec4b6',
+    '#2ec4b6', // color base (con nombre)
     [
       { label: 'Código', key: 'codigo' },
       { label: 'Destino', key: 'DESTINO' },
@@ -106,36 +135,49 @@ map.on('style.load', () => {
     ]
   );
 
-  map.addSource('predios_highlight', {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: [] }
-  });
+  // ✅ Fuente + capas de resaltado
+  if (!map.getSource('predios_highlight')) {
+    map.addSource('predios_highlight', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+  }
 
-  map.addLayer({
-    id: 'predios_highlight_fill',
-    type: 'fill',
-    source: 'predios_highlight',
-    paint: { 'fill-color': '#ffff00', 'fill-opacity': 0.30 }
-  });
+  if (!map.getLayer('predios_highlight_fill')) {
+    map.addLayer({
+      id: 'predios_highlight_fill',
+      type: 'fill',
+      source: 'predios_highlight',
+      paint: { 'fill-color': '#ffff00', 'fill-opacity': 0.30 }
+    });
+  }
 
-  map.addLayer({
-    id: 'predios_highlight_line',
-    type: 'line',
-    source: 'predios_highlight',
-    paint: { 'line-color': '#ffff00', 'line-width': 4 }
-  });
+  if (!map.getLayer('predios_highlight_line')) {
+    map.addLayer({
+      id: 'predios_highlight_line',
+      type: 'line',
+      source: 'predios_highlight',
+      paint: { 'line-color': '#ffff00', 'line-width': 4 }
+    });
+  }
 });
 
+// =====================================================
+// Geocoder local: busca por codigo, NOMBRE, NUMERO_DOCUMENTO
+// (usando PREDIOS_DATA completo)
+// =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
   mapboxgl: mapboxgl,
   marker: false,
+  localGeocoderOnly: true,
+  placeholder: 'Buscar por código, nombre o documento',
   localGeocoder: function (query) {
     const matchingFeatures = [];
     const q = (query || '').toString().toLowerCase().trim();
     if (!q) return matchingFeatures;
 
-    const features = (PREDIOS_DATA && PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
+    const features = (PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features)) ? PREDIOS_DATA.features : [];
     if (!features.length) return matchingFeatures;
 
     features.forEach((feature) => {
@@ -179,28 +221,31 @@ const geocoder = new MapboxGeocoder({
     });
 
     return matchingFeatures.slice(0, 10);
-  },
-  placeholder: 'Buscar por código, nombre o documento',
-  localGeocoderOnly: true
+  }
 });
 
+// Agregar controles al mapa
 map.addControl(geocoder, 'top-left');
 map.addControl(new mapboxgl.NavigationControl());
 
+// =====================================================
+// Al seleccionar resultado: zoom + resaltar 1 o varios predios vinculados
+// =====================================================
 geocoder.on('result', (e) => {
   const result = e.result;
   if (!result || !result.geometry) return;
 
   const properties = result.properties || {};
-  const matchField = properties.__matchField;
+  const matchField = properties.__matchField; // 'codigo' | 'NUMERO_DOCUMENTO' | 'NOMBRE'
   const matchValue = (properties.__matchValue ?? '').toString().trim();
 
   const norm = (v) => (v ?? '').toString().toLowerCase().replace(/\s+/g, '').trim();
 
-  const features = (PREDIOS_DATA && PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
+  const features = (PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features)) ? PREDIOS_DATA.features : [];
 
   let toHighlight = [];
 
+  // ✅ Agrupar y resaltar todos los que compartan el mismo codigo o NUMERO_DOCUMENTO
   if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
     const mv = norm(matchValue);
 
@@ -211,15 +256,19 @@ geocoder.on('result', (e) => {
     });
   }
 
+  // Fallback: si no encontró grupo, resalta el seleccionado
   if (!toHighlight.length) toHighlight = [result];
 
+  // Pintar resaltado
   const fc = { type: 'FeatureCollection', features: toHighlight };
   const hlSource = map.getSource('predios_highlight');
   if (hlSource) hlSource.setData(fc);
 
+  // Zoom al conjunto
   const bounds = turf.bbox(fc);
   map.fitBounds(bounds, { padding: 40 });
 
+  // Lista de códigos (para saber cuáles son)
   const codigos = toHighlight
     .map((f) => (f.properties?.codigo ?? '').toString().trim())
     .filter(Boolean);
