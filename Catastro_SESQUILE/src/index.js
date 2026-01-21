@@ -104,8 +104,8 @@ map.on('style.load', () => {
       { label: 'Destino', key: 'DESTINO' },
       { label: 'Nombre', key: 'NOMBRE' },
       { label: 'Documento', key: 'NUMERO_DOCUMENTO' },
-      { label: 'Avalúo 2026', key: 'AVALUO2026' },
-      { label: 'Área (㎡)', key: 'shap_Ar' }
+      { label: 'Avalúo 2026', key: 'AVALUO 2026' },
+      { label: 'Área (㎡)', key: 'shape_Area' }
     ]
   );
 
@@ -282,8 +282,8 @@ geocoder.on('result', (e) => {
   const avaluoTxt =
     properties.AVALUO2026 !== null && properties.AVALUO2026 !== undefined && properties.AVALUO2026 !== ''
       ? (() => {
-          const n = Number(properties.AVALUO2026);
-          return isNaN(n) ? properties.AVALUO2026 : n.toLocaleString('es-CO');
+          const n = Number(properties.AVALUO 2026);
+          return isNaN(n) ? properties.AVALUO 2026 : n.toLocaleString('es-CO');
         })()
       : 'N/A';
 
@@ -293,7 +293,7 @@ geocoder.on('result', (e) => {
     <strong>Nombre:</strong> ${properties.NOMBRE || 'N/A'}<br>
     <strong>Documento:</strong> ${properties.NUMERO_DOCUMENTO || 'N/A'}<br>
     <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
-    <strong>Área (㎡):</strong> ${Math.round(properties.shap_Ar || 0)}<br>
+    <strong>Área (㎡):</strong> ${Math.round(properties.shape_Area || 0)}<br>
     ${listaCodigos}
     <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
   `;
