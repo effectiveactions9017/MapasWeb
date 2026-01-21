@@ -2,20 +2,23 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Catastro Sesquilé - Predial</title>
+    <meta charset="utf-8">
+    <title>Pre-barrido masivo catastral</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
-    <!-- Mapbox GL -->
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <!-- Mapbox CSS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
-    <!-- Mapbox Geocoder -->
-    <link rel="stylesheet"
-        href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
-        type="text/css" />
+    <!-- Geocoder -->
     <script
-        src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+    src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"
+  ></script>
+  <link
+    rel="stylesheet"
+    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
+  />
+
 
     <!-- Turf.js (centroid) -->
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js"></script>
@@ -26,7 +29,7 @@
     <script async defer src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"></script>
 
     <!-- CSS personalizado -->
-    <link rel="stylesheet" href="./src/main.css" />
+    <link rel="stylesheet" href="../src/main.css" />
 </head>
 
 <body>
@@ -35,26 +38,27 @@
 
     <!-- Leyenda -->
     <div class="legend-container">
-        <div class="legend-title">Catastro Sesquilé<br>Predios Urbanos</div>
-
-        <div class="legend-item">
-            <div class="legend-color" style="background:#2ec4b6;"></div>
-            <div class="legend-text">Predios</div>
-        </div>
-
-        <div class="footer">
-            <a style="font-size:9px; color: #00bcd4;">&#9400 EffectiveActions</a>
-        </div>
+        <div class="legend-title">Pre-barrido catastral<br>Construcciones</div>
+        <ul class="legend-list">
+            <li><span class="legend-color c_viejas"></span> Preexistente</li>
+            <li><span class="legend-color c_nuevas"></span> Nueva</li>
+            <li><span class="legend-color c_aumento"></span> Aumento de área</li>
+            <li><span class="legend-color dem_p"></span> Demolición parcial</li>
+            <li><span class="legend-color dem_t"></span> Demolición total</li>
+        </ul>
+        <a style="font-size:9px; color: #00bcd4;">&#9400 EffectiveActions</a>
     </div>
 
     <!-- Caja de información -->
     <div class="info-box">
-        <h3>Información del predio</h3>
-        <div class="info-content">Busca un predio para ver detalles</div>
+        <h3>Información de la construcción</h3>
+
+        <div class="info-content">Busca una construcción para ver detalles</div>
+      </div>
     </div>
 
     <!-- Script JavaScript -->
-    <script src="./src/index.js"></script>
+    <script src="../src/index.js"></script>
 </body>
 
 </html>
