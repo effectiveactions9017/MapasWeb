@@ -2,100 +2,11 @@
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
 // ✅ Búsqueda 100% completa (NO depende de querySourceFeatures)
 // ✅ Busca por: codigo (cédula), NOMBRE, NUMERO_DOCUMENTO
-// ✅ Autocompletar por NOMBRE (opciones únicas + conteo)
-// ✅ Resalta 1 o varios predios (mismo codigo / documento / NOMBRE exacto)
+// ✅ Autocomplete por NOMBRE (opciones únicas + conteo)
+// ✅ Resalta 1 o varios predios vinculados (mismo codigo / documento / nombre exacto)
 // =====================================================
 
-// Usar token propio de Mapbox
-mapboxgl.accessToken =
-  'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
-
-const map = new mapboxgl.Map({
-  style: 'mapbox://styles/mapbox/dark-v11',
-  center: [-73.79724, 5.04463], // Sesquilé
-  zoom: 15,
-  pitch: 0,
-  bearing: 0,
-  container: 'map',
-  antialias: true
-});
-
-let popup = new mapboxgl.Popup({
-  closeButton: false,
-  closeOnClick: false,
-  className: 'custom-popup'
-});
-
-// ✅ Guardamos TODO el GeoJSON aquí para búsquedas completas
-let PREDIOS_DATA = null;
-
-// =====================================================
-// Helpers (normalización robusta)
-// =====================================================
-function normText(v) {
-  return (v ?? '')
-    .toString()
-    .toLowerCase()
-    .normalize('NFD') // separa tildes
-    .replace(/[\u0300-\u036f]/g, '') // quita tildes
-    .replace(/\s+/g, ' ') // espacios múltiples
-    .trim();
-}
-
-function onlyDigits(v) {
-  return (v ?? '').toString().replace(/\D/g, '').trim();
-}
-
-// =====================================================
-// Función para agregar capas (GeoJSON)
-// =====================================================
-function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
-  fetch(`../src/data/${geojsonFile}`)
-    .then((response) => response.json())
-    .then((data) => {
-      // ✅ Guardar dataset completo en memoria (para búsquedas 100% completas)
-      if (sourceId === 'predios_ssk') {
-        PREDIOS_DATA = data; // FeatureCollection completo
-      }
-
-      map.addSource(sourceId, {
-        type: 'geojson',
-        data: data
-      });
-
-      map.addLayer({
-        id: layerId,
-        source: sourceId,
-        type: 'fill',
-        minzoom: 12,
-        paint: {
-          'fill-color': color,
-          'fill-opacity': 0.75,
-          'fill-outline-color': '#ffffff'
-       I’ve reviewed the JavaScript you’re using to load the GeoJSON layer, show popups, and perform local search using `MapboxGeocoder`. To fix the issue where some records exist in the dataset but don’t appear in your search results, we need to stop relying on `map.querySourceFeatures()` (which only reliably returns features currently “loaded/rendered” in memory).
-
-✅ **Fix:** store the full GeoJSON in a global variable when it loads, and run search + highlight using that full dataset.
-
-Below is the **complete corrected `main.js`** with:
-- Search by **`codigo`**, **`NOMBRE`**, **`NUMERO_DOCUMENTO`**
-- Autocomplete for names (unique suggestions with count)
-- Highlighting **1 or many polygons** (e.g., if 4 predios share the same `NUMERO_DOCUMENTO`, all 4 are highlighted)
-- Robust matching (removes accents, normalizes spaces, handles numeric document matching)
-
----
-
-## ✅ CÓDIGO COMPLETO CORREGIDO (main.js)
-
-```js
-// =====================================================
-// ✅ Visor Predial Sesquilé - Mapbox GL JS
-// ✅ Búsqueda 100% completa (NO depende de querySourceFeatures)
-// ✅ Busca por: codigo (cédula), NOMBRE, NUMERO_DOCUMENTO
-// ✅ Autocompletar por NOMBRE (opciones únicas + conteo)
-// ✅ Resalta 1 o varios predios vinculados (mismo código/documento/nombre exacto)
-// =====================================================
-
-// Usar token propio de Mapbox
+// Token Mapbox
 mapboxgl.accessToken =
   'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
 
@@ -141,48 +52,54 @@ function formatNumberCO(v) {
 }
 
 // =====================================================
-// Función para agregar capas (GeoJSON)
+// Función para agregar capa GeoJSON (con protecciones)
 // =====================================================
 function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
   fetch(`../src/data/${geojsonFile}`)
-    .then((response) => response.json())
+    .then((r) => r.json())
     .then((data) => {
-      // ✅ Guardar dataset completo en memoria
-      if (sourceId === 'predios_ssk') {
-        PREDIOS_DATA = data; // FeatureCollection completo
+      // Guardar el dataset completo en memoria
+      if (sourceId === 'predios_ssk') PREDIOS_DATA = data;
+
+      // Source: si ya existe, solo actualiza
+      if (map.getSource(sourceId)) {
+        map.getSource(sourceId).setData(data);
+      } else {
+        map.addSource(sourceId, { type: 'geojson', data });
       }
 
-      map.addSource(sourceId, {
-        type: 'geojson',
-        data: data
-      });
+      // Layer: si ya existe, no recrear
+      if (!map.getLayer(layerId)) {
+        map.addLayer({
+          id: layerId,
+          source: sourceId,
+          type: 'fill',
+          minzoom: 12,
+          paint: {
+            'fill-color': color,
+            'fill-opacity': 0.75,
+            'fill-outline-color': '#ffffff'
+          }
+        });
+      }
 
-      map.addLayer({
-        id: layerId,
-        source: sourceId,
-        type: 'fill',
-        minzoom: 12,
-        paint: {
-          'fill-color': color,
-          'fill-opacity': 0.75,
-          'fill-outline-color': '#ffffff'
-        }
-      });
+      // Evitar duplicar eventos si recargas
+      map.off('mousemove', layerId, onMovePopup);
+      map.off('mouseenter', layerId, onEnterCursor);
+      map.off('mouseleave', layerId, onLeavePopup);
 
-      // Popup al mover el mouse por encima
-      map.on('mousemove', layerId, (e) => {
-        const feature = e.features[0];
+      function onMovePopup(e) {
+        const feature = e.features && e.features[0];
+        if (!feature) return;
 
         const popupContent = popupFields
           .map((field) => {
-            let value = feature.properties[field.key];
+            let value = feature.properties?.[field.key];
 
-            // Redondear área sin decimales
             if (field.key === 'shap_Ar' && value !== null && value !== undefined) {
               value = Math.round(Number(value));
             }
 
-            // Formatear avalúo con miles
             if (field.key === 'AVALUO2026' && value !== null && value !== undefined && value !== '') {
               value = formatNumberCO(value);
             }
@@ -195,25 +112,65 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
           .setLngLat(e.lngLat)
           .setHTML(`${popupContent}<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`)
           .addTo(map);
-      });
+      }
 
-      map.on('mouseenter', layerId, () => {
+      function onEnterCursor() {
         map.getCanvas().style.cursor = 'pointer';
-      });
+      }
 
-      map.on('mouseleave', layerId, () => {
+      function onLeavePopup() {
         map.getCanvas().style.cursor = '';
         popup.remove();
-      });
+      }
+
+      map.on('mousemove', layerId, onMovePopup);
+      map.on('mouseenter', layerId, onEnterCursor);
+      map.on('mouseleave', layerId, onLeavePopup);
     })
     .catch((err) => console.error('Error cargando GeoJSON:', err));
 }
 
 // =====================================================
-// Cargar capa predial + capas de resaltado
+// Crear/asegurar capas de resaltado (highlight)
 // =====================================================
-map.on('style.load', () => {
-  // Capa predial
+function ensureHighlightLayers() {
+  if (!map.getSource('predios_highlight')) {
+    map.addSource('predios_highlight', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+  }
+
+  if (!map.getLayer('predios_highlight_fill')) {
+    map.addLayer({
+      id: 'predios_highlight_fill',
+      type: 'fill',
+      source: 'predios_highlight',
+      paint: {
+        'fill-color': '#ffff00',
+        'fill-opacity': 0.30
+      }
+    });
+  }
+
+  if (!map.getLayer('predios_highlight_line')) {
+    map.addLayer({
+      id: 'predios_highlight_line',
+      type: 'line',
+      source: 'predios_highlight',
+      paint: {
+        'line-color': '#ffff00',
+        'line-width': 4
+      }
+    });
+  }
+}
+
+// =====================================================
+// Al cargar el mapa (NO style.load): crear todo
+// =====================================================
+map.on('load', () => {
+  // 1) Cargar capa predial
   addLayer(
     'PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson',
     'predios_ssk',
@@ -229,73 +186,50 @@ map.on('style.load', () => {
     ]
   );
 
-  // ✅ Fuente + capas de resaltado
-  map.addSource('predios_highlight', {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: [] }
-  });
+  // 2) Capas de resaltado
+  ensureHighlightLayers();
 
-  // Relleno resaltado
-  map.addLayer({
-    id: 'predios_highlight_fill',
-    type: 'fill',
-    source: 'predios_highlight',
-    paint: {
-      'fill-color': '#ffff00',
-      'fill-opacity': 0.30
-    }
-  });
-
-  // Borde resaltado
-  map.addLayer({
-    id: 'predios_highlight_line',
-    type: 'line',
-    source: 'predios_highlight',
-    paint: {
-      'line-color': '#ffff00',
-      'line-width': 4
-    }
-  });
+  // 3) Controles
+  map.addControl(geocoder, 'top-left');
+  map.addControl(new mapboxgl.NavigationControl());
 });
 
 // =====================================================
-// Geocoder local (usa PREDIOS_DATA completo)
+// Geocoder local (busca en PREDIOS_DATA completo)
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
   mapboxgl: mapboxgl,
   marker: false,
+  localGeocoderOnly: true,
+  placeholder: 'Buscar por código, nombre o documento',
 
   localGeocoder: function (query) {
     const qRaw = (query || '').toString().trim();
-    const q = normText(qRaw);
-    if (!q) return [];
+    if (!qRaw) return [];
 
-    // Esperar dataset completo
     if (!PREDIOS_DATA || !Array.isArray(PREDIOS_DATA.features)) return [];
+    const feats = PREDIOS_DATA.features;
 
-    const features = PREDIOS_DATA.features;
-
-    // Si parece texto -> sugerencias únicas de NOMBRE
+    const qNorm = normText(qRaw);
     const qDigits = onlyDigits(qRaw);
-    const looksNumeric = qDigits.length >= 4; // umbral para doc/código
-    const isTextQuery = !looksNumeric;
 
-    // -------------------------------------------------
-    // 1) AUTOCOMPLETE POR NOMBRE (opciones únicas + conteo)
-    // -------------------------------------------------
-    if (isTextQuery) {
+    // Si tiene suficientes dígitos, asumimos búsqueda por documento/código
+    const looksNumeric = qDigits.length >= 4;
+
+    // -----------------------------
+    // A) AUTOCOMPLETE POR NOMBRE
+    // -----------------------------
+    if (!looksNumeric) {
       const groups = new Map(); // nombreNorm -> { nombreOriginal, count, feature }
 
-      for (const f of features) {
+      for (const f of feats) {
         const p = f.properties || {};
         const nombre = (p.NOMBRE ?? '').toString().trim();
         if (!nombre) continue;
 
         const nombreN = normText(nombre);
-
-        // Match tipo contains
-        if (!nombreN.includes(q)) continue;
+        if (!nombreN.includes(qNorm)) continue;
 
         if (!groups.has(nombreN)) {
           groups.set(nombreN, { nombreOriginal: nombre, count: 1, feature: f });
@@ -326,76 +260,71 @@ const geocoder = new MapboxGeocoder({
         });
     }
 
-    // -------------------------------------------------
-    // 2) BÚSQUEDA POR CÓDIGO / DOCUMENTO (NUMÉRICO)
-    // -------------------------------------------------
+    // -----------------------------
+    // B) BÚSQUEDA POR CÓDIGO / DOCUMENTO
+    // -----------------------------
     const out = [];
 
-    for (const f of features) {
+    for (const f of feats) {
       const p = f.properties || {};
 
-      const codigo = (p.codigo ?? '').toString().trim();
-      const documento = (p.NUMERO_DOCUMENTO ?? '').toString().trim();
-      const nombre = (p.NOMBRE ?? '').toString().trim();
+      const codigoRaw = (p.codigo ?? '').toString().trim();
+      const docRaw = (p.NUMERO_DOCUMENTO ?? '').toString().trim();
+      const nombreRaw = (p.NOMBRE ?? '').toString().trim();
 
-      const codigoN = normText(codigo);
-      const docDigits = onlyDigits(documento);
+      const codigoN = normText(codigoRaw);
+      const docD = onlyDigits(docRaw);
 
-      // match: si el query numérico está contenido
-      const matchCodigo = codigoN.includes(q);
-      const matchDoc = docDigits.includes(qDigits);
+      // Match por contiene (código) y por dígitos (documento)
+      const matchCodigo = codigoN.includes(qNorm);
+      const matchDoc = qDigits && docD.includes(qDigits);
 
-      if (matchCodigo || matchDoc) {
-        const centro = turf.centroid(f).geometry.coordinates;
+      if (!matchCodigo && !matchDoc) continue;
 
-        const matchField = matchCodigo ? 'codigo' : 'NUMERO_DOCUMENTO';
-        const matchValue = matchCodigo ? codigo : documento;
+      const centro = turf.centroid(f).geometry.coordinates;
 
-        out.push({
-          type: 'Feature',
-          geometry: f.geometry,
-          properties: { ...p, __matchField: matchField, __matchValue: matchValue },
-          place_name: `Código: ${codigo || 'N/A'} | Nombre: ${nombre || 'N/A'} | Doc: ${documento || 'N/A'}`,
-          text: codigo || documento || 'Resultado',
-          center: centro,
-          place_type: ['place']
-        });
-      }
+      const matchField = matchCodigo ? 'codigo' : 'NUMERO_DOCUMENTO';
+      const matchValue = matchCodigo ? codigoRaw : docRaw;
+
+      out.push({
+        type: 'Feature',
+        geometry: f.geometry,
+        properties: { ...p, __matchField: matchField, __matchValue: matchValue },
+        place_name: `Código: ${codigoRaw || 'N/A'} | Nombre: ${nombreRaw || 'N/A'} | Doc: ${docRaw || 'N/A'}`,
+        text: codigoRaw || docRaw || 'Resultado',
+        center: centro,
+        place_type: ['place']
+      });
     }
 
     return out.slice(0, 10);
-  },
-
-  placeholder: 'Buscar por código, nombre o documento',
-  localGeocoderOnly: true
+  }
 });
 
-// Controles
-map.addControl(geocoder, 'top-left');
-map.addControl(new mapboxgl.NavigationControl());
-
 // =====================================================
-// Al seleccionar: resaltar 1 o varios predios (grupo)
+// Al seleccionar resultado: resaltar grupo + zoom + popup
 // =====================================================
 geocoder.on('result', (e) => {
   const result = e.result;
   if (!result || !result.geometry) return;
 
   if (!PREDIOS_DATA || !Array.isArray(PREDIOS_DATA.features)) return;
-  const features = PREDIOS_DATA.features;
+  const feats = PREDIOS_DATA.features;
+
+  ensureHighlightLayers();
 
   const props = result.properties || {};
   const matchField = props.__matchField;
   const matchValue = (props.__matchValue ?? '').toString().trim();
 
-  // Si no hay match metadata, resaltar solo el seleccionado
+  // Elegir qué resaltar
   let toHighlight = [];
 
   if (matchField && matchValue) {
     const mvText = normText(matchValue);
     const mvDigits = onlyDigits(matchValue);
 
-    toHighlight = features.filter((f) => {
+    toHighlight = feats.filter((f) => {
       const p = f.properties || {};
       if (matchField === 'codigo') return normText(p.codigo) === mvText;
       if (matchField === 'NUMERO_DOCUMENTO') return onlyDigits(p.NUMERO_DOCUMENTO) === mvDigits;
@@ -407,15 +336,13 @@ geocoder.on('result', (e) => {
   if (!toHighlight.length) toHighlight = [result];
 
   const fc = { type: 'FeatureCollection', features: toHighlight };
-
-  const hl = map.getSource('predios_highlight');
-  if (hl) hl.setData(fc);
+  map.getSource('predios_highlight').setData(fc);
 
   // Zoom al conjunto
   const bounds = turf.bbox(fc);
   map.fitBounds(bounds, { padding: 40 });
 
-  // Lista de códigos para saber cuáles son
+  // Lista de códigos para ver cuáles son
   const codigos = toHighlight
     .map((f) => (f.properties?.codigo ?? '').toString().trim())
     .filter(Boolean);
