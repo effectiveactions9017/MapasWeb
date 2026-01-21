@@ -11,7 +11,9 @@ body {
     width: 100%;
 }
 
-/* Leyenda */
+/* =========================
+   LEYENDA
+   ========================= */
 .legend-container {
     position: absolute;
     bottom: 25px;
@@ -22,7 +24,7 @@ body {
     border-radius: 8px;
     width: 200px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-    color: white; /* Color blanco para texto */
+    color: white;
 }
 
 .legend-title {
@@ -30,7 +32,7 @@ body {
     font-weight: 600;
     margin-bottom: 10px;
     text-align: left;
-    color: white; /* Color blanco */
+    color: white;
 }
 
 .legend-list {
@@ -44,7 +46,7 @@ body {
     align-items: center;
     margin-bottom: 8px;
     font-size: 0.9rem;
-    color: white; /* Color blanco */
+    color: white;
 }
 
 .legend-color {
@@ -53,9 +55,31 @@ body {
     height: 20px;
     margin-right: 10px;
     border-radius: 3px;
+    border: 1px solid #ffffff;
 }
 
-/* Colores de la leyenda */
+/* =========================
+   COLORES DE LA LEYENDA
+   ========================= */
+
+/* 🟢 Predios municipales (CON nombre) */
+.legend-color.predios-municipales {
+    background-color: #2ec4b6;
+}
+
+/* 🟠 Predios sin información R1 (SIN nombre) */
+.legend-color.predios-sin-info {
+    background-color: #ffb703;
+}
+
+/* 🟡 Predio seleccionado (resaltado) */
+.legend-color.predio-seleccionado {
+    background-color: #ffff00;
+}
+
+/* =========================
+   CLASES ANTIGUAS (SE CONSERVAN)
+   ========================= */
 .c_viejas {
     background-color: #AAB7B8;
 }
@@ -76,7 +100,9 @@ body {
     background-color: #E74C3C;
 }
 
-/** Caja de información */
+/* =========================
+   CAJA DE INFORMACIÓN
+   ========================= */
 .info-box {
     left: 10px;
     top: 310px;
@@ -90,17 +116,18 @@ body {
     z-index: 10;
     width: 200px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-    color: white; /* Color blanco para texto */
     display: none;
-  }
-  
-  .info-box h3 {
+}
+
+.info-box h3 {
     margin: 0 0 10px 0;
     font-weight: bold;
     font-size: 14px;
-  }
+}
 
-/* CSS para el popup personalizado */
+/* =========================
+   POPUP PERSONALIZADO
+   ========================= */
 .custom-popup .mapboxgl-popup-content {
     font-size: 0.8rem;
     padding: 10px 15px;
@@ -111,14 +138,15 @@ body {
 }
 
 .mapboxgl-popup-content a {
-    color: #00bcd4; /* Color de los enlaces */
+    color: #00bcd4;
     text-decoration: none;
 }
 
 .mapboxgl-popup-content a:hover {
-    text-decoration: underline; /* Subrayado al pasar el cursor */
-} 
+    text-decoration: underline;
+}
 
+/* Flechas del popup */
 .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
@@ -139,6 +167,9 @@ body {
     border-left-color: rgba(0, 0, 0, 0.8);
 }
 
+/* =========================
+   GEOCODER
+   ========================= */
 .mapboxgl-ctrl-geocoder {
-    width: 300px!important;
+    width: 300px !important;
 }
