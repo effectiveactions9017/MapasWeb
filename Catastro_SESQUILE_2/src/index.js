@@ -1,188 +1,256 @@
-// Usar token propio de Mapbox
-mapboxgl.accessToken = 'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
+// =====================================================
+// ✅ Visor Predial Sesquilé - Mapbox GL JS
+// ✅ Búsqueda local por: codigo (cédula), NOMBRE, NUMERO_DOCUMENTO
+// ✅ Resalta 1 o varios predios (vinculados al mismo codigo o documento)
+// =====================================================
+
+mapboxgl.accessToken =
+  'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
 
 const map = new mapboxgl.Map({
-    style: 'mapbox://styles/mapbox/dark-v11',
-    center: [-76.62000, 7.88400],
-    zoom: 14,
-    pitch: 0,
-    bearing: 0,
-    container: 'map',
-    antialias: true
+  style: 'mapbox://styles/mapbox/dark-v11',
+  center: [-73.79724, 5.04463],
+  zoom: 15,
+  pitch: 0,
+  bearing: 0,
+  container: 'map',
+  antialias: true
 });
 
 let popup = new mapboxgl.Popup({
-    closeButton: false,
-    closeOnClick: false,
-    className: 'custom-popup'
+  closeButton: false,
+  closeOnClick: false,
+  className: 'custom-popup'
 });
 
-// Función para agregar capas
+// ✅ Guardar dataset completo para búsquedas completas (evita fallos de querySourceFeatures)
+let PREDIOS_DATA = null;
+
 function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
-    fetch(`../src/data/${geojsonFile}`)
-        .then((response) => response.json())
-        .then((data) => {
-            map.addSource(sourceId, {
-                type: 'geojson',
-                data: data
-            });
+  fetch(`../src/data/${geojsonFile}`)
+    .then((response) => response.json())
+    .then((data) => {
 
-            map.addLayer({
-                id: layerId,
-                source: sourceId,
-                type: 'fill',
-                minzoom: 12,
-                paint: {
-                    'fill-color': color,
-                    'fill-opacity': 0.75,
-                    "fill-outline-color": '#ffffff'
-                }
-            });
+      if (sourceId === 'predios_ssk') PREDIOS_DATA = data;
 
-            // Evento mousemove para mostrar popups
-            map.on('mousemove', layerId, (e) => {
-                const feature = e.features[0];
-                const popupContent = popupFields
-                    .map((field) => {
-                        let value = feature.properties[field.key];
-                        // Redondear el valor de 'area' sin decimales
-                        if (field.key === 'area') {
-                            value = Math.round(value);
-                        }
-                        return `<strong>${field.label}:</strong> ${value}`;
-                    })
-                    .join('<br>');
+      map.addSource(sourceId, {
+        type: 'geojson',
+        data: data
+      });
 
-                popup
-                    .setLngLat(e.lngLat)
-                    .setHTML(`${popupContent}<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`)
-                    .addTo(map);
-            });
+      map.addLayer({
+        id: layerId,
+        source: sourceId,
+        type: 'fill',
+        minzoom: 12,
+        paint: {
+          'fill-color': color,
+          'fill-opacity': 0.75,
+          'fill-outline-color': '#ffffff'
+        }
+      });
 
-            // Cambiar cursor al pasar sobre el layer
-            map.on('mouseenter', layerId, () => {
-                map.getCanvas().style.cursor = 'pointer';
-            });
+      map.on('mousemove', layerId, (e) => {
+        const feature = e.features[0];
 
-            // Cerrar popup y restaurar cursor al salir
-            map.on('mouseleave', layerId, () => {
-                map.getCanvas().style.cursor = '';
-                popup.remove();
-            });
-        });
+        const popupContent = popupFields
+          .map((field) => {
+            let value = feature.properties[field.key];
+
+            // ✅ área (m²)
+            if (field.key === 'shape_Area' && value !== null && value !== undefined) {
+              value = Math.round(Number(value));
+            }
+
+            // ✅ avalúo (campo con espacio)
+            if (field.key === 'AVALUO 2026' && value !== null && value !== undefined && value !== '') {
+              const n = Number(value);
+              value = isNaN(n) ? value : n.toLocaleString('es-CO');
+            }
+
+            return `<strong>${field.label}:</strong> ${value ?? 'N/A'}`;
+          })
+          .join('<br>');
+
+        popup
+          .setLngLat(e.lngLat)
+          .setHTML(`${popupContent}<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`)
+          .addTo(map);
+      });
+
+      map.on('mouseenter', layerId, () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', layerId, () => {
+        map.getCanvas().style.cursor = '';
+        popup.remove();
+      });
+    })
+    .catch((err) => console.error('Error cargando GeoJSON:', err));
 }
 
-
-
-// Cargar capas en el orden definido
 map.on('style.load', () => {
-    const layers = map.getStyle().layers;
-    const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field']).id;
+  addLayer(
+    'PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson',
+    'predios_ssk',
+    'predios_ssk_layer',
+    '#2ec4b6',
+    [
+      { label: 'Código', key: 'codigo' },
+      { label: 'Destino', key: 'DESTINO' },
+      { label: 'Nombre', key: 'NOMBRE' },
+      { label: 'Documento', key: 'NUMERO_DOCUMENTO' },
+      { label: 'Avalúo 2026', key: 'AVALUO 2026' },
+      { label: 'Área (㎡)', key: 'shape_Area' }
+    ]
+  );
 
-    // Demoliciones parciales
-    addLayer('dem_parcial.geojson', 'dem_p', 'dem_parcial', '#F5B041', [
-        { label: 'Código', key: 'CODIGO_CON' },
-        { label: 'Área parcial (&#13217;)', key: 'area' }
-    ]);
+  map.addSource('predios_highlight', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: [] }
+  });
 
-    // Demoliciones totales
-    addLayer('dem_total.geojson', 'dem_t', 'dem_total', '#E74C3C', [
-        { label: 'Código', key: 'CODIGO_CON' },
-        { label: 'Área demolida (&#13217;)', key: 'area' }
-    ]);
+  map.addLayer({
+    id: 'predios_highlight_fill',
+    type: 'fill',
+    source: 'predios_highlight',
+    paint: { 'fill-color': '#ffff00', 'fill-opacity': 0.30 }
+  });
 
-    // Construcciones aumento
-    addLayer('cons_aumento.geojson', 'cons_a', 'c_aumento', '#F7DC6F', [
-        { label: 'Código', key: 'CODIGO_CON' },
-        { label: 'Incremento de área (&#13217;)', key: 'area' }
-    ]);
-
-    // Construcciones nuevas
-    addLayer('cons_nuevas.geojson', 'cons_n', 'c_nuevas', '#A569BD', [
-        { label: 'Código', key: 'PK_PREDIOS' },
-        { label: 'Área (&#13217;)', key: 'area' }
-    ]);
-
-    // Construcciones viejas
-    addLayer('cons_viejas.geojson', 'cons_v', 'c_viejas', '#AAB7B8', [
-        { label: 'Código', key: 'CODIGO_CON' },
-        { label: 'Número de pisos', key: 'NUMERO_PIS' },
-        { label: 'Área (&#13217;)', key: 'area' }
-    ]);
-
-    // Mover el layer "Construcciones viejas" al fondo
-    map.on('sourcedata', () => {
-        if (map.getLayer('c_viejas')) {
-            map.moveLayer('c_viejas', 'dem_parcial'); // Mover "c_viejas" debajo del primer layer agregado
-        }
-    });
+  map.addLayer({
+    id: 'predios_highlight_line',
+    type: 'line',
+    source: 'predios_highlight',
+    paint: { 'line-color': '#ffff00', 'line-width': 4 }
+  });
 });
 
-// Configurar el Geocoder para buscar en el layer 'c_viejas'
 const geocoder = new MapboxGeocoder({
-    accessToken: mapboxgl.accessToken,
-    mapboxgl: mapboxgl,
-    marker: false, // Evitar que agregue un marcador automáticamente
-    localGeocoder: function (query) {
-        const matchingFeatures = [];
+  accessToken: mapboxgl.accessToken,
+  mapboxgl: mapboxgl,
+  marker: false,
+  localGeocoder: function (query) {
+    const matchingFeatures = [];
+    const q = (query || '').toString().toLowerCase().trim();
+    if (!q) return matchingFeatures;
 
-        // Consultar las features del layer 'c_viejas'
-        const features = map.querySourceFeatures('cons_v'); // 'cons_v' es el sourceId del layer 'c_viejas'
+    const features = (PREDIOS_DATA && PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
+    if (!features.length) return matchingFeatures;
 
-        features.forEach((feature) => {
-            const props = feature.properties;
+    features.forEach((feature) => {
+      const props = feature.properties || {};
 
-            // Buscar coincidencias en el campo CODIGO_CON (puedes cambiar el campo de búsqueda)
-            if (props.CODIGO_CON && props.CODIGO_CON.toLowerCase().includes(query.toLowerCase())) {
-                matchingFeatures.push({
-                    type: 'Feature',
-                    geometry: feature.geometry,
-                    properties: props,
-                    place_name: `Código: ${props.CODIGO_CON}`, // Texto que se mostrará en el resultado
-                    text: props.CODIGO_CON,
-                    center: turf.centroid(feature).geometry.coordinates, // Centrar el mapa en el polígono
-                    place_type: ['place']
-                });
-            }
+      const codigo = (props.codigo ?? '').toString().toLowerCase();
+      const nombre = (props.NOMBRE ?? '').toString().toLowerCase();
+      const documento = (props.NUMERO_DOCUMENTO ?? '').toString().toLowerCase();
+
+      const match =
+        (codigo && codigo.includes(q)) ||
+        (nombre && nombre.includes(q)) ||
+        (documento && documento.includes(q));
+
+      if (match) {
+        const centro = turf.centroid(feature).geometry.coordinates;
+
+        const codTxt = (props.codigo ?? '').toString().trim();
+        const nomTxt = (props.NOMBRE ?? '').toString().trim();
+        const docTxt = (props.NUMERO_DOCUMENTO ?? '').toString().trim();
+
+        let matchField = null;
+        let matchValue = null;
+
+        if (codigo && codigo.includes(q)) { matchField = 'codigo'; matchValue = codTxt; }
+        else if (documento && documento.includes(q)) { matchField = 'NUMERO_DOCUMENTO'; matchValue = docTxt; }
+        else if (nombre && nombre.includes(q)) { matchField = 'NOMBRE'; matchValue = nomTxt; }
+
+        const props2 = { ...props, __matchField: matchField, __matchValue: matchValue };
+
+        matchingFeatures.push({
+          type: 'Feature',
+          geometry: feature.geometry,
+          properties: props2,
+          place_name: `Código: ${codTxt || 'N/A'} | Nombre: ${nomTxt || 'N/A'} | Doc: ${docTxt || 'N/A'}`,
+          text: codTxt || nomTxt || docTxt || 'Resultado',
+          center: centro,
+          place_type: ['place']
         });
+      }
+    });
 
-        return matchingFeatures;
-    },
-    placeholder: 'Buscar código catastral',
-    localGeocoderOnly: true // Limitar la búsqueda a datos locales
-
+    return matchingFeatures.slice(0, 10);
+  },
+  placeholder: 'Buscar por código, nombre o documento',
+  localGeocoderOnly: true
 });
 
-// Agregar el Geocoder al mapa
 map.addControl(geocoder, 'top-left');
-// Add zoom and rotation controls to the map.
 map.addControl(new mapboxgl.NavigationControl());
 
-// Hacer zoom al polígono seleccionado y actualizar la caja de información
 geocoder.on('result', (e) => {
-    const result = e.result;
+  const result = e.result;
+  if (!result || !result.geometry) return;
 
-    if (result && result.geometry) {
-        const bounds = turf.bbox(result); // Obtener límites del polígono
-        map.fitBounds(bounds, { padding: 20 });
+  const properties = result.properties || {};
+  const matchField = properties.__matchField;
+  const matchValue = (properties.__matchValue ?? '').toString().trim();
 
-        // Mostrar el popup con la información del polígono
-        const coordinates = result.center;
-        const properties = result.properties;
+  const norm = (v) => (v ?? '').toString().toLowerCase().replace(/\s+/g, '').trim();
 
-        // Crear el contenido del popup (similar al mouseover)
-        const popupContent = `
-            <strong>Código:</strong> ${properties.CODIGO_CON || 'N/A'}<br>
-            <strong>Área (&#13217;):</strong> ${Math.round(properties.area || 0)}<br>
-            <strong>Altura: </strong> ${Math.round(properties.NUMERO_PIS || 0)} pisos<br>
-            <a style="font-size:9px;">&#9400 EffectiveActions</a>
-        `;
+  const features = (PREDIOS_DATA && PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
 
-        // Configurar el popup
-        popup
-            .setLngLat(coordinates)
-            .setHTML(popupContent)
-            .addTo(map);
-    }
+  let toHighlight = [];
+
+  if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
+    const mv = norm(matchValue);
+
+    toHighlight = features.filter((f) => {
+      const p = f.properties || {};
+      const v = matchField === 'NUMERO_DOCUMENTO' ? p.NUMERO_DOCUMENTO : p.codigo;
+      return norm(v) === mv;
+    });
+  }
+
+  if (!toHighlight.length) toHighlight = [result];
+
+  const fc = { type: 'FeatureCollection', features: toHighlight };
+  const hlSource = map.getSource('predios_highlight');
+  if (hlSource) hlSource.setData(fc);
+
+  const bounds = turf.bbox(fc);
+  map.fitBounds(bounds, { padding: 40 });
+
+  const codigos = toHighlight
+    .map((f) => (f.properties?.codigo ?? '').toString().trim())
+    .filter(Boolean);
+
+  const listaCodigos = codigos.length
+    ? `<br><strong>Predios vinculados (${codigos.length}):</strong><br>${codigos.slice(0, 10).join('<br>')}${codigos.length > 10 ? '<br>…' : ''}`
+    : '';
+
+  // ✅ avalúo (campo con espacio)
+  const avaluoRaw = properties['AVALUO 2026'];
+  const avaluoTxt =
+    avaluoRaw !== null && avaluoRaw !== undefined && avaluoRaw !== ''
+      ? (() => {
+          const n = Number(avaluoRaw);
+          return isNaN(n) ? avaluoRaw : n.toLocaleString('es-CO');
+        })()
+      : 'N/A';
+
+  const popupContent = `
+    <strong>Código:</strong> ${properties.codigo || 'N/A'}<br>
+    <strong>Destino:</strong> ${properties.DESTINO || 'N/A'}<br>
+    <strong>Nombre:</strong> ${properties.NOMBRE || 'N/A'}<br>
+    <strong>Documento:</strong> ${properties.NUMERO_DOCUMENTO || 'N/A'}<br>
+    <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
+    <strong>Área (㎡):</strong> ${Math.round(properties.shape_Area || 0)}<br>
+    ${listaCodigos}
+    <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
+  `;
+
+  popup
+    .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
+    .setHTML(popupContent)
+    .addTo(map);
 });
-
