@@ -85,7 +85,7 @@ map.on('style.load', () => {
             { label: 'Código', key: 'codigo' },
             { label: 'Destino', key: 'DESTINO' },
             { label: 'Nombre', key: 'NOMBRE' },
-            { label: 'Avalúo 2026', key: 'AVALUO 2026' }, // con espacio
+            { label: 'Avalúo 2026', key: 'AVALUO2026' }, 
             { label: 'Área (㎡)', key: 'shap_Ar' }
         ]
     );
@@ -145,7 +145,7 @@ geocoder.on('result', (e) => {
             <strong>Código:</strong> ${properties.codigo || 'N/A'}<br>
             <strong>Destino:</strong> ${properties.DESTINO || 'N/A'}<br>
             <strong>Nombre:</strong> ${properties.NOMBRE || 'N/A'}<br>
-            <strong>Avalúo 2026:</strong> ${properties['AVALUO 2026'] || 'N/A'}<br>
+            <strong>Avalúo 2026:</strong> ${properties['AVALUO2026'] || 'N/A'}<br>
             <strong>Área (㎡):</strong> ${Math.round(properties.shap_Ar || 0)}<br>
             <a style="font-size:9px;">&#9400 EffectiveActions</a>
         `;
