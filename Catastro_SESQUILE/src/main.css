@@ -1,0 +1,144 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Libre Franklin', sans-serif;
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Leyenda */
+.legend-container {
+    position: absolute;
+    bottom: 25px;
+    right: 5px;
+    z-index: 10;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border-radius: 8px;
+    width: 200px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    color: white; /* Color blanco para texto */
+}
+
+.legend-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-align: left;
+    color: white; /* Color blanco */
+}
+
+.legend-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.legend-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: white; /* Color blanco */
+}
+
+.legend-color {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    border-radius: 3px;
+}
+
+/* Colores de la leyenda */
+.c_viejas {
+    background-color: #AAB7B8;
+}
+
+.c_nuevas {
+    background-color: #A569BD;
+}
+
+.c_aumento {
+    background-color: #F7DC6F;
+}
+
+.dem_p {
+    background-color: #F5B041;
+}
+
+.dem_t {
+    background-color: #E74C3C;
+}
+
+/** Caja de información */
+.info-box {
+    left: 10px;
+    top: 310px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 10px;
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    border-radius: 8px;
+    position: absolute;
+    z-index: 10;
+    width: 200px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    color: white; /* Color blanco para texto */
+    display: none;
+  }
+  
+  .info-box h3 {
+    margin: 0 0 10px 0;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+/* CSS para el popup personalizado */
+.custom-popup .mapboxgl-popup-content {
+    font-size: 0.8rem;
+    padding: 10px 15px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-radius: 8px;
+    max-width: 250px;
+}
+
+.mapboxgl-popup-content a {
+    color: #00bcd4; /* Color de los enlaces */
+    text-decoration: none;
+}
+
+.mapboxgl-popup-content a:hover {
+    text-decoration: underline; /* Subrayado al pasar el cursor */
+} 
+
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+    border-bottom-color: rgba(0, 0, 0, 0.8);
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+    border-top-color: rgba(0, 0, 0, 0.8);
+}
+
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+    border-right-color: rgba(0, 0, 0, 0.8);
+}
+
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+    border-left-color: rgba(0, 0, 0, 0.8);
+}
+
+.mapboxgl-ctrl-geocoder {
+    width: 300px!important;
+}
