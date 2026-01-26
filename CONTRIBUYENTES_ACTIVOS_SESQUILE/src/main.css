@@ -22,7 +22,7 @@ body {
     background-color: rgba(0, 0, 0, 0.7);
     padding: 15px;
     border-radius: 8px;
-    width: 200px;
+    width: 220px; /* un poquito más para textos nuevos */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     color: white;
 }
@@ -44,32 +44,41 @@ body {
 .legend-list li {
     display: flex;
     align-items: center;
+    gap: 10px; /* espacio entre cuadro y texto */
     margin-bottom: 8px;
     font-size: 0.9rem;
     color: white;
 }
 
 .legend-color {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
+    display: inline-block !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;   /* CLAVE para que no colapse */
+    min-height: 18px !important;  /* CLAVE para que no colapse */
+    margin-right: 0; /* ya usamos gap */
     border-radius: 3px;
     border: 1px solid #ffffff;
+    flex: 0 0 18px; /* CLAVE para flex */
 }
 
 /* =========================
-   COLORES DE LA LEYENDA
+   COLORES DE LA LEYENDA (NUEVOS)
    ========================= */
 
-/* 🟢 Predios municipales (CON nombre) */
-.legend-color.predios-municipales {
+/* 🔵 Predios municipio Sesquilé (capa base) */
+.legend-color.predios-base {
+    background-color: #3a86ff;
+}
+
+/* 🟢 Predios contribuyentes natural */
+.legend-color.predios-natural {
     background-color: #2ec4b6;
 }
 
-/* 🟠 Predios sin información R1 (SIN nombre) */
-.legend-color.predios-sin-info {
-    background-color: #ffb703;
+/* 🌸 Predios contribuyentes jurídicos */
+.legend-color.predios-juridicos {
+    background-color: #ff006e;
 }
 
 /* 🟡 Predio seleccionado (resaltado) */
@@ -173,26 +182,3 @@ body {
 .mapboxgl-ctrl-geocoder {
     width: 300px !important;
 }
-/* ====== FIX LEYENDA: que se vean los cuadros ====== */
-.legend-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px; /* espacio entre cuadro y texto */
-}
-
-.legend-color {
-  display: inline-block !important;
-  width: 18px !important;
-  height: 18px !important;
-  min-width: 18px !important;   /* CLAVE para que no colapse */
-  min-height: 18px !important;  /* CLAVE para que no colapse */
-  border-radius: 3px;
-  border: 1px solid #fff;
-  flex: 0 0 18px; /* CLAVE para flex */
-}
-
-/* Colores de la leyenda */
-.legend-color.predios-municipales { background-color: #2ec4b6; } /* verde */
-.legend-color.predios-sin-info    { background-color: #ffb703; } /* naranja */
-.legend-color.predio-seleccionado { background-color: #ffff00; } /* seleccionado */
-
