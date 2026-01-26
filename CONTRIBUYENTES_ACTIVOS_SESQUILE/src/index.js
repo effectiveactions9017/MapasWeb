@@ -3,6 +3,7 @@
 // ✅ Base predial: SOLO CONTORNO (sin relleno) y SIEMPRE ABAJO
 // ✅ Capas arriba: NATURAL y JURIDICOS con buscador + popup
 // ✅ Popup: solo campos seleccionados (con espacios en nombres)
+// ✅ FIX: el código predial es "codigo" (minúscula) ✅
 // =====================================================
 
 mapboxgl.accessToken =
@@ -36,7 +37,7 @@ let JURIDICOS_DATA = null;
 // ✅ POPUP: SOLO CAMPOS QUE PEDISTE
 // =====================================================
 const CAMPOS_POPUP = [
-  { key: "CODIGO_PREDIAL", label: "Código predial" },
+  { key: "codigo", label: "Código predial" }, // ✅ FIX
   { key: "No Documento", label: "Número documento" },
   { key: "Nombre del contribuyente", label: "Contribuyente" },
   { key: "Naturaleza Juridica", label: "Naturaleza jurídica" },
@@ -46,11 +47,13 @@ const CAMPOS_POPUP = [
 
 function popupHTMLCamposSeleccionados(props, titulo = "Información") {
   if (!props) props = {};
-  const rows = CAMPOS_POPUP.map(({ key, label }) => {
-    let v = props[key];
-    if (v === null || v === undefined || v === "") v = "N/A";
-    return `<strong>${label}:</strong> ${v}`;
-  }).join("<br>");
+  const rows = CAMPOS_POPUP
+    .map(({ key, label }) => {
+      let v = props[key];
+      if (v === null || v === undefined || v === "") v = "N/A";
+      return `<strong>${label}:</strong> ${v}`;
+    })
+    .join("<br>");
 
   return `
     <div style="font-weight:700; margin-bottom:6px;">${titulo}</div>
@@ -63,7 +66,9 @@ function popupHTMLCamposSeleccionados(props, titulo = "Información") {
 // ✅ Helpers
 // =====================================================
 function safeOff(eventName, layerId) {
-  try { map.off(eventName, layerId); } catch (e) {}
+  try {
+    map.off(eventName, layerId);
+  } catch (e) {}
 }
 
 function norm(v) {
@@ -73,7 +78,12 @@ function norm(v) {
 // =====================================================
 // ✅ CAPA BASE: SOLO CONTORNO (SIN RELLENO) + ABAJO DE TODO
 // =====================================================
-function addBaseOutlineLayer(geojsonFile, sourceId, layerId, lineColor = "#ffffff") {
+function addBaseOutlineLayer(
+  geojsonFile,
+  sourceId,
+  layerId,
+  lineColor = "#ffffff"
+) {
   fetch(`../src/data/${geojsonFile}`)
     .then((r) => r.json())
     .then((data) => {
@@ -102,7 +112,13 @@ function addBaseOutlineLayer(geojsonFile, sourceId, layerId, lineColor = "#fffff
 // =====================================================
 // ✅ CAPAS INTERACTIVAS (ARRIBA): clic -> popup
 // =====================================================
-function addInteractiveLayer({ geojsonFile, sourceId, layerId, baseColor, datasetKey }) {
+function addInteractiveLayer({
+  geojsonFile,
+  sourceId,
+  layerId,
+  baseColor,
+  datasetKey,
+}) {
   fetch(`../src/data/${geojsonFile}`)
     .then((r) => r.json())
     .then((data) => {
@@ -151,9 +167,11 @@ function addInteractiveLayer({ geojsonFile, sourceId, layerId, baseColor, datase
         const center = turf.centroid(f).geometry.coordinates;
 
         const titulo =
-          datasetKey === "NATURAL" ? "Contribuyente natural" :
-          datasetKey === "JURIDICOS" ? "Contribuyente jurídico" :
-          "Información";
+          datasetKey === "NATURAL"
+            ? "Contribuyente natural"
+            : datasetKey === "JURIDICOS"
+            ? "Contribuyente jurídico"
+            : "Información";
 
         popup
           .setLngLat(center)
@@ -196,7 +214,7 @@ function ensureHighlightLayers() {
 
 // =====================================================
 // ✅ Geocoder: SOLO NATURAL + JURIDICOS
-// Busca por: CODIGO_PREDIAL, No Documento, Nombre del contribuyente
+// Busca por: codigo, No Documento, Nombre del contribuyente
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
@@ -215,7 +233,7 @@ const geocoder = new MapboxGeocoder({
       feats.forEach((feature) => {
         const p = feature.properties || {};
 
-        const cod = (p["CODIGO_PREDIAL"] ?? "").toString().toLowerCase();
+        const cod = (p["codigo"] ?? "").toString().toLowerCase(); // ✅ FIX
         const doc = (p["No Documento"] ?? "").toString().toLowerCase();
         const nom = (p["Nombre del contribuyente"] ?? "").toString().toLowerCase();
 
@@ -232,18 +250,31 @@ const geocoder = new MapboxGeocoder({
         let matchField = null;
         let matchValue = null;
 
-        if (cod && cod.includes(q)) { matchField = "CODIGO_PREDIAL"; matchValue = (p["CODIGO_PREDIAL"] ?? "").toString().trim(); }
-        else if (doc && doc.includes(q)) { matchField = "No Documento"; matchValue = (p["No Documento"] ?? "").toString().trim(); }
-        else if (nom && nom.includes(q)) { matchField = "Nombre del contribuyente"; matchValue = (p["Nombre del contribuyente"] ?? "").toString().trim(); }
+        // ✅ FIX: match por "codigo"
+        if (cod && cod.includes(q)) {
+          matchField = "codigo";
+          matchValue = (p["codigo"] ?? "").toString().trim();
+        } else if (doc && doc.includes(q)) {
+          matchField = "No Documento";
+          matchValue = (p["No Documento"] ?? "").toString().trim();
+        } else if (nom && nom.includes(q)) {
+          matchField = "Nombre del contribuyente";
+          matchValue = (p["Nombre del contribuyente"] ?? "").toString().trim();
+        }
 
-        const props2 = { ...p, __dataset: datasetTag, __matchField: matchField, __matchValue: matchValue };
+        const props2 = {
+          ...p,
+          __dataset: datasetTag,
+          __matchField: matchField,
+          __matchValue: matchValue,
+        };
 
         results.push({
           type: "Feature",
           geometry: feature.geometry,
           properties: props2,
-          place_name: `[${datasetTag}] ${p["CODIGO_PREDIAL"] ?? "N/A"} | ${p["No Documento"] ?? "N/A"} | ${p["Nombre del contribuyente"] ?? "N/A"}`,
-          text: (p["CODIGO_PREDIAL"] ?? p["No Documento"] ?? p["Nombre del contribuyente"] ?? "Resultado").toString(),
+          place_name: `[${datasetTag}] ${p["codigo"] ?? "N/A"} | ${p["No Documento"] ?? "N/A"} | ${p["Nombre del contribuyente"] ?? "N/A"}`, // ✅ FIX
+          text: (p["codigo"] ?? p["No Documento"] ?? p["Nombre del contribuyente"] ?? "Resultado").toString(), // ✅ FIX
           center,
           place_type: ["place"],
         });
@@ -293,21 +324,16 @@ map.on("style.load", () => {
   ensureHighlightLayers();
 
   // ✅ Forzar orden por si acaso (blindaje)
-  // Base contorno -> abajo
   if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
-
-  // Natural y Jurídicos encima del contorno
   if (map.getLayer("predios_natural_layer")) map.moveLayer("predios_natural_layer");
   if (map.getLayer("predios_juridicos_layer")) map.moveLayer("predios_juridicos_layer");
-
-  // Highlight arriba de todo
   if (map.getLayer("predios_highlight_fill")) map.moveLayer("predios_highlight_fill");
   if (map.getLayer("predios_highlight_line")) map.moveLayer("predios_highlight_line");
 });
 
 // =====================================================
 // ✅ Al seleccionar resultado: resalta grupo + zoom + popup con campos seleccionados
-// Agrupa por CODIGO_PREDIAL o No Documento (si el match fue por esos)
+// Agrupa por codigo o No Documento (si el match fue por esos)
 // =====================================================
 geocoder.on("result", (e) => {
   const result = e.result;
@@ -315,20 +341,22 @@ geocoder.on("result", (e) => {
 
   const props = result.properties || {};
   const dataset = props.__dataset; // NATURAL | JURIDICOS
-  const matchField = props.__matchField; // CODIGO_PREDIAL | No Documento | Nombre del contribuyente
+  const matchField = props.__matchField; // codigo | No Documento | Nombre del contribuyente
   const matchValue = (props.__matchValue ?? "").toString().trim();
 
   const fc =
-    dataset === "NATURAL" ? NATURAL_DATA :
-    dataset === "JURIDICOS" ? JURIDICOS_DATA :
-    null;
+    dataset === "NATURAL"
+      ? NATURAL_DATA
+      : dataset === "JURIDICOS"
+      ? JURIDICOS_DATA
+      : null;
 
   const feats = fc && Array.isArray(fc.features) ? fc.features : [];
 
   let toHighlight = [];
 
-  // Agrupar por CODIGO_PREDIAL o No Documento
-  if ((matchField === "CODIGO_PREDIAL" || matchField === "No Documento") && matchValue) {
+  // ✅ FIX: agrupar por "codigo" o "No Documento"
+  if ((matchField === "codigo" || matchField === "No Documento") && matchValue) {
     const mv = norm(matchValue);
     toHighlight = feats.filter((f) => {
       const p = f.properties || {};
@@ -337,7 +365,6 @@ geocoder.on("result", (e) => {
     });
   }
 
-  // fallback: solo el seleccionado
   if (!toHighlight.length) toHighlight = [result];
 
   const highlightFC = { type: "FeatureCollection", features: toHighlight };
@@ -350,9 +377,11 @@ geocoder.on("result", (e) => {
   const center = result.center || turf.centroid(result).geometry.coordinates;
 
   const titulo =
-    dataset === "NATURAL" ? "Contribuyente natural" :
-    dataset === "JURIDICOS" ? "Contribuyente jurídico" :
-    "Información";
+    dataset === "NATURAL"
+      ? "Contribuyente natural"
+      : dataset === "JURIDICOS"
+      ? "Contribuyente jurídico"
+      : "Información";
 
   popup
     .setLngLat(center)
