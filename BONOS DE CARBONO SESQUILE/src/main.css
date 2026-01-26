@@ -22,7 +22,7 @@ body {
     background-color: rgba(0, 0, 0, 0.7);
     padding: 15px;
     border-radius: 8px;
-    width: 200px;
+    width: 220px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     color: white;
 }
@@ -33,6 +33,7 @@ body {
     margin-bottom: 10px;
     text-align: left;
     color: white;
+    line-height: 1.2;
 }
 
 .legend-list {
@@ -44,61 +45,58 @@ body {
 .legend-list li {
     display: flex;
     align-items: center;
+    gap: 10px;
     margin-bottom: 8px;
     font-size: 0.9rem;
     color: white;
 }
 
+/* ====== CUADROS DE COLOR (FIX FLEX) ====== */
 .legend-color {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
+    display: inline-block !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
     border-radius: 3px;
     border: 1px solid #ffffff;
+    flex: 0 0 18px;
 }
 
 /* =========================
-   COLORES DE LA LEYENDA
+   COLORES BONOS DE CARBONO
    ========================= */
 
-/* 🟢 Predios municipales (CON nombre) */
-.legend-color.predios-municipales {
+/* 🟢 Oportunidad de bonos de carbono */
+.legend-color.bonos-oportunidad {
     background-color: #2ec4b6;
 }
 
-/* 🟠 Predios sin información R1 (SIN nombre) */
-.legend-color.predios-sin-info {
-    background-color: #ffb703;
-}
-
-/* 🟡 Predio seleccionado (resaltado) */
-.legend-color.predio-seleccionado {
-    background-color: #ffff00;
+/* 🔴 Pérdidas de bonos de carbono */
+.legend-color.bonos-perdidas {
+    background-color: #ff595e;
 }
 
 /* =========================
    CLASES ANTIGUAS (SE CONSERVAN)
    ========================= */
-.c_viejas {
-    background-color: #AAB7B8;
+.legend-color.predios-municipales {
+    background-color: #2ec4b6;
 }
 
-.c_nuevas {
-    background-color: #A569BD;
+.legend-color.predios-sin-info {
+    background-color: #ffb703;
 }
 
-.c_aumento {
-    background-color: #F7DC6F;
+.legend-color.predio-seleccionado {
+    background-color: #ffff00;
 }
 
-.dem_p {
-    background-color: #F5B041;
-}
-
-.dem_t {
-    background-color: #E74C3C;
-}
+.c_viejas { background-color: #AAB7B8; }
+.c_nuevas { background-color: #A569BD; }
+.c_aumento { background-color: #F7DC6F; }
+.dem_p { background-color: #F5B041; }
+.dem_t { background-color: #E74C3C; }
 
 /* =========================
    CAJA DE INFORMACIÓN
@@ -114,7 +112,7 @@ body {
     border-radius: 8px;
     position: absolute;
     z-index: 10;
-    width: 200px;
+    width: 220px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     display: none;
 }
@@ -134,7 +132,7 @@ body {
     background-color: rgba(0, 0, 0, 0.8);
     color: #fff;
     border-radius: 8px;
-    max-width: 250px;
+    max-width: 260px;
 }
 
 .mapboxgl-popup-content a {
@@ -168,31 +166,8 @@ body {
 }
 
 /* =========================
-   GEOCODER
+   GEOCODER (si lo vuelves a usar)
    ========================= */
 .mapboxgl-ctrl-geocoder {
     width: 300px !important;
 }
-/* ====== FIX LEYENDA: que se vean los cuadros ====== */
-.legend-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px; /* espacio entre cuadro y texto */
-}
-
-.legend-color {
-  display: inline-block !important;
-  width: 18px !important;
-  height: 18px !important;
-  min-width: 18px !important;   /* CLAVE para que no colapse */
-  min-height: 18px !important;  /* CLAVE para que no colapse */
-  border-radius: 3px;
-  border: 1px solid #fff;
-  flex: 0 0 18px; /* CLAVE para flex */
-}
-
-/* Colores de la leyenda */
-.legend-color.predios-municipales { background-color: #2ec4b6; } /* verde */
-.legend-color.predios-sin-info    { background-color: #ffb703; } /* naranja */
-.legend-color.predio-seleccionado { background-color: #ffff00; } /* seleccionado */
-
