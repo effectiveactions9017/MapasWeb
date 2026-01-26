@@ -22,7 +22,7 @@ body {
     background-color: rgba(0, 0, 0, 0.7);
     padding: 15px;
     border-radius: 8px;
-    width: 200px;
+    width: 220px; /* un poco más para los nuevos textos */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     color: white;
 }
@@ -41,35 +41,40 @@ body {
     margin: 0;
 }
 
+/* ====== FIX LEYENDA: que se vean los cuadros ====== */
 .legend-list li {
     display: flex;
     align-items: center;
+    gap: 10px;
     margin-bottom: 8px;
     font-size: 0.9rem;
     color: white;
 }
 
 .legend-color {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
+    display: inline-block !important;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
     border-radius: 3px;
     border: 1px solid #ffffff;
+    flex: 0 0 18px;
 }
 
 /* =========================
-   COLORES DE LA LEYENDA
+   COLORES DE LA LEYENDA (ACTUALIZADOS)
    ========================= */
 
-/* 🟢 Predios municipales (CON nombre) */
-.legend-color.predios-municipales {
-    background-color: #2ec4b6;
+/* 🔵 Predios municipio de Sesquilé (BASE – SOLO CONTORNO) */
+.legend-color.predios-base {
+    background-color: transparent;
+    border: 2px solid #3a86ff !important;
 }
 
-/* 🟠 Predios sin información R1 (SIN nombre) */
-.legend-color.predios-sin-info {
-    background-color: #ffb703;
+/* 🟢 Predios activos públicos */
+.legend-color.predios-publicos {
+    background-color: #2ec4b6;
 }
 
 /* 🟡 Predio seleccionado (resaltado) */
@@ -173,26 +178,3 @@ body {
 .mapboxgl-ctrl-geocoder {
     width: 300px !important;
 }
-/* ====== FIX LEYENDA: que se vean los cuadros ====== */
-.legend-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px; /* espacio entre cuadro y texto */
-}
-
-.legend-color {
-  display: inline-block !important;
-  width: 18px !important;
-  height: 18px !important;
-  min-width: 18px !important;   /* CLAVE para que no colapse */
-  min-height: 18px !important;  /* CLAVE para que no colapse */
-  border-radius: 3px;
-  border: 1px solid #fff;
-  flex: 0 0 18px; /* CLAVE para flex */
-}
-
-/* Colores de la leyenda */
-.legend-color.predios-municipales { background-color: #2ec4b6; } /* verde */
-.legend-color.predios-sin-info    { background-color: #ffb703; } /* naranja */
-.legend-color.predio-seleccionado { background-color: #ffff00; } /* seleccionado */
-
