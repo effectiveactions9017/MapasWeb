@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Predios Urbanos Sesquilé</title>
+  <title>Bonos de Carbono - Sesquilé</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
   <!-- Mapbox CSS -->
@@ -13,14 +13,7 @@
   />
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
-  <!-- Geocoder -->
-  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
-  <link
-    rel="stylesheet"
-    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
-  />
-
-  <!-- Turf.js -->
+  <!-- Turf.js (lo usas en index.js para bbox/centroid si lo necesitas) -->
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js"></script>
 
   <!-- Fuentes y estilos adicionales -->
@@ -36,6 +29,50 @@
 
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
+
+  <!-- (Opcional) Estilos mínimos de leyenda si no los tienes en main.css -->
+  <style>
+    .legend-container{
+      position:absolute;
+      bottom:20px;
+      right:10px;
+      z-index:10;
+      background:rgba(0,0,0,0.70);
+      color:#fff;
+      padding:12px 14px;
+      border-radius:10px;
+      font-family:'Libre Franklin', sans-serif;
+      font-size:12px;
+      max-width:260px;
+    }
+    .legend-title{
+      font-weight:700;
+      margin-bottom:8px;
+      font-size:13px;
+      line-height:1.15;
+    }
+    .legend-list{
+      list-style:none;
+      padding:0;
+      margin:0;
+    }
+    .legend-list li{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin:6px 0;
+    }
+    .legend-color{
+      width:14px;
+      height:14px;
+      border-radius:3px;
+      border:1px solid rgba(255,255,255,0.6);
+      display:inline-block;
+    }
+    /* Colores de la leyenda (deben coincidir con index.js) */
+    .bonos-oportunidad{ background:#2ec4b6; }
+    .bonos-perdidas{ background:#ff595e; }
+  </style>
 </head>
 
 <body>
@@ -43,40 +80,35 @@
   <!-- CONTENEDOR DEL MAPA -->
   <div id="map"></div>
 
-  <!-- LEYENDA -->
-<div class="legend-container">
-  <div class="legend-title">
-    Predial<br>Sesquilé
+  <!-- LEYENDA (Actualizada a 2 capas) -->
+  <div class="legend-container">
+    <div class="legend-title">
+      Bonos de Carbono<br>Sesquilé
+    </div>
+
+    <ul class="legend-list">
+      <li>
+        <span class="legend-color bonos-oportunidad"></span>
+        Oportunidad de bonos de carbono
+      </li>
+
+      <li>
+        <span class="legend-color bonos-perdidas"></span>
+        Pérdidas de bonos de carbono
+      </li>
+    </ul>
+
+    <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
   </div>
 
-  <ul class="legend-list">
-    <li>
-      <span class="legend-color predios-municipales"></span>
-      Predios municipales
-    </li>
-
-    <li>
-      <span class="legend-color predios-sin-info"></span>
-      Predios sin información R1
-    </li>
-
-    <li>
-      <span class="legend-color predio-seleccionado"></span>
-      Predio seleccionado
-    </li>
-  </ul>
-
-  <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
-</div>
-
-
   <!-- ========================= -->
-  <!-- CAJA DE INFORMACIÓN -->
+  <!-- CAJA DE INFORMACIÓN (Opcional) -->
+  <!-- Si ya no la usas, la puedes borrar. Si la mantienes, puedes llenarla al hacer clic. -->
   <!-- ========================= -->
   <div class="info-box">
-    <h3>Información del predio</h3>
+    <h3>Información del polígono</h3>
     <div class="info-content">
-      Busca un predio para ver detalles
+      Da clic sobre un polígono para ver detalles
     </div>
   </div>
 
