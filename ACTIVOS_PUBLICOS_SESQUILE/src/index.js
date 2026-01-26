@@ -1,12 +1,9 @@
 // =====================================================
 // ✅ Visor Predios Públicos – Sesquilé (Mapbox GL JS)
 // =====================================================
-// 🔵 Base: Predios municipio de Sesquilé (SOLO CONTORNO, SIN POPUP)
+// 🔵 Base: Predios municipio de Sesquilé (SOLO CONTORNO)
 // 🟢 Interactiva: Predios públicos Sesquilé (POPUP + BUSCADOR + STREET VIEW)
 // 🟡 Highlight: Predio seleccionado
-//
-// ✅ FIX RUTA/ARCHIVO:
-//   El archivo real es: PREDIOS_PUBLICOS_SESQUILE.geojson
 // =====================================================
 
 mapboxgl.accessToken =
@@ -20,7 +17,7 @@ const map = new mapboxgl.Map({
   style: "mapbox://styles/mapbox/dark-v11",
   center: [-73.79724, 5.04463],
   zoom: 15,
-  antialias: true,
+  antialias: true
 });
 
 map.addControl(new mapboxgl.NavigationControl());
@@ -31,7 +28,7 @@ map.addControl(new mapboxgl.NavigationControl());
 const popup = new mapboxgl.Popup({
   closeButton: true,
   closeOnClick: true,
-  className: "custom-popup",
+  className: "custom-popup"
 });
 
 // =====================================================
@@ -40,12 +37,12 @@ const popup = new mapboxgl.Popup({
 let PUBLICOS_DATA = null;
 
 // =====================================================
-// CONFIGURACIÓN POPUP (lo que pediste)
+// CONFIGURACIÓN POPUP (SOLO CAMPOS DE LA CAPA)
 // =====================================================
 const CAMPOS_POPUP = [
   { key: "codigo", label: "Código predial" },
   { key: "NOMBRE", label: "Nombre" },
-  { key: "DESTINO_ECONOMICO", label: "Destino económico" },
+  { key: "DESTINO_ECONOMICO", label: "Destino económico" }
 ];
 
 // =====================================================
@@ -60,17 +57,14 @@ function norm(v) {
 }
 
 function safeOff(evt, layer) {
-  try {
-    map.off(evt, layer);
-  } catch (e) {}
+  try { map.off(evt, layer); } catch (e) {}
 }
 
 function streetViewUrl([lng, lat]) {
-  // Street View desde el punto del centroide del predio
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 }
 
-function popupHTMLPredioPublico(props, center) {
+function popupHTML(props, center) {
   props = props || {};
 
   const rows = CAMPOS_POPUP.map(({ key, label }) => {
@@ -81,8 +75,7 @@ function popupHTMLPredioPublico(props, center) {
 
   return `
     <div style="font-weight:700; margin-bottom:6px;">Predio público</div>
-    ${rows}<br>
-    <strong>Destino económico:</strong> Público<br>
+    ${rows}
     <div style="margin-top:10px;">
       <a href="${streetViewUrl(center)}" target="_blank"
          style="display:inline-block; padding:6px 10px;
@@ -96,75 +89,64 @@ function popupHTMLPredioPublico(props, center) {
 }
 
 // =====================================================
-// CAPA BASE – SOLO CONTORNO (sin relleno, sin interacción)
+// CAPA BASE – SOLO CONTORNO
 // =====================================================
 function addBaseOutlineLayer() {
   fetch("../src/data/PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson")
-    .then((r) => r.json())
-    .then((data) => {
-      // Source seguro
-      if (map.getSource("predios_base")) map.getSource("predios_base").setData(data);
-      else map.addSource("predios_base", { type: "geojson", data });
+    .then(r => r.json())
+    .then(data => {
+      if (map.getSource("predios_base")) {
+        map.getSource("predios_base").setData(data);
+      } else {
+        map.addSource("predios_base", { type: "geojson", data });
+      }
 
-      // Layer seguro
       if (!map.getLayer("predios_base_outline")) {
         map.addLayer({
           id: "predios_base_outline",
           type: "line",
           source: "predios_base",
-          minzoom: 12,
           paint: {
             "line-color": "#ffffff",
             "line-width": 1.2,
-            "line-opacity": 0.9,
-          },
+            "line-opacity": 0.9
+          }
         });
       }
-    })
-    .catch((err) => console.error("Error cargando base:", err));
+    });
 }
 
 // =====================================================
-// CAPA PREDIOS PÚBLICOS SESQUILÉ (interactiva)
+// CAPA PREDIOS PÚBLICOS (INTERACTIVA)
 // =====================================================
 function addPublicosLayer() {
-  // ✅ nombre real del archivo en tu repo:
-  const FILE_PUBLICOS = "PREDIOS_PUBLICOS_SESQUILE.geojson";
-
-  fetch(`../src/data/${FILE_PUBLICOS}`)
-    .then((r) => r.json())
-    .then((data) => {
+  fetch("../src/data/PREDIOS_PUBLICOS_SESQUILE.geojson")
+    .then(r => r.json())
+    .then(data => {
       PUBLICOS_DATA = data;
 
-      // Source seguro
-      if (map.getSource("predios_publicos")) map.getSource("predios_publicos").setData(data);
-      else map.addSource("predios_publicos", { type: "geojson", data });
+      if (map.getSource("predios_publicos")) {
+        map.getSource("predios_publicos").setData(data);
+      } else {
+        map.addSource("predios_publicos", { type: "geojson", data });
+      }
 
-      // Layer seguro (fill)
       if (!map.getLayer("predios_publicos_layer")) {
         map.addLayer({
           id: "predios_publicos_layer",
           type: "fill",
           source: "predios_publicos",
-          minzoom: 12,
           paint: {
-            // Si no hay NOMBRE -> naranja, si hay -> verde
-            "fill-color": [
-              "case",
-              ["==", ["coalesce", ["get", "NOMBRE"], ""], ""],
-              "#ffb703",
-              "#2ec4b6",
-            ],
+            "fill-color": "#2ec4b6",
             "fill-opacity": 0.75,
-            "fill-outline-color": "#ffffff",
-          },
+            "fill-outline-color": "#ffffff"
+          }
         });
       }
 
-      // Eventos
-      safeOff("click", "predios_publicos_layer");
       safeOff("mouseenter", "predios_publicos_layer");
       safeOff("mouseleave", "predios_publicos_layer");
+      safeOff("click", "predios_publicos_layer");
 
       map.on("mouseenter", "predios_publicos_layer", () => {
         map.getCanvas().style.cursor = "pointer";
@@ -174,55 +156,40 @@ function addPublicosLayer() {
         map.getCanvas().style.cursor = "";
       });
 
-      map.on("click", "predios_publicos_layer", (e) => {
-        const f = e.features && e.features[0];
-        if (!f) return;
-
+      map.on("click", "predios_publicos_layer", e => {
+        const f = e.features[0];
         const center = turf.centroid(f).geometry.coordinates;
 
         popup
           .setLngLat(center)
-          .setHTML(popupHTMLPredioPublico(f.properties, center))
+          .setHTML(popupHTML(f.properties, center))
           .addTo(map);
       });
-    })
-    .catch((err) => console.error("Error cargando públicos:", err));
+    });
 }
 
 // =====================================================
-// HIGHLIGHT (selección)
+// HIGHLIGHT
 // =====================================================
 function addHighlight() {
-  if (!map.getSource("highlight")) {
-    map.addSource("highlight", {
-      type: "geojson",
-      data: { type: "FeatureCollection", features: [] },
-    });
-  }
+  map.addSource("highlight", {
+    type: "geojson",
+    data: { type: "FeatureCollection", features: [] }
+  });
 
-  if (!map.getLayer("highlight_fill")) {
-    map.addLayer({
-      id: "highlight_fill",
-      type: "fill",
-      source: "highlight",
-      paint: {
-        "fill-color": "#ffff00",
-        "fill-opacity": 0.25,
-      },
-    });
-  }
+  map.addLayer({
+    id: "highlight_fill",
+    type: "fill",
+    source: "highlight",
+    paint: { "fill-color": "#ffff00", "fill-opacity": 0.25 }
+  });
 
-  if (!map.getLayer("highlight_line")) {
-    map.addLayer({
-      id: "highlight_line",
-      type: "line",
-      source: "highlight",
-      paint: {
-        "line-color": "#ffff00",
-        "line-width": 4,
-      },
-    });
-  }
+  map.addLayer({
+    id: "highlight_line",
+    type: "line",
+    source: "highlight",
+    paint: { "line-color": "#ffff00", "line-width": 4 }
+  });
 }
 
 // =====================================================
@@ -233,78 +200,65 @@ const geocoder = new MapboxGeocoder({
   mapboxgl,
   marker: false,
   localGeocoderOnly: true,
-  placeholder: "Buscar (código, nombre o destino económico)",
-  localGeocoder: (q) => {
-    q = (q || "").toString().toLowerCase().trim();
-    if (!q || !PUBLICOS_DATA || !Array.isArray(PUBLICOS_DATA.features)) return [];
+  placeholder: "Buscar predio público",
+  localGeocoder: q => {
+    q = q.toLowerCase().trim();
+    if (!PUBLICOS_DATA) return [];
 
     return PUBLICOS_DATA.features
-      .filter((f) => {
-        const p = f.properties || {};
-        return (
-          norm(p.codigo).includes(q) ||
-          norm(p.NOMBRE).includes(q) ||
-          norm(p.DESTINO_ECONOMICO).includes(q)
-        );
-      })
+      .filter(f =>
+        norm(f.properties.codigo).includes(q) ||
+        norm(f.properties.NOMBRE).includes(q) ||
+        norm(f.properties.DESTINO_ECONOMICO).includes(q)
+      )
       .slice(0, 10)
-      .map((f) => {
+      .map(f => {
         const center = turf.centroid(f).geometry.coordinates;
         return {
           type: "Feature",
           geometry: f.geometry,
           center,
-          place_name: `${f.properties?.codigo ?? "N/A"} | ${f.properties?.NOMBRE ?? "N/A"} | ${f.properties?.DESTINO_ECONOMICO ?? "N/A"}`,
-          text: (f.properties?.codigo ?? f.properties?.NOMBRE ?? "Resultado").toString(),
+          place_name: `${f.properties.codigo} | ${f.properties.NOMBRE}`,
+          text: f.properties.codigo,
           properties: f.properties,
-          place_type: ["place"],
+          place_type: ["place"]
         };
       });
-  },
+  }
 });
 
 map.addControl(geocoder, "top-left");
 
 // =====================================================
-// RESULTADO BUSCADOR: highlight + zoom + popup + StreetView
+// RESULTADO BUSCADOR
 // =====================================================
-geocoder.on("result", (e) => {
+geocoder.on("result", e => {
   const f = e.result;
-  if (!f) return;
-
   const center = f.center || turf.centroid(f).geometry.coordinates;
 
-  const src = map.getSource("highlight");
-  if (src) {
-    src.setData({
-      type: "FeatureCollection",
-      features: [f],
-    });
-  }
+  map.getSource("highlight").setData({
+    type: "FeatureCollection",
+    features: [f]
+  });
 
   map.fitBounds(turf.bbox(f), { padding: 40 });
 
   popup
     .setLngLat(center)
-    .setHTML(popupHTMLPredioPublico(f.properties || {}, center))
+    .setHTML(popupHTML(f.properties, center))
     .addTo(map);
 });
 
 // =====================================================
-// CARGA FINAL (orden de capas)
+// CARGA FINAL
 // =====================================================
 map.on("style.load", () => {
-  addBaseOutlineLayer(); // abajo
-  addPublicosLayer();    // encima
-  addHighlight();        // arriba de todo
+  addBaseOutlineLayer();
+  addPublicosLayer();
+  addHighlight();
 
-  // Blindaje (cuando ya existan)
-  setTimeout(() => {
-    try {
-      if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
-      if (map.getLayer("predios_publicos_layer")) map.moveLayer("predios_publicos_layer");
-      if (map.getLayer("highlight_fill")) map.moveLayer("highlight_fill");
-      if (map.getLayer("highlight_line")) map.moveLayer("highlight_line");
-    } catch (e) {}
-  }, 300);
+  map.moveLayer("predios_base_outline");
+  map.moveLayer("predios_publicos_layer");
+  map.moveLayer("highlight_fill");
+  map.moveLayer("highlight_line");
 });
