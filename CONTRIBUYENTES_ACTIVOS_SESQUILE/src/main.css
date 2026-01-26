@@ -22,7 +22,7 @@ body {
     background-color: rgba(0, 0, 0, 0.7);
     padding: 15px;
     border-radius: 8px;
-    width: 220px; /* un poquito más para textos nuevos */
+    width: 220px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     color: white;
 }
@@ -44,7 +44,7 @@ body {
 .legend-list li {
     display: flex;
     align-items: center;
-    gap: 10px; /* espacio entre cuadro y texto */
+    gap: 10px;
     margin-bottom: 8px;
     font-size: 0.9rem;
     color: white;
@@ -54,21 +54,21 @@ body {
     display: inline-block !important;
     width: 18px !important;
     height: 18px !important;
-    min-width: 18px !important;   /* CLAVE para que no colapse */
-    min-height: 18px !important;  /* CLAVE para que no colapse */
-    margin-right: 0; /* ya usamos gap */
+    min-width: 18px !important;
+    min-height: 18px !important;
     border-radius: 3px;
     border: 1px solid #ffffff;
-    flex: 0 0 18px; /* CLAVE para flex */
+    flex: 0 0 18px;
 }
 
 /* =========================
-   COLORES DE LA LEYENDA (NUEVOS)
+   COLORES DE LA LEYENDA
    ========================= */
 
-/* 🔵 Predios municipio Sesquilé (capa base) */
+/* 🔵 Predios municipio Sesquilé (BASE – SOLO CONTORNO) */
 .legend-color.predios-base {
-    background-color: #3a86ff;
+    background-color: transparent;
+    border: 2px solid #3a86ff !important;
 }
 
 /* 🟢 Predios contribuyentes natural */
@@ -81,7 +81,7 @@ body {
     background-color: #ff006e;
 }
 
-/* 🟡 Predio seleccionado (resaltado) */
+/* 🟡 Predio seleccionado */
 .legend-color.predio-seleccionado {
     background-color: #ffff00;
 }
