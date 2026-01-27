@@ -2,6 +2,8 @@
 // ✅ Predial Sesquilé - Mapbox GL JS
 // ✅ Búsqueda por: codigo, NOMBRE, NUMERO_DOCUMENTO
 // ✅ Resalta 1 o varios predios (mismo codigo o documento)
+// ✅ + Street View en el POPUP (también para predios/polígonos)
+//    (Google ajusta al panorama/vía más cercana)
 // =====================================================
 
 mapboxgl.accessToken =
@@ -26,6 +28,41 @@ let popup = new mapboxgl.Popup({
 // ✅ Guardar dataset completo para búsquedas completas
 let PREDIOS_DATA = null;
 
+// =====================================================
+// HELPERS Street View (punto representativo)
+// =====================================================
+function getFeatureLngLat(feature, fallbackLngLat = null) {
+  // 1) si viene de evento (mousemove/click) úsalo
+  if (
+    fallbackLngLat &&
+    typeof fallbackLngLat.lng === 'number' &&
+    typeof fallbackLngLat.lat === 'number'
+  ) {
+    return [fallbackLngLat.lng, fallbackLngLat.lat];
+  }
+
+  // 2) si es punto
+  const c = feature?.geometry?.coordinates;
+  if (Array.isArray(c) && c.length >= 2 && c[0] != null && c[1] != null) {
+    return [Number(c[0]), Number(c[1])];
+  }
+
+  // 3) si es polígono: punto dentro del polígono (mejor que centroide)
+  try {
+    const pt = turf.pointOnFeature(feature).geometry.coordinates;
+    return [Number(pt[0]), Number(pt[1])];
+  } catch (e) {}
+
+  return [-73.79724, 5.04463];
+}
+
+function streetViewUrl([lng, lat]) {
+  return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+}
+
+// =====================================================
+// Capa + popup
+// =====================================================
 function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
   fetch(`../src/data/${geojsonFile}`)
     .then((response) => response.json())
@@ -55,6 +92,10 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
       }
 
       // Popup al mover el mouse
+      try { map.off('mousemove', layerId); } catch (e) {}
+      try { map.off('mouseenter', layerId); } catch (e) {}
+      try { map.off('mouseleave', layerId); } catch (e) {}
+
       map.on('mousemove', layerId, (e) => {
         const feature = e.features && e.features[0];
         if (!feature) return;
@@ -78,9 +119,22 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
           })
           .join('<br>');
 
+        // ✅ Street View coords (desde el mouse o punto representativo)
+        const svLngLat = getFeatureLngLat(feature, e.lngLat);
+
+        const svBtn = `
+          <div style="margin-top:10px;">
+            <a href="${streetViewUrl(svLngLat)}" target="_blank" rel="noopener"
+               style="display:inline-block; padding:6px 10px; border-radius:6px;
+                      background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+              📷 Street View
+            </a>
+          </div>
+        `;
+
         popup
           .setLngLat(e.lngLat)
-          .setHTML(`${popupContent}<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`)
+          .setHTML(`${popupContent}${svBtn}<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`)
           .addTo(map);
       });
 
@@ -211,17 +265,17 @@ geocoder.on('result', (e) => {
   const matchField = properties.__matchField;
   const matchValue = (properties.__matchValue ?? '').toString().trim();
 
-  const norm = (v) => (v ?? '').toString().toLowerCase().replace(/\s+/g, '').trim();
+  const normLocal = (v) => (v ?? '').toString().toLowerCase().replace(/\s+/g, '').trim();
   const features = (PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features)) ? PREDIOS_DATA.features : [];
 
   let toHighlight = [];
 
   if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
-    const mv = norm(matchValue);
+    const mv = normLocal(matchValue);
     toHighlight = features.filter((f) => {
       const p = f.properties || {};
       const v = matchField === 'NUMERO_DOCUMENTO' ? p.NUMERO_DOCUMENTO : p.codigo;
-      return norm(v) === mv;
+      return normLocal(v) === mv;
     });
   }
 
@@ -243,6 +297,10 @@ geocoder.on('result', (e) => {
         })()
       : 'N/A';
 
+  // ✅ coords para Street View: centro del bbox del grupo
+  const b = turf.bbox(fc);
+  const svCenter = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
+
   const popupContent = `
     <strong>Código:</strong> ${properties.codigo || 'N/A'}<br>
     <strong>Destino:</strong> ${properties.DESTINO || 'N/A'}<br>
@@ -250,6 +308,15 @@ geocoder.on('result', (e) => {
     <strong>Documento:</strong> ${properties.NUMERO_DOCUMENTO || 'N/A'}<br>
     <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
     <strong>Área (㎡):</strong> ${Math.round(properties.Shape_Area || 0)}<br>
+
+    <div style="margin-top:10px;">
+      <a href="${streetViewUrl(svCenter)}" target="_blank" rel="noopener"
+         style="display:inline-block; padding:6px 10px; border-radius:6px;
+                background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+        📷 Street View
+      </a>
+    </div>
+
     <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
   `;
 
