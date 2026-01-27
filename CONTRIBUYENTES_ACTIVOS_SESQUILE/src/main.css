@@ -22,7 +22,7 @@ body {
     background-color: rgba(0, 0, 0, 0.7);
     padding: 15px;
     border-radius: 8px;
-    width: 220px;
+    width: 240px; /* un poquito más por 2 ítems nuevos */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     color: white;
 }
@@ -56,7 +56,7 @@ body {
     height: 18px !important;
     min-width: 18px !important;
     min-height: 18px !important;
-    border-radius: 3px;
+    border-radius: 3px;          /* por defecto: cuadrito */
     border: 1px solid #ffffff;
     flex: 0 0 18px;
 }
@@ -71,17 +71,29 @@ body {
     border: 2px solid #3a86ff !important;
 }
 
-/* 🟢 Predios contribuyentes natural */
+/* 🟢 Predios contribuyentes natural (polígono) */
 .legend-color.predios-natural {
     background-color: #2ec4b6;
 }
 
-/* 🌸 Predios contribuyentes jurídicos */
+/* 🌸 Predios contribuyentes jurídicos (polígono) */
 .legend-color.predios-juridicos {
     background-color: #ff006e;
 }
 
-/* 🟡 Predio seleccionado */
+/* 🟢 Persona natural (puntos) -> puntico */
+.legend-color.persona-natural {
+    background-color: #2ec4b6;
+    border-radius: 999px !important; /* ✅ puntico */
+}
+
+/* 🌸 Persona jurídica (puntos) -> puntico */
+.legend-color.persona-juridica {
+    background-color: #ff006e;
+    border-radius: 999px !important; /* ✅ puntico */
+}
+
+/* 🟡 Seleccionado */
 .legend-color.predio-seleccionado {
     background-color: #ffff00;
 }
