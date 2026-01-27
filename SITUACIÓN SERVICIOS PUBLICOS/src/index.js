@@ -66,23 +66,41 @@ function streetViewUrl([lng, lat]) {
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 }
 
-function popupHTMLCampos(props, campos, titulo) {
+function formatAvaluo(val) {
+  if (val === null || val === undefined || val === "") return "N/A";
+  const n = Number(val);
+  return isNaN(n) ? String(val) : n.toLocaleString("es-CO");
+}
+
+function formatArea(val) {
+  if (val === null || val === undefined || val === "") return "N/A";
+  const n = Number(val);
+  return isNaN(n) ? String(val) : Math.round(n).toString();
+}
+
+// =====================================================
+// ✅ POPUP PREDIOS (como el “viejo”, pero por CLIC)
+// =====================================================
+function popupHTMLPredio(props) {
   props = props || {};
-  const rows = campos.map((k) => {
-    let v = props[k];
-    if (v === null || v === undefined || v === "") v = "N/A";
-    return `<strong>${k}:</strong> ${v}`;
-  }).join("<br>");
+
+  const avaluoTxt = formatAvaluo(props["AVALUO 2026"]);
+  const areaTxt = formatArea(props["Shape_Area"]);
 
   return `
-    <div style="font-weight:700; margin-bottom:6px;">${titulo}</div>
-    ${rows}
+    <div style="font-weight:700; margin-bottom:6px;">Predio municipio de Sesquilé</div>
+    <strong>Código:</strong> ${props.codigo ?? "N/A"}<br>
+    <strong>Destino:</strong> ${props.DESTINO ?? "N/A"}<br>
+    <strong>Nombre:</strong> ${props.NOMBRE ?? "N/A"}<br>
+    <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? "N/A"}<br>
+    <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
+    <strong>Área (㎡):</strong> ${areaTxt}<br>
     <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
   `;
 }
 
 // =====================================================
-// ✅ POPUP SERVICIOS: SOLO ESTOS CAMPOS (los definitivos)
+// ✅ POPUP SERVICIOS (solo estos 10 campos) + Street View
 // =====================================================
 const CAMPOS_SERVICIOS = [
   "Número predial",
@@ -98,9 +116,13 @@ const CAMPOS_SERVICIOS = [
 ];
 
 function popupHTMLServicios(props, lngLat) {
-  const base = popupHTMLCampos(props, CAMPOS_SERVICIOS, "Situación de servicios públicos");
+  props = props || {};
+  const rows = CAMPOS_SERVICIOS.map((k) => {
+    let v = props[k];
+    if (v === null || v === undefined || v === "") v = "N/A";
+    return `<strong>${k}:</strong> ${v}`;
+  }).join("<br>");
 
-  // Botón Street View (igual que lo veníamos manejando)
   const btn = `
     <div style="margin-top:10px;">
       <a href="${streetViewUrl(lngLat)}" target="_blank"
@@ -111,18 +133,17 @@ function popupHTMLServicios(props, lngLat) {
     </div>
   `;
 
-  // Insertamos el botón antes del ©
-  return base.replace(
-    `<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`,
-    `${btn}<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`
-  );
+  return `
+    <div style="font-weight:700; margin-bottom:6px;">Situación de servicios públicos</div>
+    ${rows}
+    ${btn}
+    <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
+  `;
 }
 
 // =====================================================
 // ✅ CAPA PREDIOS (CONTORNO + POPUP al clic)
 // =====================================================
-const CAMPOS_PREDIOS = ["codigo", "NOMBRE", "DESTINO_ECONOMICO"];
-
 function addPrediosBase() {
   fetch("../src/data/PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson")
     .then((r) => r.json())
@@ -130,6 +151,7 @@ function addPrediosBase() {
       if (map.getSource("predios_base")) map.getSource("predios_base").setData(data);
       else map.addSource("predios_base", { type: "geojson", data });
 
+      // contorno
       if (!map.getLayer("predios_base_outline")) {
         map.addLayer({
           id: "predios_base_outline",
@@ -144,10 +166,28 @@ function addPrediosBase() {
         });
       }
 
-      // Popup por clic en predio (como “venía antes”)
-      safeOff("click", "predios_base_outline");
+      // ✅ Para poder capturar click sobre el polígono, creamos un fill transparente
+      if (!map.getLayer("predios_base_click")) {
+        map.addLayer({
+          id: "predios_base_click",
+          type: "fill",
+          source: "predios_base",
+          minzoom: 12,
+          paint: {
+            "fill-color": "#000000",
+            "fill-opacity": 0.001, // invisible pero clickable
+          },
+        });
+      }
 
-      map.on("click", "predios_base_outline", (e) => {
+      safeOff("click", "predios_base_click");
+      safeOff("mouseenter", "predios_base_click");
+      safeOff("mouseleave", "predios_base_click");
+
+      map.on("mouseenter", "predios_base_click", () => (map.getCanvas().style.cursor = "pointer"));
+      map.on("mouseleave", "predios_base_click", () => (map.getCanvas().style.cursor = ""));
+
+      map.on("click", "predios_base_click", (e) => {
         const f = e.features && e.features[0];
         if (!f) return;
 
@@ -155,9 +195,13 @@ function addPrediosBase() {
 
         popup
           .setLngLat(center)
-          .setHTML(popupHTMLCampos(f.properties || {}, CAMPOS_PREDIOS, "Predios municipio de Sesquilé"))
+          .setHTML(popupHTMLPredio(f.properties || {}))
           .addTo(map);
       });
+
+      // Orden: contorno debajo del fill clickable (da igual visualmente) pero lo dejamos coherente
+      if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
+      if (map.getLayer("predios_base_click")) map.moveLayer("predios_base_click");
     })
     .catch((err) => console.error("Error cargando predios base:", err));
 }
@@ -166,7 +210,6 @@ function addPrediosBase() {
 // ✅ CAPA SERVICIOS (PUNTOS + POPUP + Street View)
 // =====================================================
 function addServiciosPublicos() {
-  // Asegúrate que el archivo exista EXACTO en src/data/
   const FILE = "Servicios_publicos_puntos.geojson";
 
   fetch(`../src/data/${FILE}`)
@@ -196,13 +239,8 @@ function addServiciosPublicos() {
       safeOff("mouseleave", "servicios_publicos_layer");
       safeOff("click", "servicios_publicos_layer");
 
-      map.on("mouseenter", "servicios_publicos_layer", () => {
-        map.getCanvas().style.cursor = "pointer";
-      });
-
-      map.on("mouseleave", "servicios_publicos_layer", () => {
-        map.getCanvas().style.cursor = "";
-      });
+      map.on("mouseenter", "servicios_publicos_layer", () => (map.getCanvas().style.cursor = "pointer"));
+      map.on("mouseleave", "servicios_publicos_layer", () => (map.getCanvas().style.cursor = ""));
 
       map.on("click", "servicios_publicos_layer", (e) => {
         const f = e.features && e.features[0];
@@ -210,13 +248,12 @@ function addServiciosPublicos() {
 
         const lngLat = getPointLngLat(f);
 
-        // Popup servicios + Street View
         popup
           .setLngLat(lngLat)
           .setHTML(popupHTMLServicios(f.properties || {}, lngLat))
           .addTo(map);
 
-        // Highlight
+        // highlight
         const hs = map.getSource("highlight");
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
       });
@@ -252,8 +289,7 @@ function addHighlight() {
 }
 
 // =====================================================
-// ✅ BUSCADOR LOCAL (igual estilo que veníamos)
-// Busca en SERVICIOS por varios campos, y fallback a todo
+// ✅ BUSCADOR LOCAL (SERVICIOS) + Street View
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
@@ -270,7 +306,6 @@ const geocoder = new MapboxGeocoder({
     for (const feature of SERVICIOS_DATA.features) {
       const p = feature.properties || {};
 
-      // Campos clave
       const vPredial = norm(p["Número predial"]);
       const vProp = norm(p["Nombre del propietario"]);
       const vTipo = norm(p["Tipo de predio"]);
@@ -292,7 +327,6 @@ const geocoder = new MapboxGeocoder({
         (vInt && vInt.includes(query)) ||
         (vGas && vGas.includes(query));
 
-      // Fallback a todo
       if (!ok) {
         const big = norm(Object.values(p).join(" "));
         ok = big.includes(query);
@@ -322,23 +356,18 @@ const geocoder = new MapboxGeocoder({
 
 map.addControl(geocoder, "top-left");
 
-// =====================================================
-// ✅ Resultado del buscador: zoom + highlight + popup + Street View
-// =====================================================
+// Resultado del buscador
 geocoder.on("result", (e) => {
   const f = e.result;
   if (!f) return;
 
   const lngLat = f.center || getPointLngLat(f);
 
-  // highlight
   const hs = map.getSource("highlight");
   if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
 
-  // zoom
   map.flyTo({ center: lngLat, zoom: 18 });
 
-  // popup servicios + Street View
   popup
     .setLngLat(lngLat)
     .setHTML(popupHTMLServicios(f.properties || {}, lngLat))
@@ -349,7 +378,7 @@ geocoder.on("result", (e) => {
 // CARGA FINAL (orden correcto)
 // =====================================================
 map.on("style.load", () => {
-  addPrediosBase();        // abajo (contorno)
+  addPrediosBase();        // abajo (contorno + click)
   addServiciosPublicos();  // arriba (puntos)
   addHighlight();          // arriba de todo
 
@@ -357,8 +386,9 @@ map.on("style.load", () => {
   setTimeout(() => {
     try {
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
+      if (map.getLayer("predios_base_click")) map.moveLayer("predios_base_click");
       if (map.getLayer("servicios_publicos_layer")) map.moveLayer("servicios_publicos_layer");
       if (map.getLayer("highlight_circle")) map.moveLayer("highlight_circle");
     } catch (e) {}
-  }, 350);
+  }, 400);
 });
