@@ -1,9 +1,10 @@
 // =====================================================
-// ✅ Visor Predial + Servicios Públicos – Sesquilé
+// ✅ Visor Predial + Servicios Públicos – Sesquilé (ACTUALIZADO)
 // =====================================================
 // 🔵 Predios municipio: polígono (CONTORNO + POPUP al clic)
 // 🟠 Servicios públicos: puntos (POPUP + Street View + BUSCADOR)
 // 🟡 Highlight: punto seleccionado (por buscador y clic)
+// ✅ PRIORIDAD DE CLIC: si hay punto encima, manda el punto (no el predio)
 // =====================================================
 
 mapboxgl.accessToken =
@@ -79,7 +80,7 @@ function formatArea(val) {
 }
 
 // =====================================================
-// ✅ POPUP PREDIOS (como el “viejo”, pero por CLIC)
+// ✅ POPUP PREDIOS (CLIC)
 // =====================================================
 function popupHTMLPredio(props) {
   props = props || {};
@@ -100,7 +101,7 @@ function popupHTMLPredio(props) {
 }
 
 // =====================================================
-// ✅ POPUP SERVICIOS (solo estos 10 campos) + Street View
+// ✅ POPUP SERVICIOS (10 campos) + Street View
 // =====================================================
 const CAMPOS_SERVICIOS = [
   "Número predial",
@@ -143,6 +144,7 @@ function popupHTMLServicios(props, lngLat) {
 
 // =====================================================
 // ✅ CAPA PREDIOS (CONTORNO + POPUP al clic)
+// ✅ PRIORIDAD: si hay punto encima, NO muestra predio
 // =====================================================
 function addPrediosBase() {
   fetch("../src/data/PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson")
@@ -166,7 +168,7 @@ function addPrediosBase() {
         });
       }
 
-      // ✅ Para poder capturar click sobre el polígono, creamos un fill transparente
+      // fill transparente clickable
       if (!map.getLayer("predios_base_click")) {
         map.addLayer({
           id: "predios_base_click",
@@ -175,7 +177,7 @@ function addPrediosBase() {
           minzoom: 12,
           paint: {
             "fill-color": "#000000",
-            "fill-opacity": 0.001, // invisible pero clickable
+            "fill-opacity": 0.001,
           },
         });
       }
@@ -188,6 +190,12 @@ function addPrediosBase() {
       map.on("mouseleave", "predios_base_click", () => (map.getCanvas().style.cursor = ""));
 
       map.on("click", "predios_base_click", (e) => {
+        // ✅ PRIORIDAD: si el click cae sobre un punto de servicios, NO abrir predio
+        const hitServicios = map.queryRenderedFeatures(e.point, {
+          layers: ["servicios_publicos_layer"],
+        });
+        if (hitServicios && hitServicios.length) return;
+
         const f = e.features && e.features[0];
         if (!f) return;
 
@@ -199,7 +207,7 @@ function addPrediosBase() {
           .addTo(map);
       });
 
-      // Orden: contorno debajo del fill clickable (da igual visualmente) pero lo dejamos coherente
+      // Orden coherente
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
       if (map.getLayer("predios_base_click")) map.moveLayer("predios_base_click");
     })
@@ -257,6 +265,14 @@ function addServiciosPublicos() {
         const hs = map.getSource("highlight");
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
       });
+
+      // ✅ Blindaje de orden cuando ya existen capas
+      try {
+        if (map.getLayer("predios_base_click") && map.getLayer("servicios_publicos_layer")) {
+          map.moveLayer("servicios_publicos_layer"); // arriba de predios
+        }
+        if (map.getLayer("highlight_circle")) map.moveLayer("highlight_circle"); // arriba de todo
+      } catch (e) {}
     })
     .catch((err) => console.error("Error cargando servicios públicos:", err));
 }
@@ -382,7 +398,7 @@ map.on("style.load", () => {
   addServiciosPublicos();  // arriba (puntos)
   addHighlight();          // arriba de todo
 
-  // Blindaje de orden (por si demora el fetch)
+  // Blindaje extra (por si demora el fetch)
   setTimeout(() => {
     try {
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
