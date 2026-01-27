@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Predios Urbanos Sesquilé</title>
+  <title>Contribuyentes y Predios — Sesquilé</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
   <!-- Mapbox CSS -->
@@ -23,6 +23,36 @@
 
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
+
+  <!-- CSS extra para leyenda (punticos + cuadritos) -->
+  <style>
+    /* Si ya tienes estos estilos en main.css, no pasa nada (se sobreescriben) */
+    .legend-color{
+      display:inline-block;
+      width:12px;
+      height:12px;
+      margin-right:8px;
+      vertical-align:middle;
+      border:1px solid rgba(255,255,255,.85);
+      box-sizing:border-box;
+    }
+
+    /* Cuadritos (polígonos) */
+    .predios-base{ background: transparent; border:1px solid #ffffff; }
+    .predios-natural{ background:#2ec4b6; border-radius:3px; }
+    .predios-juridicos{ background:#ff006e; border-radius:3px; }
+    .predio-seleccionado{ background:#ffff00; border-radius:3px; }
+
+    /* Punticos (puntos) */
+    .persona-natural{
+      background:#2ec4b6;
+      border-radius:999px;
+    }
+    .persona-juridica{
+      background:#ff006e;
+      border-radius:999px;
+    }
+  </style>
 </head>
 
 <body>
@@ -30,16 +60,16 @@
   <!-- CONTENEDOR DEL MAPA -->
   <div id="map"></div>
 
-  <!-- LEYENDA (ACTUALIZADA A 3 CAPAS) -->
+  <!-- LEYENDA (ACTUALIZADA A 5 CAPAS: base + 2 polígonos + 2 puntos + seleccionado) -->
   <div id="legend" class="legend-container">
     <div class="legend-title">
-      Predial<br>Sesquilé
+      Contribuyentes<br>Sesquilé
     </div>
 
     <ul class="legend-list">
       <li>
         <span class="legend-color predios-base"></span>
-        Predios municipio Sesquilé
+        Predios municipio Sesquilé (contorno)
       </li>
 
       <li>
@@ -53,8 +83,18 @@
       </li>
 
       <li>
+        <span class="legend-color persona-natural"></span>
+        Persona natural (puntos)
+      </li>
+
+      <li>
+        <span class="legend-color persona-juridica"></span>
+        Persona jurídica (puntos)
+      </li>
+
+      <li>
         <span class="legend-color predio-seleccionado"></span>
-        Predio seleccionado
+        Seleccionado
       </li>
     </ul>
 
@@ -66,9 +106,9 @@
   <!-- (puedes dejarla; si no la usas en JS no molesta) -->
   <!-- ========================= -->
   <div class="info-box">
-    <h3>Información del predio</h3>
+    <h3>Información</h3>
     <div class="info-content">
-      Busca un predio para ver detalles
+      Busca un contribuyente/predio para ver detalles
     </div>
   </div>
 
