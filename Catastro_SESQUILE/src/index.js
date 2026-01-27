@@ -6,6 +6,8 @@
 // ✅ Usa PREDIOS_DATA para búsqueda completa (sin querySourceFeatures)
 // ✅ Evita errores "source/layer already exists"
 // ✅ POPUP SOLO POR CLICK (no hover)
+// ✅ + BOTÓN STREET VIEW EN POPUP (también para predios/polígonos)
+//    (Google ajusta al panorama/vía más cercana)
 // =====================================================
 
 mapboxgl.accessToken =
@@ -53,9 +55,53 @@ function norm(v) {
     .trim();
 }
 
-function buildPopupHTML(props, extraHTML = '') {
+// ✅ Punto representativo del feature (para polígonos/puntos) + fallback
+function getFeatureLngLat(feature, fallbackLngLat = null) {
+  // 1) si viene del click (e.lngLat)
+  if (
+    fallbackLngLat &&
+    typeof fallbackLngLat.lng === 'number' &&
+    typeof fallbackLngLat.lat === 'number'
+  ) {
+    return [fallbackLngLat.lng, fallbackLngLat.lat];
+  }
+
+  // 2) si es punto
+  const c = feature?.geometry?.coordinates;
+  if (Array.isArray(c) && c.length >= 2 && c[0] != null && c[1] != null) {
+    return [Number(c[0]), Number(c[1])];
+  }
+
+  // 3) si es polígono: punto dentro del polígono (mejor que centroide)
+  try {
+    const pt = turf.pointOnFeature(feature).geometry.coordinates;
+    return [Number(pt[0]), Number(pt[1])];
+  } catch (e) {}
+
+  // 4) fallback
+  return [-73.79724, 5.04463];
+}
+
+function streetViewUrl([lng, lat]) {
+  return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+}
+
+function buildPopupHTML(props, lngLat = null, extraHTML = '') {
+  props = props || {};
   const avaluoTxt = formatAvaluo(props['AVALUO 2026']);
   const areaTxt = formatArea(props.Shape_Area);
+
+  const svBtn = lngLat
+    ? `
+      <div style="margin-top:10px;">
+        <a href="${streetViewUrl(lngLat)}" target="_blank" rel="noopener"
+           style="display:inline-block; padding:6px 10px; border-radius:6px;
+                  background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+          📷 Street View
+        </a>
+      </div>
+    `
+    : '';
 
   return `
     <strong>Código:</strong> ${props.codigo ?? 'N/A'}<br>
@@ -65,6 +111,7 @@ function buildPopupHTML(props, extraHTML = '') {
     <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
     <strong>Área (㎡):</strong> ${areaTxt}<br>
     ${extraHTML}
+    ${svBtn}
     <br><a style="font-size:9px;">&#9400; EffectiveActions</a>
   `;
 }
@@ -123,14 +170,17 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
         if (!feature) return;
 
         const props = feature.properties || {};
-        const lngLat = e.lngLat;
+        const lngLatClick = e.lngLat;
 
         // (Opcional) si quieres que al click también resalte el grupo:
         highlightGroupFromFeature(feature);
 
+        // ✅ coords para Street View (click o punto representativo)
+        const svLngLat = getFeatureLngLat(feature, lngLatClick);
+
         popup
-          .setLngLat(lngLat)
-          .setHTML(buildPopupHTML(props))
+          .setLngLat(lngLatClick) // el popup se abre donde clickeaste
+          .setHTML(buildPopupHTML(props, svLngLat)) // el botón usa svLngLat
           .addTo(map);
       });
 
@@ -368,9 +418,13 @@ geocoder.on('result', (e) => {
         .join('<br>')}${codigos.length > 10 ? '<br>…' : ''}`
     : '';
 
+  // ✅ coords para Street View desde el centro del bbox del grupo (más representativo)
+  const b = turf.bbox(fc);
+  const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]; // [lng, lat]
+
   // Popup SOLO por selección (geocoder)
   popup
     .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
-    .setHTML(buildPopupHTML(properties, listaCodigos))
+    .setHTML(buildPopupHTML(properties, center, listaCodigos))
     .addTo(map);
 });
