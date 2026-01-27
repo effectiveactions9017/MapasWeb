@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="utf-8">
-  <title>Predios Urbanos Sesquilé</title>
+  <title>Predial + Recaudo impuesto ICA – Sesquilé</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
   <!-- Mapbox CSS -->
@@ -23,16 +22,11 @@
   <!-- Turf.js -->
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js"></script>
 
-  <!-- Fuentes y estilos adicionales -->
+  <!-- Fuente -->
   <link
     href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap"
     rel="stylesheet"
   >
-  <link
-    href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css"
-    rel="stylesheet"
-  >
-  <script async defer src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"></script>
 
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
@@ -43,41 +37,25 @@
   <!-- CONTENEDOR DEL MAPA -->
   <div id="map"></div>
 
-  <!-- LEYENDA -->
-<div class="legend-container">
-  <div class="legend-title">
-    Predial<br>Sesquilé
-  </div>
-
-  <ul class="legend-list">
-    <li>
-      <span class="legend-color predios-municipales"></span>
-      Predios municipales
-    </li>
-
-    <li>
-      <span class="legend-color predios-sin-info"></span>
-      Predios sin información R1
-    </li>
-
-    <li>
-      <span class="legend-color predio-seleccionado"></span>
-      Predio seleccionado
-    </li>
-  </ul>
-
-  <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
-</div>
-
-
-  <!-- ========================= -->
-  <!-- CAJA DE INFORMACIÓN -->
-  <!-- ========================= -->
-  <div class="info-box">
-    <h3>Información del predio</h3>
-    <div class="info-content">
-      Busca un predio para ver detalles
+  <!-- LEYENDA (ACTUALIZADA) -->
+  <div class="legend-container">
+    <div class="legend-title">
+      Predial<br>Sesquilé
     </div>
+
+    <ul class="legend-list">
+      <li>
+        <span class="legend-color predios-municipio"></span>
+        Predial
+      </li>
+
+      <li>
+        <span class="legend-color ica-puntos"></span>
+        Recaudo impuesto ICA
+      </li>
+    </ul>
+
+    <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
   </div>
 
   <!-- SCRIPT PRINCIPAL -->
