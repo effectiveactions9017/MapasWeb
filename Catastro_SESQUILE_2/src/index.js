@@ -1,7 +1,8 @@
 // =====================================================
-// ✅ Predial Sesquilé - Mapbox GL JS
+// ✅ Predial Sesquilé - Mapbox GL JS (ACTUALIZADO)
 // ✅ Búsqueda por: codigo, NOMBRE, NUMERO_DOCUMENTO
 // ✅ Resalta 1 o varios predios (mismo codigo o documento)
+// ✅ POPUP SOLO POR CLICK + SOLO POR SELECCIÓN DEL BUSCADOR (NO HOVER)
 // ✅ + Street View en el POPUP (también para predios/polígonos)
 //    (Google ajusta al panorama/vía más cercana)
 // =====================================================
@@ -20,8 +21,8 @@ const map = new mapboxgl.Map({
 });
 
 let popup = new mapboxgl.Popup({
-  closeButton: false,
-  closeOnClick: false,
+  closeButton: true,
+  closeOnClick: true,
   className: 'custom-popup'
 });
 
@@ -32,7 +33,7 @@ let PREDIOS_DATA = null;
 // HELPERS Street View (punto representativo)
 // =====================================================
 function getFeatureLngLat(feature, fallbackLngLat = null) {
-  // 1) si viene de evento (mousemove/click) úsalo
+  // 1) si viene de evento (click) úsalo
   if (
     fallbackLngLat &&
     typeof fallbackLngLat.lng === 'number' &&
@@ -61,7 +62,48 @@ function streetViewUrl([lng, lat]) {
 }
 
 // =====================================================
-// Capa + popup
+// Util: construir HTML del popup desde fields + Street View
+// =====================================================
+function buildPopupFromFields(feature, lngLatForPopup, popupFields, lngLatForSV) {
+  const props = feature.properties || {};
+
+  const popupContent = popupFields
+    .map((field) => {
+      let value = props?.[field.key];
+
+      // Área (m²) - usa Shape_Area
+      if (field.key === 'Shape_Area' && value !== null && value !== undefined) {
+        value = Math.round(Number(value));
+      }
+
+      // Avalúo (campo con espacio)
+      if (field.key === 'AVALUO 2026' && value !== null && value !== undefined && value !== '') {
+        const n = Number(value);
+        value = isNaN(n) ? value : n.toLocaleString('es-CO');
+      }
+
+      return `<strong>${field.label}:</strong> ${value ?? 'N/A'}`;
+    })
+    .join('<br>');
+
+  const svBtn = `
+    <div style="margin-top:10px;">
+      <a href="${streetViewUrl(lngLatForSV)}" target="_blank" rel="noopener"
+         style="display:inline-block; padding:6px 10px; border-radius:6px;
+                background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+        📷 Street View
+      </a>
+    </div>
+  `;
+
+  popup
+    .setLngLat(lngLatForPopup)
+    .setHTML(`${popupContent}${svBtn}<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`)
+    .addTo(map);
+}
+
+// =====================================================
+// Capa + popup (SOLO CLICK)
 // =====================================================
 function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
   fetch(`../src/data/${geojsonFile}`)
@@ -91,60 +133,34 @@ function addLayer(geojsonFile, sourceId, layerId, color, popupFields) {
         });
       }
 
-      // Popup al mover el mouse
+      // ✅ IMPORTANTE: QUITAR MOUSEMOVE (HOVER POPUP)
       try { map.off('mousemove', layerId); } catch (e) {}
       try { map.off('mouseenter', layerId); } catch (e) {}
       try { map.off('mouseleave', layerId); } catch (e) {}
+      try { map.off('click', layerId); } catch (e) {}
 
-      map.on('mousemove', layerId, (e) => {
-        const feature = e.features && e.features[0];
-        if (!feature) return;
-
-        const popupContent = popupFields
-          .map((field) => {
-            let value = feature.properties?.[field.key];
-
-            // Área (m²) - usa Shape_Area
-            if (field.key === 'Shape_Area' && value !== null && value !== undefined) {
-              value = Math.round(Number(value));
-            }
-
-            // Avalúo (campo con espacio)
-            if (field.key === 'AVALUO 2026' && value !== null && value !== undefined && value !== '') {
-              const n = Number(value);
-              value = isNaN(n) ? value : n.toLocaleString('es-CO');
-            }
-
-            return `<strong>${field.label}:</strong> ${value ?? 'N/A'}`;
-          })
-          .join('<br>');
-
-        // ✅ Street View coords (desde el mouse o punto representativo)
-        const svLngLat = getFeatureLngLat(feature, e.lngLat);
-
-        const svBtn = `
-          <div style="margin-top:10px;">
-            <a href="${streetViewUrl(svLngLat)}" target="_blank" rel="noopener"
-               style="display:inline-block; padding:6px 10px; border-radius:6px;
-                      background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
-              📷 Street View
-            </a>
-          </div>
-        `;
-
-        popup
-          .setLngLat(e.lngLat)
-          .setHTML(`${popupContent}${svBtn}<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`)
-          .addTo(map);
-      });
-
+      // Cursor pointer (solo cursor)
       map.on('mouseenter', layerId, () => {
         map.getCanvas().style.cursor = 'pointer';
       });
 
       map.on('mouseleave', layerId, () => {
         map.getCanvas().style.cursor = '';
-        popup.remove();
+      });
+
+      // ✅ Popup SOLO por CLICK
+      map.on('click', layerId, (e) => {
+        const feature = e.features && e.features[0];
+        if (!feature) return;
+
+        const svLngLat = getFeatureLngLat(feature, e.lngLat);
+
+        buildPopupFromFields(
+          feature,
+          e.lngLat,         // popup donde clickeas
+          popupFields,
+          svLngLat          // Street View
+        );
       });
     })
     .catch((err) => console.error('Error cargando GeoJSON:', err));
@@ -256,7 +272,7 @@ const geocoder = new MapboxGeocoder({
 map.addControl(geocoder, 'top-left');
 map.addControl(new mapboxgl.NavigationControl());
 
-// Al seleccionar resultado: resaltar grupo + zoom + popup
+// Al seleccionar resultado: resaltar grupo + zoom + popup (SOLO por selección)
 geocoder.on('result', (e) => {
   const result = e.result;
   if (!result || !result.geometry) return;
@@ -282,46 +298,39 @@ geocoder.on('result', (e) => {
   if (!toHighlight.length) toHighlight = [result];
 
   const fc = { type: 'FeatureCollection', features: toHighlight };
+
+  // ✅ highlight
   const hlSource = map.getSource('predios_highlight');
   if (hlSource) hlSource.setData(fc);
 
+  // ✅ zoom
   const bounds = turf.bbox(fc);
   map.fitBounds(bounds, { padding: 40 });
 
-  const avaluoRaw = properties['AVALUO 2026'];
-  const avaluoTxt =
-    avaluoRaw !== null && avaluoRaw !== undefined && avaluoRaw !== ''
-      ? (() => {
-          const n = Number(avaluoRaw);
-          return isNaN(n) ? avaluoRaw : n.toLocaleString('es-CO');
-        })()
-      : 'N/A';
+  // ✅ construir popup con los mismos fields
+  const popupFields = [
+    { label: 'Código', key: 'codigo' },
+    { label: 'Destino', key: 'DESTINO' },
+    { label: 'Nombre', key: 'NOMBRE' },
+    { label: 'Documento', key: 'NUMERO_DOCUMENTO' },
+    { label: 'Avalúo 2026', key: 'AVALUO 2026' },
+    { label: 'Área (㎡)', key: 'Shape_Area' }
+  ];
 
-  // ✅ coords para Street View: centro del bbox del grupo
+  // Street View: centro del bbox del grupo
   const b = turf.bbox(fc);
   const svCenter = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
 
-  const popupContent = `
-    <strong>Código:</strong> ${properties.codigo || 'N/A'}<br>
-    <strong>Destino:</strong> ${properties.DESTINO || 'N/A'}<br>
-    <strong>Nombre:</strong> ${properties.NOMBRE || 'N/A'}<br>
-    <strong>Documento:</strong> ${properties.NUMERO_DOCUMENTO || 'N/A'}<br>
-    <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
-    <strong>Área (㎡):</strong> ${Math.round(properties.Shape_Area || 0)}<br>
+  // popup en el centro del resultado (o centroide)
+  const center = result.center || turf.centroid(result).geometry.coordinates;
 
-    <div style="margin-top:10px;">
-      <a href="${streetViewUrl(svCenter)}" target="_blank" rel="noopener"
-         style="display:inline-block; padding:6px 10px; border-radius:6px;
-                background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
-        📷 Street View
-      </a>
-    </div>
+  // construir "feature-like" para reutilizar el builder
+  const featureLike = { properties };
 
-    <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
-  `;
-
-  popup
-    .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
-    .setHTML(popupContent)
-    .addTo(map);
+  buildPopupFromFields(
+    featureLike,
+    center,
+    popupFields,
+    svCenter
+  );
 });
