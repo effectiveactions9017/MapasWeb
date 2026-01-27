@@ -9,7 +9,7 @@
 // ✅ Popup: campos seleccionados + botón Street View (para TODOS)
 // ✅ Buscador: busca en las 4 capas
 // ✅ Highlight: polígonos (fill+line) y puntos (circle)
-// ✅ Leyenda: muestra cuadrito (polígonos) y puntico (puntos)
+// ✅ Leyenda: usar SOLO la del HTML (#legend). NO se inyecta leyenda extra.
 // ✅ FIX: código predial = "codigo" (minúscula)
 // =====================================================
 
@@ -17,8 +17,8 @@ mapboxgl.accessToken =
   "pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w";
 
 // ===== COLORES UNIFICADOS =====
-const COLOR_NATURAL = "#2ec4b6";  // 🟩 verde
-const COLOR_JURIDICO = "#ff006e"; // 🟥 rojo
+const COLOR_NATURAL = "#2ec4b6";   // 🟩 verde
+const COLOR_JURIDICO = "#ff006e";  // 🟥 rojo
 
 // =====================================================
 // MAPA
@@ -76,10 +76,8 @@ function norm(v) {
 }
 
 function getPointLngLat(feature) {
-  // para puntos
   const c = feature?.geometry?.coordinates;
   if (Array.isArray(c) && c.length >= 2) return [Number(c[0]), Number(c[1])];
-  // fallback
   try {
     const cent = turf.centroid(feature).geometry.coordinates;
     return [Number(cent[0]), Number(cent[1])];
@@ -89,7 +87,6 @@ function getPointLngLat(feature) {
 }
 
 function getFeatureLngLat(feature, fallbackLngLat = null) {
-  // para polígonos/puntos: devuelve [lng,lat]
   if (
     fallbackLngLat &&
     typeof fallbackLngLat.lng === "number" &&
@@ -112,7 +109,6 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
 }
 
 function streetViewUrl([lng, lat]) {
-  // Google ajusta al panorama/vía más cercana
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 }
 
@@ -148,87 +144,14 @@ function popupHTMLCamposSeleccionados(props, titulo = "Información", lngLatForS
 }
 
 // =====================================================
-// ✅ LEYENDA (cuadritos + punticos)
+// ✅ IMPORTANTE: QUITAR LA LEYENDA DUPLICADA
+// - Ya existe la leyenda grande en tu HTML con id="legend"
+// - Por eso ELIMINAMOS ensureLegend() y NO la llamamos.
+// Si por alguna razón quedó una leyenda vieja inyectada (ea-legend), la removemos.
 // =====================================================
-function ensureLegend() {
-  if (document.getElementById("ea-legend")) return;
-
-  const div = document.createElement("div");
-  div.id = "ea-legend";
-  div.className = "ea-legend";
-  div.innerHTML = `
-    <div class="ea-legend-title">Leyenda</div>
-
-    <div class="ea-legend-item">
-      <span class="ea-swatch ea-square" style="background:${COLOR_NATURAL}"></span>
-      <span>Predios contribuyentes natural</span>
-    </div>
-    <div class="ea-legend-item">
-      <span class="ea-swatch ea-square" style="background:${COLOR_JURIDICO}"></span>
-      <span>Predios contribuyentes jurídicos</span>
-    </div>
-
-    <div class="ea-legend-item">
-      <span class="ea-swatch ea-dot" style="background:${COLOR_NATURAL}"></span>
-      <span>Persona natural</span>
-    </div>
-    <div class="ea-legend-item">
-      <span class="ea-swatch ea-dot" style="background:${COLOR_JURIDICO}"></span>
-      <span>Persona jurídica</span>
-    </div>
-
-    <div class="ea-legend-item">
-      <span class="ea-swatch ea-hl"></span>
-      <span>Seleccionado</span>
-    </div>
-  `;
-
-  const css = document.createElement("style");
-  css.innerHTML = `
-    .ea-legend{
-      position:absolute;
-      bottom:20px;
-      right:10px;
-      z-index:10;
-      background: rgba(0,0,0,0.70);
-      color:#fff;
-      padding:12px 12px;
-      border-radius:10px;
-      width: 240px;
-      font-family: Arial, sans-serif;
-      box-shadow: 0 8px 20px rgba(0,0,0,.35);
-    }
-    .ea-legend-title{
-      font-weight: 800;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-    .ea-legend-item{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      margin: 6px 0;
-      font-size: 12px;
-      line-height: 1.2;
-    }
-    .ea-swatch{ display:inline-block; flex:0 0 auto; }
-    .ea-square{
-      width: 12px; height: 12px; border-radius: 3px;
-      border: 1px solid rgba(255,255,255,.8);
-    }
-    .ea-dot{
-      width: 12px; height: 12px; border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.8);
-    }
-    .ea-hl{
-      width: 12px; height: 12px; border-radius: 3px;
-      background: #ffff00;
-      border: 1px solid rgba(255,255,255,.8);
-    }
-  `;
-
-  document.head.appendChild(css);
-  document.body.appendChild(div);
+function removeInjectedLegendIfExists() {
+  const old = document.getElementById("ea-legend");
+  if (old) old.remove();
 }
 
 // =====================================================
@@ -261,13 +184,7 @@ function addBaseOutlineLayer(geojsonFile, sourceId, layerId, lineColor = "#fffff
 // =====================================================
 // ✅ CAPAS POLÍGONO INTERACTIVAS: clic -> popup + highlight
 // =====================================================
-function addInteractivePolygonLayer({
-  geojsonFile,
-  sourceId,
-  layerId,
-  baseColor,
-  datasetKey,
-}) {
+function addInteractivePolygonLayer({ geojsonFile, sourceId, layerId, baseColor, datasetKey }) {
   fetch(`../src/data/${geojsonFile}`)
     .then((r) => r.json())
     .then((data) => {
@@ -310,7 +227,6 @@ function addInteractivePolygonLayer({
         const props = f.properties || {};
         const center = turf.centroid(f).geometry.coordinates;
 
-        // highlight (polígono)
         const hl = map.getSource("poly_highlight");
         if (hl) hl.setData({ type: "FeatureCollection", features: [f] });
 
@@ -335,13 +251,7 @@ function addInteractivePolygonLayer({
 // =====================================================
 // ✅ CAPAS PUNTO INTERACTIVAS: clic -> popup + highlight
 // =====================================================
-function addInteractivePointLayer({
-  geojsonFile,
-  sourceId,
-  layerId,
-  color,
-  datasetKey,
-}) {
+function addInteractivePointLayer({ geojsonFile, sourceId, layerId, color, datasetKey }) {
   fetch(`../src/data/${geojsonFile}`)
     .then((r) => r.json())
     .then((data) => {
@@ -380,7 +290,6 @@ function addInteractivePointLayer({
         const props = f.properties || {};
         const lngLat = getPointLngLat(f);
 
-        // highlight (punto)
         const hl = map.getSource("point_highlight");
         if (hl) hl.setData({ type: "FeatureCollection", features: [f] });
 
@@ -404,7 +313,6 @@ function addInteractivePointLayer({
 // ✅ HIGHLIGHTS (polígonos y puntos)
 // =====================================================
 function ensureHighlightLayers() {
-  // ---- highlight polígonos
   if (!map.getSource("poly_highlight")) {
     map.addSource("poly_highlight", {
       type: "geojson",
@@ -428,7 +336,6 @@ function ensureHighlightLayers() {
     });
   }
 
-  // ---- highlight puntos
   if (!map.getSource("point_highlight")) {
     map.addSource("point_highlight", {
       type: "geojson",
@@ -453,7 +360,6 @@ function ensureHighlightLayers() {
 
 // =====================================================
 // ✅ GEOCODER: BUSCA EN LAS 4 CAPAS
-// Busca por: codigo, No Documento, Nombre del contribuyente
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
@@ -472,7 +378,7 @@ const geocoder = new MapboxGeocoder({
       feats.forEach((feature) => {
         const p = feature.properties || {};
 
-        const cod = (p["codigo"] ?? "").toString().toLowerCase(); // ✅ FIX
+        const cod = (p["codigo"] ?? "").toString().toLowerCase();
         const doc = (p["No Documento"] ?? "").toString().toLowerCase();
         const nom = (p["Nombre del contribuyente"] ?? "").toString().toLowerCase();
 
@@ -517,10 +423,9 @@ map.addControl(geocoder, "top-left");
 // CARGA DE CAPAS (ORDEN)
 // =====================================================
 map.on("style.load", () => {
-  // Leyenda (una vez)
-  ensureLegend();
+  // ✅ eliminar leyenda pequeña inyectada (si existe)
+  removeInjectedLegendIfExists();
 
-  // 1) Base abajo
   addBaseOutlineLayer(
     "PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson",
     "predios_base",
@@ -528,7 +433,6 @@ map.on("style.load", () => {
     "#ffffff"
   );
 
-  // 2) Polígonos (natural/jurídico)
   addInteractivePolygonLayer({
     geojsonFile: "PREDIOS_CONTRIBUYENTES_NATURAL.geojson",
     sourceId: "predios_natural",
@@ -545,7 +449,6 @@ map.on("style.load", () => {
     datasetKey: "JURIDICOS",
   });
 
-  // 3) Puntos (persona natural/jurídica)
   addInteractivePointLayer({
     geojsonFile: "Contribuyentes_Persona_Natural.geojson",
     sourceId: "persona_natural",
@@ -562,10 +465,8 @@ map.on("style.load", () => {
     datasetKey: "PERSONA_JURIDICA",
   });
 
-  // 4) Highlights arriba de todo
   ensureHighlightLayers();
 
-  // Blindaje de orden (por si fetch demora)
   setTimeout(() => {
     try {
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
@@ -584,21 +485,17 @@ map.on("style.load", () => {
 });
 
 // =====================================================
-// ✅ RESULTADO DEL BUSCADOR:
-// - Resalta grupo (si match fue por codigo o No Documento)
-// - Zoom al grupo
-// - Popup con Street View
+// ✅ RESULTADO DEL BUSCADOR
 // =====================================================
 geocoder.on("result", (e) => {
   const result = e.result;
   if (!result) return;
 
   const props = result.properties || {};
-  const dataset = props.__dataset;       // PREDIO_NATURAL | PREDIO_JURIDICO | PERSONA_NATURAL | PERSONA_JURIDICA
-  const matchField = props.__matchField; // codigo | No Documento | Nombre del contribuyente
+  const dataset = props.__dataset;
+  const matchField = props.__matchField;
   const matchValue = (props.__matchValue ?? "").toString().trim();
 
-  // Elegir FC según dataset
   let fc = null;
   if (dataset === "PREDIO_NATURAL") fc = NATURAL_DATA;
   if (dataset === "PREDIO_JURIDICO") fc = JURIDICOS_DATA;
@@ -608,7 +505,6 @@ geocoder.on("result", (e) => {
   const feats = fc && Array.isArray(fc.features) ? fc.features : [];
   let toHighlight = [];
 
-  // Agrupar por codigo o No Documento
   if ((matchField === "codigo" || matchField === "No Documento") && matchValue && feats.length) {
     const mv = norm(matchValue);
     toHighlight = feats.filter((f) => {
@@ -621,14 +517,13 @@ geocoder.on("result", (e) => {
   if (!toHighlight.length) toHighlight = [result];
 
   const highlightFC = { type: "FeatureCollection", features: toHighlight };
+
   const bounds = turf.bbox(highlightFC);
   map.fitBounds(bounds, { padding: 40 });
 
-  // ¿Es punto o polígono?
   const isPoint = (result.geometry?.type || "").toLowerCase().includes("point");
 
   if (isPoint) {
-    // highlight punto
     const hs = map.getSource("point_highlight");
     if (hs) hs.setData(highlightFC);
 
@@ -647,7 +542,6 @@ geocoder.on("result", (e) => {
       .addTo(map);
 
   } else {
-    // highlight polígono
     const hs = map.getSource("poly_highlight");
     if (hs) hs.setData(highlightFC);
 
@@ -660,7 +554,6 @@ geocoder.on("result", (e) => {
         ? "Predios contribuyentes jurídico"
         : "Información";
 
-    // Street View: centro del bbox del grupo
     const b = turf.bbox(highlightFC);
     const svCenter = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
 
