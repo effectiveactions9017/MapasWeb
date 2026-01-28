@@ -71,7 +71,7 @@ function popupHTMLICA(props, lngLat) {
   const texto = props.texto ?? props.TEXTO ?? props.nombre ?? props.NOMBRE ?? "N/A";
 
   return `
-    <div style="font-weight:700; margin-bottom:6px;">Recaudo impuesto ICA</div>
+    <div style="font-weight:700; margin-bottom:6px;">Unidades Productivas Identificadas</div>
     <strong>Texto:</strong> ${texto}<br>
 
     <div style="margin-top:10px;">
