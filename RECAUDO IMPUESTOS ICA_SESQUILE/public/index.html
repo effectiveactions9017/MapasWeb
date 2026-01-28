@@ -30,6 +30,27 @@
 
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
+
+  <!-- ✅ Estilos de la leyenda (colores actualizados) -->
+  <style>
+    /* Predial base (contorno blanco) */
+    .legend-color.predios-municipio{
+      background:#ffffff;
+      border:1px solid rgba(255,255,255,0.9);
+    }
+
+    /* ✅ ICA (verde) */
+    .legend-color.ica-puntos{
+      background:#00c853;
+      border:1px solid rgba(255,255,255,0.9);
+    }
+
+    /* ✅ Jurídicos (fucsia) */
+    .legend-color.juridicos{
+      background:#ff00ff;
+      border:1px solid rgba(255,255,255,0.9);
+    }
+  </style>
 </head>
 
 <body>
@@ -46,7 +67,12 @@
     <ul class="legend-list">
       <li>
         <span class="legend-color predios-municipio"></span>
-        Predial
+        Predial (base)
+      </li>
+
+      <li>
+        <span class="legend-color juridicos"></span>
+        Predios contribuyentes jurídicos
       </li>
 
       <li>
