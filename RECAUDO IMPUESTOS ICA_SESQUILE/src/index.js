@@ -26,7 +26,7 @@ const popup = new mapboxgl.Popup({
 // =====================================================
 // DATASETS COMPLETOS PARA BUSCADOR
 // =====================================================
-let PREDIOS_DATA = null;
+let PREDIOS_DATA = null; // (solo visual, pero lo cargamos por si lo necesitas luego)
 let ICA_DATA = null;
 let PREDIOS_JURIDICOS_DATA = null;
 let CONTRIB_JURIDICA_DATA = null;
@@ -48,18 +48,6 @@ function norm(v) {
     .trim();
 }
 
-function formatAvaluo(val) {
-  if (val === null || val === undefined || val === "") return "N/A";
-  const n = Number(val);
-  return isNaN(n) ? String(val) : n.toLocaleString("es-CO");
-}
-
-function formatArea(val) {
-  if (val === null || val === undefined || val === "") return "N/A";
-  const n = Number(val);
-  return isNaN(n) ? String(val) : Math.round(n).toString();
-}
-
 function getPointLngLat(feature) {
   const c = feature?.geometry?.coordinates;
   if (Array.isArray(c) && c.length >= 2) return [Number(c[0]), Number(c[1])];
@@ -73,26 +61,6 @@ function getPointLngLat(feature) {
 
 function streetViewUrl([lng, lat]) {
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-}
-
-// =====================================================
-// POPUP PREDIO (base)
-// =====================================================
-function popupHTMLPredio(props) {
-  props = props || {};
-  const avaluoTxt = formatAvaluo(props["AVALUO 2026"]);
-  const areaTxt = formatArea(props["Shape_Area"]);
-
-  return `
-    <div style="font-weight:700; margin-bottom:6px;">Predial (Sesquilé)</div>
-    <strong>Código:</strong> ${props.codigo ?? "N/A"}<br>
-    <strong>Destino:</strong> ${props.DESTINO ?? "N/A"}<br>
-    <strong>Nombre:</strong> ${props.NOMBRE ?? "N/A"}<br>
-    <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? "N/A"}<br>
-    <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
-    <strong>Área (㎡):</strong> ${areaTxt}<br>
-    <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
-  `;
 }
 
 // =====================================================
@@ -120,8 +88,6 @@ function popupHTMLICA(props, lngLat) {
 
 // =====================================================
 // ✅ POPUP PREDIOS CONTRIBUYENTES JURÍDICOS (polígono)
-// (como tu screenshot: Código predial, doc, contribuyente,
-// naturaleza, razón social, estado + Street View)
 // =====================================================
 function popupHTMLPredioJuridico(props, lngLat) {
   props = props || {};
@@ -184,15 +150,13 @@ function popupHTMLPredioJuridico(props, lngLat) {
 
 // =====================================================
 // ✅ POPUP CONTRIBUYENTES PERSONA JURÍDICA (puntos)
-// (mismos campos, por si este geojson trae el registro “puro”)
 // =====================================================
 function popupHTMLContribJuridica(props, lngLat) {
-  // reutilizamos exactamente el mismo layout
   return popupHTMLPredioJuridico(props, lngLat);
 }
 
 // =====================================================
-// CAPA PREDIOS BASE
+// CAPA PREDIOS BASE (SOLO VISUAL)
 // =====================================================
 function addPrediosBase() {
   fetch("../src/data/PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson")
@@ -203,6 +167,7 @@ function addPrediosBase() {
       if (map.getSource("predios_base")) map.getSource("predios_base").setData(data);
       else map.addSource("predios_base", { type: "geojson", data });
 
+      // contorno visible (SOLO VISUAL)
       if (!map.getLayer("predios_base_outline")) {
         map.addLayer({
           id: "predios_base_outline",
@@ -216,64 +181,12 @@ function addPrediosBase() {
           },
         });
       }
-
-      if (!map.getLayer("predios_base_click")) {
-        map.addLayer({
-          id: "predios_base_click",
-          type: "fill",
-          source: "predios_base",
-          minzoom: 12,
-          paint: { "fill-color": "#000", "fill-opacity": 0.001 },
-        });
-      }
-
-      if (!map.getSource("highlight_predio")) {
-        map.addSource("highlight_predio", {
-          type: "geojson",
-          data: { type: "FeatureCollection", features: [] },
-        });
-      }
-      if (!map.getLayer("highlight_predio_fill")) {
-        map.addLayer({
-          id: "highlight_predio_fill",
-          type: "fill",
-          source: "highlight_predio",
-          paint: { "fill-color": "#ffff00", "fill-opacity": 0.20 },
-        });
-      }
-      if (!map.getLayer("highlight_predio_line")) {
-        map.addLayer({
-          id: "highlight_predio_line",
-          type: "line",
-          source: "highlight_predio",
-          paint: { "line-color": "#ffff00", "line-width": 4 },
-        });
-      }
-
-      safeOff("click", "predios_base_click");
-      safeOff("mouseenter", "predios_base_click");
-      safeOff("mouseleave", "predios_base_click");
-
-      map.on("mouseenter", "predios_base_click", () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", "predios_base_click", () => (map.getCanvas().style.cursor = ""));
-
-      map.on("click", "predios_base_click", (e) => {
-        const f = e.features && e.features[0];
-        if (!f) return;
-
-        const center = turf.centroid(f).geometry.coordinates;
-
-        const hs = map.getSource("highlight_predio");
-        if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
-
-        popup.setLngLat(center).setHTML(popupHTMLPredio(f.properties || {})).addTo(map);
-      });
     })
     .catch((err) => console.error("Error cargando predios:", err));
 }
 
 // =====================================================
-// CAPA ICA (imagenes_limpias)
+// CAPA ICA (imagenes_limpias) — ✅ VERDE
 // =====================================================
 function addICALayer() {
   fetch("../src/data/imagenes_limpias.geojson")
@@ -291,7 +204,7 @@ function addICALayer() {
           source: "ica_points",
           paint: {
             "circle-radius": 6,
-            "circle-color": "#b5179e",
+            "circle-color": "#00c853", // ✅ VERDE sólido
             "circle-stroke-width": 1.5,
             "circle-stroke-color": "#ffffff",
             "circle-opacity": 0.95,
@@ -299,6 +212,7 @@ function addICALayer() {
         });
       }
 
+      // highlight ICA
       if (!map.getSource("highlight_ica")) {
         map.addSource("highlight_ica", {
           type: "geojson",
@@ -343,7 +257,7 @@ function addICALayer() {
 }
 
 // =====================================================
-// ✅ NUEVA CAPA: PREDIOS CONTRIBUYENTES JURÍDICOS (POLÍGONOS)
+// ✅ PREDIOS CONTRIBUYENTES JURÍDICOS (POLÍGONOS) — ✅ FUCSIA (relleno + contorno)
 // =====================================================
 function addPrediosJuridicosLayer() {
   fetch("../src/data/PREDIOS_CONTRIBUYENTES_JURIDICOS.geojson")
@@ -354,7 +268,21 @@ function addPrediosJuridicosLayer() {
       if (map.getSource("predios_juridicos")) map.getSource("predios_juridicos").setData(data);
       else map.addSource("predios_juridicos", { type: "geojson", data });
 
-      // contorno visible
+      // ✅ relleno fucsia sólido
+      if (!map.getLayer("predios_juridicos_fill")) {
+        map.addLayer({
+          id: "predios_juridicos_fill",
+          type: "fill",
+          source: "predios_juridicos",
+          minzoom: 12,
+          paint: {
+            "fill-color": "#ff00ff",  // ✅ FUCSIA
+            "fill-opacity": 0.35,
+          },
+        });
+      }
+
+      // contorno fucsia
       if (!map.getLayer("predios_juridicos_outline")) {
         map.addLayer({
           id: "predios_juridicos_outline",
@@ -362,7 +290,7 @@ function addPrediosJuridicosLayer() {
           source: "predios_juridicos",
           minzoom: 12,
           paint: {
-            "line-color": "#00bcd4",
+            "line-color": "#ff00ff",  // ✅ FUCSIA
             "line-width": 2.0,
             "line-opacity": 0.95,
           },
@@ -392,7 +320,7 @@ function addPrediosJuridicosLayer() {
           id: "highlight_juridico_predio_fill",
           type: "fill",
           source: "highlight_juridico_predio",
-          paint: { "fill-color": "#00bcd4", "fill-opacity": 0.18 },
+          paint: { "fill-color": "#ffff00", "fill-opacity": 0.18 },
         });
       }
       if (!map.getLayer("highlight_juridico_predio_line")) {
@@ -400,7 +328,7 @@ function addPrediosJuridicosLayer() {
           id: "highlight_juridico_predio_line",
           type: "line",
           source: "highlight_juridico_predio",
-          paint: { "line-color": "#00bcd4", "line-width": 5 },
+          paint: { "line-color": "#ffff00", "line-width": 5 },
         });
       }
 
@@ -420,18 +348,14 @@ function addPrediosJuridicosLayer() {
         const hs = map.getSource("highlight_juridico_predio");
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
 
-        // para StreetView usamos el centro del polígono
-        popup
-          .setLngLat(center)
-          .setHTML(popupHTMLPredioJuridico(f.properties || {}, center))
-          .addTo(map);
+        popup.setLngLat(center).setHTML(popupHTMLPredioJuridico(f.properties || {}, center)).addTo(map);
       });
     })
     .catch((err) => console.error("Error cargando predios jurídicos:", err));
 }
 
 // =====================================================
-// ✅ NUEVA CAPA: CONTRIBUYENTES PERSONA JURÍDICA (PUNTOS)
+// ✅ CONTRIBUYENTES PERSONA JURÍDICA (PUNTOS) — ✅ FUCSIA
 // =====================================================
 function addContribJuridicaLayer() {
   fetch("../src/data/Contribuyentes_Persona_Juridica.geojson")
@@ -449,7 +373,7 @@ function addContribJuridicaLayer() {
           source: "contrib_juridica",
           paint: {
             "circle-radius": 6,
-            "circle-color": "#00bcd4",
+            "circle-color": "#ff00ff", // ✅ FUCSIA sólido
             "circle-stroke-width": 1.5,
             "circle-stroke-color": "#ffffff",
             "circle-opacity": 0.95,
@@ -457,6 +381,7 @@ function addContribJuridicaLayer() {
         });
       }
 
+      // highlight punto
       if (!map.getSource("highlight_contrib_juridica")) {
         map.addSource("highlight_contrib_juridica", {
           type: "geojson",
@@ -494,24 +419,21 @@ function addContribJuridicaLayer() {
         const hs = map.getSource("highlight_contrib_juridica");
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
 
-        popup
-          .setLngLat(lngLat)
-          .setHTML(popupHTMLContribJuridica(f.properties || {}, lngLat))
-          .addTo(map);
+        popup.setLngLat(lngLat).setHTML(popupHTMLContribJuridica(f.properties || {}, lngLat)).addTo(map);
       });
     })
     .catch((err) => console.error("Error cargando contribuyentes jurídicos:", err));
 }
 
 // =====================================================
-// BUSCADOR LOCAL (PREDIOS + ICA + JURIDICOS)
+// BUSCADOR LOCAL (ICA + JURIDICOS) — ❌ sin predios base
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
   mapboxgl,
   marker: false,
   localGeocoderOnly: true,
-  placeholder: "Buscar predio / ICA / contribuyente jurídico",
+  placeholder: "Buscar ICA / contribuyente jurídico",
   localGeocoder: (q) => {
     const query = norm(q);
     if (!query) return [];
@@ -607,33 +529,6 @@ const geocoder = new MapboxGeocoder({
       }
     }
 
-    // --- PREDIOS BASE ---
-    if (PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) && results.length < 10) {
-      for (const f of PREDIOS_DATA.features) {
-        const p = f.properties || {};
-        const cod = norm(p.codigo);
-        const nom = norm(p.NOMBRE);
-        const doc = norm(p.NUMERO_DOCUMENTO);
-
-        const ok = (cod && cod.includes(query)) || (nom && nom.includes(query)) || (doc && doc.includes(query));
-        if (!ok) continue;
-
-        const center = turf.centroid(f).geometry.coordinates;
-
-        results.push({
-          type: "Feature",
-          geometry: f.geometry,
-          center,
-          properties: { ...p, __tipo: "PREDIO" },
-          place_name: `Predio: ${p.codigo ?? "N/A"} | ${p.NOMBRE ?? "N/A"} | ${p.NUMERO_DOCUMENTO ?? "N/A"}`,
-          text: (p.codigo ?? p.NOMBRE ?? p.NUMERO_DOCUMENTO ?? "Predio").toString(),
-          place_type: ["place"],
-        });
-
-        if (results.length >= 10) break;
-      }
-    }
-
     return results;
   },
 });
@@ -682,16 +577,6 @@ geocoder.on("result", (e) => {
     popup.setLngLat(center).setHTML(popupHTMLPredioJuridico(r.properties || {}, center)).addTo(map);
     return;
   }
-
-  // Predio base
-  const center = r.center || turf.centroid(r).geometry.coordinates;
-
-  const hs = map.getSource("highlight_predio");
-  if (hs) hs.setData({ type: "FeatureCollection", features: [r] });
-
-  map.fitBounds(turf.bbox(r), { padding: 40 });
-
-  popup.setLngLat(center).setHTML(popupHTMLPredio(r.properties || {})).addTo(map);
 });
 
 // =====================================================
@@ -705,11 +590,11 @@ map.on("style.load", () => {
 
   setTimeout(() => {
     try {
-      // abajo
+      // base visual abajo
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
-      if (map.getLayer("predios_base_click")) map.moveLayer("predios_base_click");
 
-      // encima: jurídicos polígono
+      // jurídicos: fill debajo del outline
+      if (map.getLayer("predios_juridicos_fill")) map.moveLayer("predios_juridicos_fill");
       if (map.getLayer("predios_juridicos_outline")) map.moveLayer("predios_juridicos_outline");
       if (map.getLayer("predios_juridicos_click")) map.moveLayer("predios_juridicos_click");
 
@@ -717,13 +602,9 @@ map.on("style.load", () => {
       if (map.getLayer("ica_points_layer")) map.moveLayer("ica_points_layer");
       if (map.getLayer("contrib_juridica_layer")) map.moveLayer("contrib_juridica_layer");
 
-      // highlights siempre arriba de todo
-      if (map.getLayer("highlight_predio_fill")) map.moveLayer("highlight_predio_fill");
-      if (map.getLayer("highlight_predio_line")) map.moveLayer("highlight_predio_line");
-
+      // highlights arriba
       if (map.getLayer("highlight_juridico_predio_fill")) map.moveLayer("highlight_juridico_predio_fill");
       if (map.getLayer("highlight_juridico_predio_line")) map.moveLayer("highlight_juridico_predio_line");
-
       if (map.getLayer("highlight_ica_circle")) map.moveLayer("highlight_ica_circle");
       if (map.getLayer("highlight_contrib_juridica_circle")) map.moveLayer("highlight_contrib_juridica_circle");
     } catch (e) {}
