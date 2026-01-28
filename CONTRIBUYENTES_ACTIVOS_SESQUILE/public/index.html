@@ -24,9 +24,11 @@
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
 
-  <!-- CSS extra para leyenda (punticos + cuadritos) -->
+  <!-- CSS extra: leyenda + control de capas (dropdown + checks) -->
   <style>
-    /* Si ya tienes estos estilos en main.css, no pasa nada (se sobreescriben) */
+    /* =========================
+       LEYENDA (icons)
+       ========================= */
     .legend-color{
       display:inline-block;
       width:12px;
@@ -44,14 +46,56 @@
     .predio-seleccionado{ background:#ffff00; border-radius:3px; }
 
     /* Punticos (puntos) */
-    .persona-natural{
-      background:#2ec4b6;
-      border-radius:999px;
+    .persona-natural{ background:#2ec4b6; border-radius:999px; }
+    .persona-juridica{ background:#ff006e; border-radius:999px; }
+
+    /* =========================
+       ✅ CONTROL DE CAPAS (UI)
+       ========================= */
+    .layer-control{
+      position:absolute;
+      top: 25px;          /* arriba */
+      right: 5px;         /* a la derecha, junto a la leyenda */
+      z-index: 30;
+      background: rgba(0,0,0,0.75);
+      padding: 12px;
+      border-radius: 10px;
+      width: 250px;
+      color: #fff;
+      font-family: 'Libre Franklin', sans-serif;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(3px);
     }
-    .persona-juridica{
-      background:#ff006e;
-      border-radius:999px;
+    .lc-title{
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: .2px;
     }
+    .lc-select{
+      width:100%;
+      padding:8px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.18);
+      background:#111;
+      color:#fff;
+      outline:none;
+      margin-bottom:10px;
+    }
+    .lc-group{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .lc-item{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:13px;
+      line-height: 1.2;
+      user-select:none;
+    }
+    .lc-item input{ transform: translateY(1px); }
   </style>
 </head>
 
@@ -60,7 +104,44 @@
   <!-- CONTENEDOR DEL MAPA -->
   <div id="map"></div>
 
-  <!-- LEYENDA (ACTUALIZADA A 5 CAPAS: base + 2 polígonos + 2 puntos + seleccionado) -->
+  <!-- ✅ CONTROL DE CAPAS (NATURAL / JURÍDICO) -->
+  <div id="layerControl" class="layer-control">
+    <div class="lc-title">Filtros de visualización</div>
+
+    <select id="lcMode" class="lc-select">
+      <option value="ALL" selected>Ver todo</option>
+      <option value="NATURAL">Solo NATURAL (predios + puntos)</option>
+      <option value="JURIDICO">Solo JURÍDICO (predios + puntos)</option>
+    </select>
+
+    <div class="lc-group">
+      <label class="lc-item">
+        <input type="checkbox" id="toggle_predios_natural" checked />
+        <span class="legend-color predios-natural"></span>
+        Predios contribuyentes natural
+      </label>
+
+      <label class="lc-item">
+        <input type="checkbox" id="toggle_predios_juridicos" checked />
+        <span class="legend-color predios-juridicos"></span>
+        Predios contribuyentes jurídicos
+      </label>
+
+      <label class="lc-item">
+        <input type="checkbox" id="toggle_persona_natural" checked />
+        <span class="legend-color persona-natural"></span>
+        Persona natural (puntos)
+      </label>
+
+      <label class="lc-item">
+        <input type="checkbox" id="toggle_persona_juridica" checked />
+        <span class="legend-color persona-juridica"></span>
+        Persona jurídica (puntos)
+      </label>
+    </div>
+  </div>
+
+  <!-- LEYENDA (base + 2 polígonos + 2 puntos + seleccionado) -->
   <div id="legend" class="legend-container">
     <div class="legend-title">
       Contribuyentes<br>Sesquilé
@@ -103,7 +184,6 @@
 
   <!-- ========================= -->
   <!-- CAJA DE INFORMACIÓN -->
-  <!-- (puedes dejarla; si no la usas en JS no molesta) -->
   <!-- ========================= -->
   <div class="info-box">
     <h3>Información</h3>
