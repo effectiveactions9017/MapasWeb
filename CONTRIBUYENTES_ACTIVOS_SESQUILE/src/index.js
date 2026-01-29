@@ -11,6 +11,7 @@
 // ✅ Highlight: polígonos (fill+line) y puntos (circle)
 // ✅ Leyenda: usar SOLO la del HTML (#legend). NO se inyecta leyenda extra.
 // ✅ FIX: código predial = "codigo" (minúscula)
+// ✅ NUEVO: Control UI (dropdown + checks) sincroniza NATURAL/JURÍDICO
 // =====================================================
 
 mapboxgl.accessToken =
@@ -145,9 +146,6 @@ function popupHTMLCamposSeleccionados(props, titulo = "Información", lngLatForS
 
 // =====================================================
 // ✅ IMPORTANTE: QUITAR LA LEYENDA DUPLICADA
-// - Ya existe la leyenda grande en tu HTML con id="legend"
-// - Por eso ELIMINAMOS ensureLegend() y NO la llamamos.
-// Si por alguna razón quedó una leyenda vieja inyectada (ea-legend), la removemos.
 // =====================================================
 function removeInjectedLegendIfExists() {
   const old = document.getElementById("ea-legend");
@@ -182,7 +180,7 @@ function addBaseOutlineLayer(geojsonFile, sourceId, layerId, lineColor = "#fffff
 }
 
 // =====================================================
-// ✅ CAPAS POLÍGONO INTERACTIVAS: clic -> popup + highlight
+// ✅ CAPAS POLÍGONO INTERACTIVAS
 // =====================================================
 function addInteractivePolygonLayer({ geojsonFile, sourceId, layerId, baseColor, datasetKey }) {
   fetch(`../src/data/${geojsonFile}`)
@@ -244,12 +242,17 @@ function addInteractivePolygonLayer({ geojsonFile, sourceId, layerId, baseColor,
           .setHTML(popupHTMLCamposSeleccionados(props, titulo, svLngLat))
           .addTo(map);
       });
+
+      // ✅ si el control de capas existe, re-aplica modo al terminar de cargar la capa
+      if (typeof applyLayerMode === "function") {
+        setTimeout(() => { try { applyLayerMode(); } catch(e){} }, 0);
+      }
     })
     .catch((err) => console.error("Error capa polígono:", err));
 }
 
 // =====================================================
-// ✅ CAPAS PUNTO INTERACTIVAS: clic -> popup + highlight
+// ✅ CAPAS PUNTO INTERACTIVAS
 // =====================================================
 function addInteractivePointLayer({ geojsonFile, sourceId, layerId, color, datasetKey }) {
   fetch(`../src/data/${geojsonFile}`)
@@ -305,6 +308,11 @@ function addInteractivePointLayer({ geojsonFile, sourceId, layerId, color, datas
           .setHTML(popupHTMLCamposSeleccionados(props, titulo, lngLat))
           .addTo(map);
       });
+
+      // ✅ si el control de capas existe, re-aplica modo al terminar de cargar la capa
+      if (typeof applyLayerMode === "function") {
+        setTimeout(() => { try { applyLayerMode(); } catch(e){} }, 0);
+      }
     })
     .catch((err) => console.error("Error capa punto:", err));
 }
@@ -356,6 +364,90 @@ function ensureHighlightLayers() {
       },
     });
   }
+}
+
+// =====================================================
+// ✅ CONTROL UI: dropdown + checks (SINCRONIZA MODO)
+// =====================================================
+const LAYERS = {
+  PREDIOS_NATURAL: "predios_natural_layer",
+  PREDIOS_JURIDICO: "predios_juridicos_layer",
+  PERSONA_NATURAL: "persona_natural_layer",
+  PERSONA_JURIDICO: "persona_juridica_layer",
+};
+
+function setLayerVisibility(layerId, visible) {
+  if (!map.getLayer(layerId)) return;
+  map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
+}
+
+// ✅ ESTA ES LA FUNCIÓN CLAVE (sincroniza checks + aplica visibilidad)
+function applyLayerMode() {
+  const mode = document.getElementById("lcMode")?.value || "ALL";
+
+  const cbPredNat = document.getElementById("toggle_predios_natural");
+  const cbPredJur = document.getElementById("toggle_predios_juridicos");
+  const cbPerNat  = document.getElementById("toggle_persona_natural");
+  const cbPerJur  = document.getElementById("toggle_persona_juridica");
+
+  // Si el HTML aún no está montado, no hacemos nada
+  if (!cbPredNat || !cbPredJur || !cbPerNat || !cbPerJur) return;
+
+  // 1) Sincroniza checkboxes con el modo
+  if (mode === "NATURAL") {
+    cbPredNat.checked = true;
+    cbPerNat.checked  = true;
+    cbPredJur.checked = false;
+    cbPerJur.checked  = false;
+  } else if (mode === "JURIDICO") {
+    cbPredNat.checked = false;
+    cbPerNat.checked  = false;
+    cbPredJur.checked = true;
+    cbPerJur.checked  = true;
+  } else { // ALL
+    cbPredNat.checked = true;
+    cbPerNat.checked  = true;
+    cbPredJur.checked = true;
+    cbPerJur.checked  = true;
+  }
+
+  // 2) Aplica visibilidad
+  setLayerVisibility(LAYERS.PREDIOS_NATURAL,  cbPredNat.checked);
+  setLayerVisibility(LAYERS.PERSONA_NATURAL,  cbPerNat.checked);
+  setLayerVisibility(LAYERS.PREDIOS_JURIDICO, cbPredJur.checked);
+  setLayerVisibility(LAYERS.PERSONA_JURIDICO, cbPerJur.checked);
+
+  // 3) Limpia popup viejo para evitar “info” de capa apagada
+  try { popup.remove(); } catch(e){}
+}
+
+function wireLayerControls() {
+  const modeSel = document.getElementById("lcMode");
+  if (!modeSel) return;
+
+  modeSel.addEventListener("change", applyLayerMode);
+
+  // Si estás en ALL, puedes cambiar checks; si estás en NATURAL/JURIDICO,
+  // los checks se re-sincronizan cuando cambies el modo.
+  ["toggle_predios_natural","toggle_predios_juridicos","toggle_persona_natural","toggle_persona_juridica"]
+    .forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("change", () => {
+        // solo respeta checks cuando está en ALL
+        const mode = document.getElementById("lcMode")?.value || "ALL";
+        if (mode === "ALL") {
+          setLayerVisibility(LAYERS.PREDIOS_NATURAL,  document.getElementById("toggle_predios_natural")?.checked);
+          setLayerVisibility(LAYERS.PERSONA_NATURAL,  document.getElementById("toggle_persona_natural")?.checked);
+          setLayerVisibility(LAYERS.PREDIOS_JURIDICO, document.getElementById("toggle_predios_juridicos")?.checked);
+          setLayerVisibility(LAYERS.PERSONA_JURIDICO, document.getElementById("toggle_persona_juridica")?.checked);
+          try { popup.remove(); } catch(e){}
+        } else {
+          applyLayerMode();
+        }
+      });
+    });
+
+  applyLayerMode();
 }
 
 // =====================================================
@@ -423,7 +515,6 @@ map.addControl(geocoder, "top-left");
 // CARGA DE CAPAS (ORDEN)
 // =====================================================
 map.on("style.load", () => {
-  // ✅ eliminar leyenda pequeña inyectada (si existe)
   removeInjectedLegendIfExists();
 
   addBaseOutlineLayer(
@@ -467,7 +558,10 @@ map.on("style.load", () => {
 
   ensureHighlightLayers();
 
+  // ✅ Conecta el UI y aplica modo inicial
   setTimeout(() => {
+    wireLayerControls();
+    applyLayerMode();
     try {
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
 
@@ -481,7 +575,7 @@ map.on("style.load", () => {
       if (map.getLayer("poly_highlight_line")) map.moveLayer("poly_highlight_line");
       if (map.getLayer("point_highlight_circle")) map.moveLayer("point_highlight_circle");
     } catch (e) {}
-  }, 450);
+  }, 600);
 });
 
 // =====================================================
@@ -562,4 +656,8 @@ geocoder.on("result", (e) => {
       .setHTML(popupHTMLCamposSeleccionados(props, titulo, svCenter))
       .addTo(map);
   }
+
+  // ✅ Si estás en modo NATURAL/JURIDICO, el buscador podría traerte algo “apagado”
+  // Re-aplicamos el modo al final para mantener coherencia visual.
+  setTimeout(() => { try { applyLayerMode(); } catch(e){} }, 0);
 });
