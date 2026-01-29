@@ -24,11 +24,8 @@
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
 
-  <!-- CSS extra: leyenda + control de capas (dropdown + checks) -->
+  <!-- CSS extra: control de capas (dropdown + checks) -->
   <style>
-    /* =========================
-       LEYENDA (icons)
-       ========================= */
     .legend-color{
       display:inline-block;
       width:12px;
@@ -39,23 +36,17 @@
       box-sizing:border-box;
     }
 
-    /* Cuadritos (polígonos) */
-    .predios-base{ background: transparent; border:1px solid #ffffff; }
+    /* Iconos */
     .predios-natural{ background:#2ec4b6; border-radius:3px; }
     .predios-juridicos{ background:#ff006e; border-radius:3px; }
-    .predio-seleccionado{ background:#ffff00; border-radius:3px; }
-
-    /* Punticos (puntos) */
     .persona-natural{ background:#2ec4b6; border-radius:999px; }
     .persona-juridica{ background:#ff006e; border-radius:999px; }
 
-    /* =========================
-       ✅ CONTROL DE CAPAS (UI)
-       ========================= */
+    /* ✅ CONTROL DE CAPAS (UI) */
     .layer-control{
       position:absolute;
-      top: 25px;          /* arriba */
-      right: 5px;         /* a la derecha, junto a la leyenda */
+      top: 15px;
+      right: 10px;
       z-index: 30;
       background: rgba(0,0,0,0.75);
       padding: 12px;
@@ -141,49 +132,11 @@
     </div>
   </div>
 
-  <!-- LEYENDA (base + 2 polígonos + 2 puntos + seleccionado) -->
-  <div id="legend" class="legend-container">
-    <div class="legend-title">
-      Contribuyentes<br>Sesquilé
-    </div>
-
-    <ul class="legend-list">
-      <li>
-        <span class="legend-color predios-base"></span>
-        Predios municipio Sesquilé (contorno)
-      </li>
-
-      <li>
-        <span class="legend-color predios-natural"></span>
-        Predios contribuyentes natural
-      </li>
-
-      <li>
-        <span class="legend-color predios-juridicos"></span>
-        Predios contribuyentes jurídicos
-      </li>
-
-      <li>
-        <span class="legend-color persona-natural"></span>
-        Persona natural (puntos)
-      </li>
-
-      <li>
-        <span class="legend-color persona-juridica"></span>
-        Persona jurídica (puntos)
-      </li>
-
-      <li>
-        <span class="legend-color predio-seleccionado"></span>
-        Seleccionado
-      </li>
-    </ul>
-
-    <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
-  </div>
+  <!-- ✅ QUITAMOS LA LEYENDA DE ABAJO (YA NO SE NECESITA) -->
+  <!-- (Se eliminó el bloque <div id="legend" ...> completo) -->
 
   <!-- ========================= -->
-  <!-- CAJA DE INFORMACIÓN -->
+  <!-- CAJA DE INFORMACIÓN (opcional) -->
   <!-- ========================= -->
   <div class="info-box">
     <h3>Información</h3>
