@@ -6,30 +6,51 @@
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
   <!-- Mapbox CSS -->
-  <link
-    href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css"
-    rel="stylesheet"
-  />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet"/>
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
   <!-- Geocoder -->
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
-  <link
-    rel="stylesheet"
-    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
-  />
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"/>
 
   <!-- Turf.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
   <!-- Fuentes -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap"
-    rel="stylesheet"
-  >
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap" rel="stylesheet">
 
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
+
+  <!-- ✅ Estilos del panel de filtros (si ya existen en main.css no pasa nada) -->
+  <style>
+    .layer-control{
+      position:absolute;
+      top:15px;
+      right:10px;
+      z-index:30;
+      background:rgba(0,0,0,0.75);
+      padding:12px;
+      border-radius:10px;
+      width:260px;
+      color:#fff;
+      font-family:'Libre Franklin', sans-serif;
+      box-shadow:0 6px 18px rgba(0,0,0,0.35);
+      border:1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(3px);
+    }
+    .lc-title{ font-weight:800; margin-bottom:8px; letter-spacing:.2px; }
+    .lc-select{
+      width:100%;
+      padding:8px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.18);
+      background:#111;
+      color:#fff;
+      outline:none;
+    }
+    .lc-help{ margin-top:8px; font-size:12px; opacity:.85; line-height:1.25; }
+  </style>
 </head>
 
 <body>
@@ -37,26 +58,37 @@
   <!-- MAPA -->
   <div id="map"></div>
 
-  <!-- LEYENDA -->
-  <div class="legend-container">
-    <div class="legend-title">
-      Predial<br>Sesquilé
+  <!-- ✅ FILTRO DESPLEGABLE (SI / NO) – SERVICIOS PÚBLICOS -->
+  <div id="spControl" class="layer-control">
+    <div class="lc-title">Servicios públicos — filtro</div>
+
+    <select id="spSelect" class="lc-select">
+      <option value="ALL" selected>Ver todos</option>
+      <option disabled>────────────</option>
+
+      <option value="GAS_SI">Gas: Sí</option>
+      <option value="GAS_NO">Gas: No</option>
+
+      <option value="ACUEDUCTO_SI">Acueducto: Sí</option>
+      <option value="ACUEDUCTO_NO">Acueducto: No</option>
+
+      <option value="ALC_SI">Alcantarillado: Sí</option>
+      <option value="ALC_NO">Alcantarillado: No</option>
+
+      <option value="INTERNET_SI">Internet: Sí</option>
+      <option value="INTERNET_NO">Internet: No</option>
+
+      <option value="BASURAS_SI">Basuras: Sí</option>
+      <option value="BASURAS_NO">Basuras: No</option>
+    </select>
+
+    <div class="lc-help">
+      Filtra los puntos visibles en el mapa (según el atributo).
     </div>
-
-    <ul class="legend-list">
-      <li>
-        <span class="legend-color predios-municipio"></span>
-        Predios municipio de Sesquilé
-      </li>
-
-      <li>
-        <span class="legend-color servicios-publicos"></span>
-        Situación de servicios públicos
-      </li>
-    </ul>
-
-    <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
   </div>
+
+  <!-- ✅ QUITAMOS LA LEYENDA DE ABAJO (ya no es necesaria) -->
+  <!-- (Se eliminó el bloque .legend-container completo) -->
 
   <!-- SCRIPT PRINCIPAL -->
   <script src="../src/index.js"></script>
