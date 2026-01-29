@@ -5,6 +5,9 @@
 // 🟠 Servicios públicos: puntos (POPUP + Street View + BUSCADOR)
 // 🟡 Highlight: punto seleccionado (por buscador y clic)
 // ✅ PRIORIDAD DE CLIC: si hay punto encima, manda el punto (no el predio)
+// ✅ NUEVO: Filtro desplegable SI/NO por servicios (Gas/Acueducto/Alcantarillado/Internet/Basuras)
+//     - Usa SOLO campos que existan en atributos
+//     - Aplica filtro visual con map.setFilter() sobre servicios_publicos_layer
 // =====================================================
 
 mapboxgl.accessToken =
@@ -143,6 +146,121 @@ function popupHTMLServicios(props, lngLat) {
 }
 
 // =====================================================
+// ✅ FILTRO DESPLEGABLE (SI / NO) – SOLO SERVICIOS
+// Requiere que en tu HTML exista: <select id="spSelect">...</select>
+// =====================================================
+
+// Expr Mapbox para “SI”
+function exprTieneSi(fieldName) {
+  return [
+    "in",
+    ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]],
+    ["literal", ["si", "sí", "s", "1", "true", "x", "yes", "y"]]
+  ];
+}
+
+// Expr Mapbox para “NO” (incluye vacío como NO)
+function exprTieneNo(fieldName) {
+  return [
+    "any",
+    ["==", ["to-string", ["coalesce", ["get", fieldName], ""]], ""],
+    ["in",
+      ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]],
+      ["literal", ["no", "n", "0", "false", "na", "n/a", "sin", "ninguno"]]
+    ]
+  ];
+}
+
+const SP_FIELDS = {
+  GAS: "Tiene servicio de Gas?",
+  ACUEDUCTO: "Tiene servicio de acueducto?",
+  ALC: "Tiene servicio de alcantarillado?",
+  INTERNET: "Tiene servicio de Internet?",
+  BASURAS: "Tiene servicio de recolección de basuras?",
+};
+
+// ✅ Detecta cuáles campos existen realmente en tus atributos
+function getServiciosFieldsPresent() {
+  const present = {};
+  const feats = SERVICIOS_DATA?.features;
+  if (!Array.isArray(feats) || !feats.length) return present;
+
+  // revisa en las primeras ~50 features para no gastar mucho
+  const sample = feats.slice(0, Math.min(50, feats.length));
+  for (const [k, fieldName] of Object.entries(SP_FIELDS)) {
+    present[k] = sample.some(f => f?.properties && Object.prototype.hasOwnProperty.call(f.properties, fieldName));
+  }
+  return present;
+}
+
+function applyServiciosSelectFilter(value) {
+  const layerId = "servicios_publicos_layer";
+  if (!map.getLayer(layerId)) return;
+
+  if (!value || value === "ALL") {
+    map.setFilter(layerId, null);
+    return;
+  }
+
+  let filter = null;
+
+  switch (value) {
+    case "GAS_SI":       filter = exprTieneSi(SP_FIELDS.GAS); break;
+    case "GAS_NO":       filter = exprTieneNo(SP_FIELDS.GAS); break;
+
+    case "ACUEDUCTO_SI": filter = exprTieneSi(SP_FIELDS.ACUEDUCTO); break;
+    case "ACUEDUCTO_NO": filter = exprTieneNo(SP_FIELDS.ACUEDUCTO); break;
+
+    case "ALC_SI":       filter = exprTieneSi(SP_FIELDS.ALC); break;
+    case "ALC_NO":       filter = exprTieneNo(SP_FIELDS.ALC); break;
+
+    case "INTERNET_SI":  filter = exprTieneSi(SP_FIELDS.INTERNET); break;
+    case "INTERNET_NO":  filter = exprTieneNo(SP_FIELDS.INTERNET); break;
+
+    case "BASURAS_SI":   filter = exprTieneSi(SP_FIELDS.BASURAS); break;
+    case "BASURAS_NO":   filter = exprTieneNo(SP_FIELDS.BASURAS); break;
+
+    default: filter = null;
+  }
+
+  map.setFilter(layerId, filter);
+}
+
+function wireServiciosSelect() {
+  const sel = document.getElementById("spSelect");
+  if (!sel) return;
+
+  // ✅ Oculta opciones que no existan en la tabla de atributos
+  const present = getServiciosFieldsPresent();
+  const hideIfMissing = [
+    { key: "GAS", values: ["GAS_SI", "GAS_NO"] },
+    { key: "ACUEDUCTO", values: ["ACUEDUCTO_SI", "ACUEDUCTO_NO"] },
+    { key: "ALC", values: ["ALC_SI", "ALC_NO"] },
+    { key: "INTERNET", values: ["INTERNET_SI", "INTERNET_NO"] },
+    { key: "BASURAS", values: ["BASURAS_SI", "BASURAS_NO"] },
+  ];
+
+  hideIfMissing.forEach(({ key, values }) => {
+    if (present[key]) return;
+    values.forEach((v) => {
+      const opt = sel.querySelector(`option[value="${v}"]`);
+      if (opt) opt.style.display = "none";
+    });
+  });
+
+  sel.addEventListener("change", () => {
+    applyServiciosSelectFilter(sel.value);
+
+    // Limpia popup y highlight al cambiar filtro
+    try { popup.remove(); } catch (e) {}
+    const hs = map.getSource("highlight");
+    if (hs) hs.setData({ type: "FeatureCollection", features: [] });
+  });
+
+  applyServiciosSelectFilter(sel.value || "ALL");
+}
+
+// =====================================================
 // ✅ CAPA PREDIOS (CONTORNO + POPUP al clic)
 // ✅ PRIORIDAD: si hay punto encima, NO muestra predio
 // =====================================================
@@ -265,6 +383,11 @@ function addServiciosPublicos() {
         const hs = map.getSource("highlight");
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
       });
+
+      // ✅ Conectar el filtro desplegable cuando YA cargó servicios
+      setTimeout(() => {
+        try { wireServiciosSelect(); } catch (e) {}
+      }, 0);
 
       // ✅ Blindaje de orden cuando ya existen capas
       try {
