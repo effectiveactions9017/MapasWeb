@@ -1,129 +1,204 @@
+/* ==========================================================
+   BASE
+   ========================================================== */
 body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Libre Franklin', sans-serif;
+  margin: 0;
+  padding: 0;
+  font-family: 'Libre Franklin', sans-serif;
 }
 
 #map {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 100%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
 }
 
-/* =========================
-   LEYENDA
-   ========================= */
+/* ==========================================================
+   ✅ PANEL FILTRO (Servicios públicos — filtro)
+   (usa tus IDs: #spControl, #spOpen y tu select #spSelect)
+   ========================================================== */
+.sp-panel{
+  position:absolute;
+  top:15px;
+  right:10px;
+  z-index:30;
+
+  width:280px;
+  padding:12px 12px 14px 12px;
+  border-radius:14px;
+
+  background:rgba(0,0,0,0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border:1px solid rgba(255,255,255,0.12);
+  box-shadow:0 18px 40px rgba(0,0,0,0.35);
+  color:#fff;
+}
+
+.sp-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.sp-title{
+  font-weight:800;
+  font-size:16px;
+  letter-spacing:.2px;
+  line-height:1.1;
+}
+
+.sp-close{
+  border:0;
+  background:rgba(255,255,255,0.10);
+  color:#fff;
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  font-size:20px;
+  line-height:34px;
+  cursor:pointer;
+  transition: transform .12s ease, background .12s ease;
+}
+.sp-close:hover{
+  background:rgba(255,255,255,0.18);
+  transform: translateY(-1px);
+}
+
+.sp-select{
+  width:100%;
+  height:44px;
+  border-radius:12px;
+  padding:0 12px;
+
+  background:rgba(15,15,15,0.90);
+  color:#fff;
+
+  border:1px solid rgba(255,255,255,0.14);
+  outline:none;
+  font-weight:700;
+
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+
+  /* flecha */
+  background-image:
+    linear-gradient(45deg, transparent 50%, #cfcfcf 50%),
+    linear-gradient(135deg, #cfcfcf 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 19px,
+    calc(100% - 12px) 19px;
+  background-size:6px 6px, 6px 6px;
+  background-repeat:no-repeat;
+}
+.sp-select:focus{
+  border-color: rgba(0, 188, 212, 0.65);
+  box-shadow: 0 0 0 3px rgba(0,188,212,0.18);
+}
+
+.sp-help{
+  margin-top:10px;
+  font-size:12px;
+  opacity:.85;
+  line-height:1.25;
+}
+
+/* Botón para re-abrir el panel cuando está cerrado */
+.sp-open{
+  position:absolute;
+  top:15px;
+  right:10px;
+  z-index:31;
+
+  display:none;
+  border:0;
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(0,0,0,0.72);
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+
+  border:1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:0 18px 40px rgba(0,0,0,0.35);
+}
+.sp-open:hover{
+  background:rgba(0,0,0,0.82);
+}
+
+/* ==========================================================
+   ❌ LEYENDA (DESACTIVADA / ya no se usa)
+   Si aún existe el HTML por error, esto la oculta.
+   ========================================================== */
 .legend-container {
-    position: absolute;
-    bottom: 25px;
-    right: 5px;
-    z-index: 10;
-    background-color: rgba(0, 0, 0, 0.7);
-    padding: 15px;
-    border-radius: 8px;
-    width: 230px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-    color: white;
+  display: none !important;
 }
 
-.legend-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 10px;
-    text-align: left;
-    color: white;
-}
-
-.legend-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.legend-list li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-    color: white;
-}
-
-.legend-color {
-    display: inline-block;
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
-    min-height: 18px;
-    border-radius: 3px;
-    border: 1px solid #ffffff;
-    flex: 0 0 18px;
-}
-
-/* =========================
-   COLORES DE LA LEYENDA
-   ========================= */
-
-/* 🔵 Predios municipio de Sesquilé (base – contorno) */
-.legend-color.predios-municipio {
-    background-color: #ffffff;
-}
-
-/* 🟠 Situación de servicios públicos (puntos) */
-.legend-color.servicios-publicos {
-    background-color: #ffb703;
-}
-
-/* =========================
+/* ==========================================================
    POPUP PERSONALIZADO
-   ========================= */
+   ========================================================== */
 .custom-popup .mapboxgl-popup-content {
-    font-size: 0.8rem;
-    padding: 10px 15px;
-    background-color: rgba(0, 0, 0, 0.85);
-    color: #fff;
-    border-radius: 8px;
-    max-width: 260px;
+  font-size: 0.8rem;
+  padding: 10px 15px;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  border-radius: 10px;
+  max-width: 280px;
+  box-shadow: 0 14px 32px rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.10);
 }
 
 .mapboxgl-popup-content strong {
-    font-weight: 600;
+  font-weight: 700;
 }
 
 .mapboxgl-popup-content a {
-    color: #00bcd4;
-    text-decoration: none;
+  color: #00bcd4;
+  text-decoration: none;
 }
 
 .mapboxgl-popup-content a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
 /* Flechas del popup */
 .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
-    border-bottom-color: rgba(0, 0, 0, 0.85);
+  border-bottom-color: rgba(0, 0, 0, 0.85);
 }
 
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
-    border-top-color: rgba(0, 0, 0, 0.85);
+  border-top-color: rgba(0, 0, 0, 0.85);
 }
 
 .mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
-    border-right-color: rgba(0, 0, 0, 0.85);
+  border-right-color: rgba(0, 0, 0, 0.85);
 }
 
 .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
-    border-left-color: rgba(0, 0, 0, 0.85);
+  border-left-color: rgba(0, 0, 0, 0.85);
 }
 
-/* =========================
+/* ==========================================================
    GEOCODER
-   ========================= */
+   ========================================================== */
 .mapboxgl-ctrl-geocoder {
-    width: 320px !important;
+  width: 320px !important;
+  min-width: 320px !important;
+}
+
+/* Ajuste: si el panel tapa el geocoder en pantallas pequeñas */
+@media (max-width: 520px){
+  .mapboxgl-ctrl-geocoder { width: 260px !important; min-width: 260px !important; }
+  .sp-panel{ width: 240px; }
 }
