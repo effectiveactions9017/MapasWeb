@@ -13,6 +13,7 @@
 // ✅ FIX: filtros Sí/No robustos para valores tipo "C_No", "Si_", "c_si", etc.
 //     - Vacíos / N/A NO se toman como "No"
 // ✅ FIX2: si las capas ya existían, ahora se ACTUALIZA el filter con map.setFilter()
+// ✅ COLOR-FIX: el panel toma los mismos colores definidos en FILTER_GROUPS (1:1)
 // =====================================================
 
 mapboxgl.accessToken =
@@ -211,6 +212,7 @@ function getServiciosFieldsPresent() {
 
 // =====================================================
 // ✅ DEFINICIÓN DE "GRUPOS" (cada grupo = 1 switch + 1 color)
+// (estos colores son la “fuente de verdad”)
 // =====================================================
 const FILTER_GROUPS = [
   { id: "L_GAS_SI",       label: "Gas: Sí",            field: SP_FIELDS.GAS,       expr: () => exprTieneSi(SP_FIELDS.GAS),       color: "#00bcd4" },
@@ -228,6 +230,23 @@ const FILTER_GROUPS = [
   { id: "L_BASURAS_SI",   label: "Basuras: Sí",        field: SP_FIELDS.BASURAS,   expr: () => exprTieneSi(SP_FIELDS.BASURAS),   color: "#e879f9" },
   { id: "L_BASURAS_NO",   label: "Basuras: No",        field: SP_FIELDS.BASURAS,   expr: () => exprTieneNo(SP_FIELDS.BASURAS),   color: "#f97316" },
 ];
+
+// =====================================================
+// ✅ COLOR-FIX: sincroniza colores del PANEL con FILTER_GROUPS (1:1)
+// =====================================================
+function syncPanelAccentsFromJS() {
+  const list = document.getElementById("spToggleList");
+  if (!list) return;
+
+  FILTER_GROUPS.forEach((g) => {
+    const row = list.querySelector(`.sp-row[data-layer="${g.id}"]`);
+    if (!row) return;
+    row.style.setProperty("--sp-accent", g.color);
+  });
+
+  const rowAll = list.querySelector(`.sp-row[data-layer="L_ALL"]`);
+  if (rowAll) rowAll.style.setProperty("--sp-accent", "#ffb703"); // mismo que L_BASE
+}
 
 // =====================================================
 // ✅ LAYERS DE FILTRO: base + N capas por grupo
@@ -258,13 +277,11 @@ function ensureServiciosFilterLayers() {
     const newFilter = g.expr();
 
     if (map.getLayer(g.id)) {
-      // ✅ si existe, ACTUALIZA filtro y color
       map.setFilter(g.id, newFilter);
       map.setPaintProperty(g.id, "circle-color", g.color);
       continue;
     }
 
-    // ✅ si no existe, créala
     map.addLayer({
       id: g.id,
       type: "circle",
@@ -328,6 +345,9 @@ function wireServiciosLayerInteractions(activeLayerIdsGetter) {
 function wireServiciosToggleList() {
   const list = document.getElementById("spToggleList");
   if (!list) return;
+
+  // ✅ COLOR-FIX: aplica los mismos colores del JS al panel
+  syncPanelAccentsFromJS();
 
   const present = getServiciosFieldsPresent();
   const canDetect = Object.keys(present).length > 0;
