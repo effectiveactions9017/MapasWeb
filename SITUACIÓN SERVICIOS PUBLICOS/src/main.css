@@ -16,6 +16,7 @@ body {
 
 /* ==========================================================
    ✅ PANEL FILTRO (Servicios públicos — filtro)
+   ✅ FIX: que NO se salga de pantalla + scroll interno
    (usa tus IDs: #spControl, #spOpen, #spClose)
    ========================================================== */
 .sp-panel{
@@ -25,6 +26,10 @@ body {
   z-index:30;
 
   width:280px;
+  max-width: calc(100vw - 20px);         /* ✅ nunca se sale horizontal */
+  max-height: calc(100vh - 30px);        /* ✅ nunca se sale vertical */
+  overflow: hidden;                      /* ✅ el scroll va adentro */
+
   padding:12px 12px 14px 12px;
   border-radius:14px;
 
@@ -35,6 +40,10 @@ body {
   border:1px solid rgba(255,255,255,0.12);
   box-shadow:0 18px 40px rgba(0,0,0,0.35);
   color:#fff;
+
+  /* ✅ permite layout tipo columna (header fijo + contenido scroll) */
+  display:flex;
+  flex-direction:column;
 }
 
 .sp-header{
@@ -43,6 +52,8 @@ body {
   justify-content:space-between;
   gap:10px;
   margin-bottom:10px;
+
+  flex: 0 0 auto; /* ✅ header fijo */
 }
 
 .sp-title{
@@ -74,6 +85,8 @@ body {
   font-size:12px;
   opacity:.85;
   line-height:1.25;
+
+  flex: 0 0 auto;
 }
 
 /* Botón para re-abrir el panel cuando está cerrado */
@@ -96,25 +109,39 @@ body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow:0 18px 40px rgba(0,0,0,0.35);
+
+  max-width: calc(100vw - 20px);
 }
 .sp-open:hover{
   background:rgba(0,0,0,0.82);
 }
 
 /* ==========================================================
-   ✅ LISTA CON SWITCHES (como tu ejemplo)
+   ✅ LISTA CON SWITCHES (multi-select)
    Requiere HTML:
    - #spToggleList
-   - .sp-row[data-value]  (cada fila)
+   - .sp-row[data-layer]  (cada fila)  ✅ según tu JS nuevo
    ========================================================== */
 
-/* contenedor de la lista */
+/* ✅ contenedor de la lista: scroll interno si no cabe */
 #spToggleList{
   margin-top: 8px;
+
   display:flex;
   flex-direction:column;
   gap:10px;
+
+  flex: 1 1 auto;                /* ✅ ocupa el espacio disponible */
+  min-height: 0;                 /* ✅ CRÍTICO para que overflow funcione en flex */
+  overflow: auto;                /* ✅ scroll vertical */
+  padding-right: 2px;            /* ✅ espacio para scrollbar */
 }
+
+/* Scrollbar (Chrome/Edge) */
+#spToggleList::-webkit-scrollbar{ width:10px; }
+#spToggleList::-webkit-scrollbar-track{ background:rgba(255,255,255,0.06); border-radius:10px; }
+#spToggleList::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.18); border-radius:10px; }
+#spToggleList::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,0.26); }
 
 /* fila */
 .sp-row{
@@ -178,18 +205,27 @@ body {
   transition: left .12s ease, background .12s ease;
 }
 
-/* ✅ activo (solo una fila a la vez: .is-active la pone el JS) */
+/* ==========================================================
+   ✅ ACTIVO (multi-select): varios pueden estar activos
+   ✅ Color por fila usando CSS variables (opcional)
+   - Si en HTML pones style="--sp-accent:#3b82f6" en cada .sp-row,
+     el switch queda con ese color.
+   ========================================================== */
+.sp-row{
+  --sp-accent: rgba(0,188,212,0.85); /* fallback */
+}
+
 .sp-row.is-active{
-  background:rgba(0,188,212,0.12);
-  border-color: rgba(0,188,212,0.55);
+  background: color-mix(in srgb, var(--sp-accent) 14%, rgba(0,0,0,0.55));
+  border-color: color-mix(in srgb, var(--sp-accent) 60%, rgba(255,255,255,0.10));
 }
 .sp-row.is-active .sp-switch{
-  background: rgba(0,188,212,0.75);
-  border-color: rgba(0,188,212,0.75);
+  background: var(--sp-accent);
+  border-color: var(--sp-accent);
 }
 .sp-row.is-active .sp-switch::after{
   left: calc(100% - 24px);
-  background:#0b0b0b; /* “knob” oscuro como el ejemplo */
+  background:#0b0b0b; /* knob oscuro */
 }
 
 /* separador opcional */
@@ -262,10 +298,16 @@ body {
   min-width: 320px !important;
 }
 
-/* Ajuste: si el panel tapa el geocoder en pantallas pequeñas */
+/* ==========================================================
+   Responsive
+   ========================================================== */
 @media (max-width: 520px){
   .mapboxgl-ctrl-geocoder { width: 260px !important; min-width: 260px !important; }
   .sp-panel{ width: 240px; }
   .sp-switch{ width:46px; }
 }
 
+/* ✅ extra: si el alto es pequeño, reduce el top para que quepa */
+@media (max-height: 540px){
+  .sp-panel{ top:10px; max-height: calc(100vh - 20px); }
+}
