@@ -8,8 +8,8 @@
 // ✅ NUEVO: Filtro SI/NO por servicios (Gas/Acueducto/Alcantarillado/Internet/Basuras)
 //     - Usa SOLO campos que existan en atributos
 //     - Aplica filtro visual con map.setFilter() sobre servicios_publicos_layer
-// ✅ NUEVO (UI): panel filtro premium + dropdown personalizado (NO <select> nativo)
-//     - Requiere en HTML: #spControl, #spClose, #spOpen, #spBtn, #spBtnText, #spMenu, .sp-item[data-value]
+// ✅ NUEVO (UI): panel filtro premium + LISTA CON SWITCHES (NO dropdown, NO <select>)
+//     - Requiere en HTML: #spControl, #spClose, #spOpen, #spToggleList, .sp-row[data-value]
 // =====================================================
 
 mapboxgl.accessToken =
@@ -252,16 +252,14 @@ function applyServiciosSelectFilter(value) {
 }
 
 // =====================================================
-// ✅ DROPDOWN PERSONALIZADO (reemplaza <select id="spSelect">)
-// Requiere en HTML: #spBtn, #spBtnText, #spMenu, .sp-item[data-value]
+// ✅ LISTA CON SWITCHES (como el ejemplo)
+// Requiere en HTML: #spToggleList y .sp-row[data-value]
 // =====================================================
-function wireServiciosSelect() {
-  const btn = document.getElementById("spBtn");
-  const btnText = document.getElementById("spBtnText");
-  const menu = document.getElementById("spMenu");
-  if (!btn || !btnText || !menu) return;
+function wireServiciosToggleList() {
+  const list = document.getElementById("spToggleList");
+  if (!list) return;
 
-  // Oculta items si el campo no existe
+  // 1) Ocultar filas si el campo NO existe
   const present = getServiciosFieldsPresent();
   const hideIfMissing = [
     { key: "GAS", values: ["GAS_SI", "GAS_NO"] },
@@ -274,58 +272,36 @@ function wireServiciosSelect() {
   hideIfMissing.forEach(({ key, values }) => {
     if (present[key]) return;
     values.forEach((v) => {
-      const item = menu.querySelector(`.sp-item[data-value="${v}"]`);
-      if (item) item.style.display = "none";
+      const row = list.querySelector(`.sp-row[data-value="${v}"]`);
+      if (row) row.style.display = "none";
     });
   });
 
-  function openMenu() {
-    menu.classList.add("open");
-    menu.setAttribute("aria-hidden", "false");
-  }
-  function closeMenu() {
-    menu.classList.remove("open");
-    menu.setAttribute("aria-hidden", "true");
+  // 2) Helper para “1 solo activo”
+  function setActive(value) {
+    list.querySelectorAll(".sp-row[data-value]").forEach((row) => {
+      row.classList.toggle("is-active", row.dataset.value === value);
+    });
   }
 
-  // Toggle
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    menu.classList.contains("open") ? closeMenu() : openMenu();
-  });
+  // 3) Click en fila => aplica filtro
+  list.querySelectorAll(".sp-row[data-value]").forEach((row) => {
+    row.addEventListener("click", () => {
+      const value = row.dataset.value || "ALL";
 
-  // Cerrar al click afuera
-  document.addEventListener("click", () => closeMenu());
-
-  // Selección
-  menu.querySelectorAll(".sp-item[data-value]").forEach((item) => {
-    item.addEventListener("click", (e) => {
-      e.stopPropagation();
-
-      const value = item.dataset.value || "ALL";
-      const label = item.textContent.trim();
-
-      // UI
-      btnText.textContent = label;
-      menu.querySelectorAll(".sp-item").forEach((i) => i.classList.remove("active"));
-      item.classList.add("active");
-      closeMenu();
-
-      // Filtro
+      setActive(value);
       applyServiciosSelectFilter(value);
 
       // Limpia popup y highlight al cambiar filtro
-      try { popup.remove(); } catch (e2) {}
+      try { popup.remove(); } catch (e) {}
       const hs = map.getSource("highlight");
       if (hs) hs.setData({ type: "FeatureCollection", features: [] });
     });
   });
 
-  // Estado inicial
+  // 4) Estado inicial
+  setActive("ALL");
   applyServiciosSelectFilter("ALL");
-  btnText.textContent = "Ver todos";
-  const first = menu.querySelector('.sp-item[data-value="ALL"]');
-  if (first) first.classList.add("active");
 }
 
 // =====================================================
@@ -447,9 +423,9 @@ function addServiciosPublicos() {
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
       });
 
-      // ✅ Conectar dropdown personalizado cuando YA cargó servicios
+      // ✅ Conectar LISTA con switches cuando YA cargó servicios
       setTimeout(() => {
-        try { wireServiciosSelect(); } catch (e) {}
+        try { wireServiciosToggleList(); } catch (e) {}
       }, 0);
 
       // ✅ Conectar UI de abrir/cerrar panel
