@@ -35,7 +35,8 @@
       z-index:30;
 
       width:320px;
-      max-height: calc(100vh - 30px);   /* ✅ clave */
+      max-width: calc(100vw - 20px);      /* ✅ FIX: nunca se sale horizontal */
+      max-height: calc(100vh - 30px);     /* ✅ clave */
       display:flex;
       flex-direction:column;
 
@@ -49,7 +50,7 @@
       border:1px solid rgba(255,255,255,0.12);
       box-shadow:0 18px 40px rgba(0,0,0,0.35);
       color:#fff;
-      overflow:hidden;                 /* scroll interno abajo */
+      overflow:hidden;                    /* scroll interno abajo */
     }
 
     .sp-header{
@@ -113,6 +114,7 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       box-shadow:0 18px 40px rgba(0,0,0,0.35);
+      max-width: calc(100vw - 20px);      /* ✅ FIX: tampoco se sale */
     }
     .sp-open:hover{ background:rgba(0,0,0,0.82); }
 
@@ -121,6 +123,7 @@
        ========================================================== */
     #spToggleList{
       flex: 1 1 auto;                      /* ✅ ocupa lo disponible */
+      min-height: 0;                       /* ✅ FIX CRÍTICO: overflow dentro de flex */
       overflow:auto;                       /* ✅ scroll interno */
       padding-right:6px;
       border-radius:12px;
@@ -227,6 +230,11 @@
     /* Mobile */
     @media (max-width: 520px){
       .sp-panel{ width: 260px; }
+    }
+
+    /* ✅ Extra: pantallas bajitas */
+    @media (max-height: 540px){
+      .sp-panel{ top:10px; max-height: calc(100vh - 20px); }
     }
   </style>
 </head>
