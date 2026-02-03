@@ -5,10 +5,11 @@
 // 🟠 Servicios públicos: puntos (POPUP + Street View + BUSCADOR)
 // 🟡 Highlight: punto seleccionado (por buscador y clic)
 // ✅ PRIORIDAD DE CLIC: si hay punto encima, manda el punto (no el predio)
-// ✅ NUEVO: Filtro desplegable SI/NO por servicios (Gas/Acueducto/Alcantarillado/Internet/Basuras)
+// ✅ NUEVO: Filtro SI/NO por servicios (Gas/Acueducto/Alcantarillado/Internet/Basuras)
 //     - Usa SOLO campos que existan en atributos
 //     - Aplica filtro visual con map.setFilter() sobre servicios_publicos_layer
-// ✅ NUEVO (UI): botón cerrar/abrir panel de filtro (spControl/spOpen/spClose)
+// ✅ NUEVO (UI): panel filtro premium + dropdown personalizado (NO <select> nativo)
+//     - Requiere en HTML: #spControl, #spClose, #spOpen, #spBtn, #spBtnText, #spMenu, .sp-item[data-value]
 // =====================================================
 
 mapboxgl.accessToken =
@@ -94,7 +95,6 @@ function wireFilterPanelToggle() {
 
   if (!panel || !btnClose || !btnOpen) return;
 
-  // Estado inicial: panel visible, botón "Filtros" oculto
   btnOpen.style.display = "none";
 
   btnClose.addEventListener("click", () => {
@@ -172,11 +172,8 @@ function popupHTMLServicios(props, lngLat) {
 }
 
 // =====================================================
-// ✅ FILTRO DESPLEGABLE (SI / NO) – SOLO SERVICIOS
-// Requiere en tu HTML: <select id="spSelect">...</select>
+// ✅ FILTRO (Mapbox Expressions)
 // =====================================================
-
-// Expr Mapbox para “SI”
 function exprTieneSi(fieldName) {
   return [
     "in",
@@ -185,7 +182,6 @@ function exprTieneSi(fieldName) {
   ];
 }
 
-// Expr Mapbox para “NO” (incluye vacío como NO)
 function exprTieneNo(fieldName) {
   return [
     "any",
@@ -206,13 +202,11 @@ const SP_FIELDS = {
   BASURAS: "Tiene servicio de recolección de basuras?",
 };
 
-// ✅ Detecta cuáles campos existen realmente en tus atributos
 function getServiciosFieldsPresent() {
   const present = {};
   const feats = SERVICIOS_DATA?.features;
   if (!Array.isArray(feats) || !feats.length) return present;
 
-  // revisa en las primeras ~50 features para no gastar mucho
   const sample = feats.slice(0, Math.min(50, feats.length));
   for (const [k, fieldName] of Object.entries(SP_FIELDS)) {
     present[k] = sample.some(
@@ -236,53 +230,38 @@ function applyServiciosSelectFilter(value) {
   let filter = null;
 
   switch (value) {
-    case "GAS_SI":
-      filter = exprTieneSi(SP_FIELDS.GAS);
-      break;
-    case "GAS_NO":
-      filter = exprTieneNo(SP_FIELDS.GAS);
-      break;
+    case "GAS_SI":       filter = exprTieneSi(SP_FIELDS.GAS); break;
+    case "GAS_NO":       filter = exprTieneNo(SP_FIELDS.GAS); break;
 
-    case "ACUEDUCTO_SI":
-      filter = exprTieneSi(SP_FIELDS.ACUEDUCTO);
-      break;
-    case "ACUEDUCTO_NO":
-      filter = exprTieneNo(SP_FIELDS.ACUEDUCTO);
-      break;
+    case "ACUEDUCTO_SI": filter = exprTieneSi(SP_FIELDS.ACUEDUCTO); break;
+    case "ACUEDUCTO_NO": filter = exprTieneNo(SP_FIELDS.ACUEDUCTO); break;
 
-    case "ALC_SI":
-      filter = exprTieneSi(SP_FIELDS.ALC);
-      break;
-    case "ALC_NO":
-      filter = exprTieneNo(SP_FIELDS.ALC);
-      break;
+    case "ALC_SI":       filter = exprTieneSi(SP_FIELDS.ALC); break;
+    case "ALC_NO":       filter = exprTieneNo(SP_FIELDS.ALC); break;
 
-    case "INTERNET_SI":
-      filter = exprTieneSi(SP_FIELDS.INTERNET);
-      break;
-    case "INTERNET_NO":
-      filter = exprTieneNo(SP_FIELDS.INTERNET);
-      break;
+    case "INTERNET_SI":  filter = exprTieneSi(SP_FIELDS.INTERNET); break;
+    case "INTERNET_NO":  filter = exprTieneNo(SP_FIELDS.INTERNET); break;
 
-    case "BASURAS_SI":
-      filter = exprTieneSi(SP_FIELDS.BASURAS);
-      break;
-    case "BASURAS_NO":
-      filter = exprTieneNo(SP_FIELDS.BASURAS);
-      break;
+    case "BASURAS_SI":   filter = exprTieneSi(SP_FIELDS.BASURAS); break;
+    case "BASURAS_NO":   filter = exprTieneNo(SP_FIELDS.BASURAS); break;
 
-    default:
-      filter = null;
+    default: filter = null;
   }
 
   map.setFilter(layerId, filter);
 }
 
+// =====================================================
+// ✅ DROPDOWN PERSONALIZADO (reemplaza <select id="spSelect">)
+// Requiere en HTML: #spBtn, #spBtnText, #spMenu, .sp-item[data-value]
+// =====================================================
 function wireServiciosSelect() {
-  const sel = document.getElementById("spSelect");
-  if (!sel) return;
+  const btn = document.getElementById("spBtn");
+  const btnText = document.getElementById("spBtnText");
+  const menu = document.getElementById("spMenu");
+  if (!btn || !btnText || !menu) return;
 
-  // ✅ Oculta opciones que no existan en la tabla de atributos
+  // Oculta items si el campo no existe
   const present = getServiciosFieldsPresent();
   const hideIfMissing = [
     { key: "GAS", values: ["GAS_SI", "GAS_NO"] },
@@ -295,21 +274,58 @@ function wireServiciosSelect() {
   hideIfMissing.forEach(({ key, values }) => {
     if (present[key]) return;
     values.forEach((v) => {
-      const opt = sel.querySelector(`option[value="${v}"]`);
-      if (opt) opt.style.display = "none";
+      const item = menu.querySelector(`.sp-item[data-value="${v}"]`);
+      if (item) item.style.display = "none";
     });
   });
 
-  sel.addEventListener("change", () => {
-    applyServiciosSelectFilter(sel.value);
+  function openMenu() {
+    menu.classList.add("open");
+    menu.setAttribute("aria-hidden", "false");
+  }
+  function closeMenu() {
+    menu.classList.remove("open");
+    menu.setAttribute("aria-hidden", "true");
+  }
 
-    // Limpia popup y highlight al cambiar filtro
-    try { popup.remove(); } catch (e) {}
-    const hs = map.getSource("highlight");
-    if (hs) hs.setData({ type: "FeatureCollection", features: [] });
+  // Toggle
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    menu.classList.contains("open") ? closeMenu() : openMenu();
   });
 
-  applyServiciosSelectFilter(sel.value || "ALL");
+  // Cerrar al click afuera
+  document.addEventListener("click", () => closeMenu());
+
+  // Selección
+  menu.querySelectorAll(".sp-item[data-value]").forEach((item) => {
+    item.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      const value = item.dataset.value || "ALL";
+      const label = item.textContent.trim();
+
+      // UI
+      btnText.textContent = label;
+      menu.querySelectorAll(".sp-item").forEach((i) => i.classList.remove("active"));
+      item.classList.add("active");
+      closeMenu();
+
+      // Filtro
+      applyServiciosSelectFilter(value);
+
+      // Limpia popup y highlight al cambiar filtro
+      try { popup.remove(); } catch (e2) {}
+      const hs = map.getSource("highlight");
+      if (hs) hs.setData({ type: "FeatureCollection", features: [] });
+    });
+  });
+
+  // Estado inicial
+  applyServiciosSelectFilter("ALL");
+  btnText.textContent = "Ver todos";
+  const first = menu.querySelector('.sp-item[data-value="ALL"]');
+  if (first) first.classList.add("active");
 }
 
 // =====================================================
@@ -323,7 +339,6 @@ function addPrediosBase() {
       if (map.getSource("predios_base")) map.getSource("predios_base").setData(data);
       else map.addSource("predios_base", { type: "geojson", data });
 
-      // contorno
       if (!map.getLayer("predios_base_outline")) {
         map.addLayer({
           id: "predios_base_outline",
@@ -338,7 +353,6 @@ function addPrediosBase() {
         });
       }
 
-      // fill transparente clickable
       if (!map.getLayer("predios_base_click")) {
         map.addLayer({
           id: "predios_base_click",
@@ -360,7 +374,6 @@ function addPrediosBase() {
       map.on("mouseleave", "predios_base_click", () => (map.getCanvas().style.cursor = ""));
 
       map.on("click", "predios_base_click", (e) => {
-        // ✅ PRIORIDAD: si el click cae sobre un punto de servicios, NO abrir predio
         const hitServicios = map.queryRenderedFeatures(e.point, {
           layers: ["servicios_publicos_layer"],
         });
@@ -377,7 +390,6 @@ function addPrediosBase() {
           .addTo(map);
       });
 
-      // Orden coherente
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
       if (map.getLayer("predios_base_click")) map.moveLayer("predios_base_click");
     })
@@ -431,27 +443,26 @@ function addServiciosPublicos() {
           .setHTML(popupHTMLServicios(f.properties || {}, lngLat))
           .addTo(map);
 
-        // highlight
         const hs = map.getSource("highlight");
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
       });
 
-      // ✅ Conectar el filtro desplegable cuando YA cargó servicios
+      // ✅ Conectar dropdown personalizado cuando YA cargó servicios
       setTimeout(() => {
         try { wireServiciosSelect(); } catch (e) {}
       }, 0);
 
-      // ✅ Conectar UI de abrir/cerrar panel (una vez existan nodos)
+      // ✅ Conectar UI de abrir/cerrar panel
       setTimeout(() => {
         try { wireFilterPanelToggle(); } catch (e) {}
       }, 0);
 
-      // ✅ Blindaje de orden cuando ya existen capas
+      // ✅ Blindaje de orden
       try {
         if (map.getLayer("predios_base_click") && map.getLayer("servicios_publicos_layer")) {
-          map.moveLayer("servicios_publicos_layer"); // arriba de predios
+          map.moveLayer("servicios_publicos_layer");
         }
-        if (map.getLayer("highlight_circle")) map.moveLayer("highlight_circle"); // arriba de todo
+        if (map.getLayer("highlight_circle")) map.moveLayer("highlight_circle");
       } catch (e) {}
     })
     .catch((err) => console.error("Error cargando servicios públicos:", err));
@@ -552,7 +563,6 @@ const geocoder = new MapboxGeocoder({
 
 map.addControl(geocoder, "top-left");
 
-// Resultado del buscador
 geocoder.on("result", (e) => {
   const f = e.result;
   if (!f) return;
@@ -574,11 +584,10 @@ geocoder.on("result", (e) => {
 // CARGA FINAL (orden correcto)
 // =====================================================
 map.on("style.load", () => {
-  addPrediosBase();        // abajo (contorno + click)
-  addServiciosPublicos();  // arriba (puntos)
-  addHighlight();          // arriba de todo
+  addPrediosBase();
+  addServiciosPublicos();
+  addHighlight();
 
-  // Blindaje extra (por si demora el fetch)
   setTimeout(() => {
     try {
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
