@@ -10,6 +10,7 @@
 //     - Si no hay switches activos → muestra TODOS (capa base)
 // ✅ FIX DATOS VACÍOS: vacíos / N/A / NNA / no aplica NO cuentan como NO
 // ✅ FIX COLORES: el color del panel coincide 1:1 con el color de la capa
+// ✅ FIX UI: switches vuelven a funcionar (sin listeners duplicados)
 // =====================================================
 
 mapboxgl.accessToken =
@@ -203,46 +204,28 @@ const SP_FIELDS = {
   BASURAS: "Tiene servicio de recolección de basuras?",
 };
 
-function getServiciosFieldsPresent() {
-  const present = {};
-  const feats = SERVICIOS_DATA?.features;
-  if (!Array.isArray(feats) || !feats.length) return present;
-
-  const sample = feats.slice(0, Math.min(50, feats.length));
-  for (const [k, fieldName] of Object.entries(SP_FIELDS)) {
-    present[k] = sample.some(
-      (f) =>
-        f?.properties &&
-        Object.prototype.hasOwnProperty.call(f.properties, fieldName)
-    );
-  }
-  return present;
-}
-
 // =====================================================
 // ✅ DEFINICIÓN DE "GRUPOS" (cada switch = 1 capa + 1 color)
 // =====================================================
 const FILTER_GROUPS = [
-  { id: "L_GAS_SI",       label: "Gas: Sí",            field: SP_FIELDS.GAS,       expr: () => exprTieneSi(SP_FIELDS.GAS),       color: "#00bcd4" },
-  { id: "L_GAS_NO",       label: "Gas: No",            field: SP_FIELDS.GAS,       expr: () => exprTieneNo(SP_FIELDS.GAS),       color: "#ff4d6d" },
+  { id: "L_GAS_SI",       label: "Gas: Sí",            field: SP_FIELDS.GAS,       expr: () => exprTieneSi(SP_FIELDS.GAS),        color: "#00bcd4" },
+  { id: "L_GAS_NO",       label: "Gas: No",            field: SP_FIELDS.GAS,       expr: () => exprTieneNo(SP_FIELDS.GAS),        color: "#ff4d6d" },
 
   { id: "L_ACUEDUCTO_SI", label: "Acueducto: Sí",      field: SP_FIELDS.ACUEDUCTO, expr: () => exprTieneSi(SP_FIELDS.ACUEDUCTO), color: "#3b82f6" },
   { id: "L_ACUEDUCTO_NO", label: "Acueducto: No",      field: SP_FIELDS.ACUEDUCTO, expr: () => exprTieneNo(SP_FIELDS.ACUEDUCTO), color: "#f59e0b" },
 
-  { id: "L_ALC_SI",       label: "Alcantarillado: Sí", field: SP_FIELDS.ALC,       expr: () => exprTieneSi(SP_FIELDS.ALC),       color: "#22c55e" },
-  { id: "L_ALC_NO",       label: "Alcantarillado: No", field: SP_FIELDS.ALC,       expr: () => exprTieneNo(SP_FIELDS.ALC),       color: "#ef4444" },
+  { id: "L_ALC_SI",       label: "Alcantarillado: Sí", field: SP_FIELDS.ALC,       expr: () => exprTieneSi(SP_FIELDS.ALC),        color: "#22c55e" },
+  { id: "L_ALC_NO",       label: "Alcantarillado: No", field: SP_FIELDS.ALC,       expr: () => exprTieneNo(SP_FIELDS.ALC),        color: "#ef4444" },
 
-  { id: "L_INTERNET_SI",  label: "Internet: Sí",       field: SP_FIELDS.INTERNET,  expr: () => exprTieneSi(SP_FIELDS.INTERNET),  color: "#a855f7" },
-  { id: "L_INTERNET_NO",  label: "Internet: No",       field: SP_FIELDS.INTERNET,  expr: () => exprTieneNo(SP_FIELDS.INTERNET),  color: "#94a3b8" },
+  { id: "L_INTERNET_SI",  label: "Internet: Sí",       field: SP_FIELDS.INTERNET,  expr: () => exprTieneSi(SP_FIELDS.INTERNET),   color: "#a855f7" },
+  { id: "L_INTERNET_NO",  label: "Internet: No",       field: SP_FIELDS.INTERNET,  expr: () => exprTieneNo(SP_FIELDS.INTERNET),   color: "#94a3b8" },
 
-  { id: "L_BASURAS_SI",   label: "Basuras: Sí",        field: SP_FIELDS.BASURAS,   expr: () => exprTieneSi(SP_FIELDS.BASURAS),   color: "#10b981" },
-  { id: "L_BASURAS_NO",   label: "Basuras: No",        field: SP_FIELDS.BASURAS,   expr: () => exprTieneNo(SP_FIELDS.BASURAS),   color: "#f97316" },
+  { id: "L_BASURAS_SI",   label: "Basuras: Sí",        field: SP_FIELDS.BASURAS,   expr: () => exprTieneSi(SP_FIELDS.BASURAS),    color: "#10b981" },
+  { id: "L_BASURAS_NO",   label: "Basuras: No",        field: SP_FIELDS.BASURAS,   expr: () => exprTieneNo(SP_FIELDS.BASURAS),    color: "#f97316" },
 ];
 
 // =====================================================
-// ✅ FIX COLORES UI: pinta el puntico del panel con el MISMO color del grupo
-// - Usa: <div class="sp-row" data-layer="L_GAS_SI">...</div>
-// - Pone: style="--sp-accent:#xxxxxx" y un punto .sp-dot si existe
+// ✅ FIX COLORES UI: puntico del panel = color de la capa
 // =====================================================
 function syncPanelColorsWithGroups() {
   const list = document.getElementById("spToggleList");
@@ -252,15 +235,12 @@ function syncPanelColorsWithGroups() {
     const row = list.querySelector(`.sp-row[data-layer="${g.id}"]`);
     if (!row) continue;
 
-    // Variable CSS para el switch / fondo activo (tu CSS ya la usa)
     row.style.setProperty("--sp-accent", g.color);
 
-    // Si tienes un puntico (como en tu captura), lo colorea también
     const dot = row.querySelector(".sp-dot");
     if (dot) dot.style.background = g.color;
   }
 
-  // “Ver todos” (opcional)
   const all = list.querySelector(`.sp-row[data-layer="L_ALL"]`);
   if (all) all.style.setProperty("--sp-accent", "#00bcd4");
 }
@@ -272,7 +252,6 @@ function ensureServiciosFilterLayers() {
   const sourceId = "servicios_publicos";
   const baseId = "L_BASE";
 
-  // Base (todos)
   if (!map.getLayer(baseId)) {
     map.addLayer({
       id: baseId,
@@ -288,7 +267,6 @@ function ensureServiciosFilterLayers() {
     });
   }
 
-  // Capas por grupo (inicialmente ocultas)
   for (const g of FILTER_GROUPS) {
     if (map.getLayer(g.id)) continue;
 
@@ -341,80 +319,94 @@ function wireServiciosLayerInteractions() {
 }
 
 // =====================================================
-// ✅ LISTA CON SWITCHES: MULTI-SELECT
-// - "Ver todos" apaga los demás y deja base visible
-// - Si hay ≥1 activo → base se oculta y se muestran los activos
+// ✅ LISTA CON SWITCHES: MULTI-SELECT (FIX robusto)
+// - evita listeners duplicados
+// - solo toma filas .sp-row con data-layer
 // =====================================================
 function wireServiciosToggleList() {
   const list = document.getElementById("spToggleList");
   if (!list) return;
 
-  // ✅ aplica colores al panel (1:1)
+  // ✅ colores 1:1
   syncPanelColorsWithGroups();
-
-  const rowAll = list.querySelector(`.sp-row[data-layer="L_ALL"]`);
-  const groupRows = Array.from(list.querySelectorAll(`.sp-row[data-layer]`))
-    .filter(r => r.dataset.layer && r.dataset.layer !== "L_ALL");
-
-  function getActiveGroups() {
-    return groupRows
-      .filter(r => r.classList.contains("is-active"))
-      .map(r => r.dataset.layer)
-      .filter(Boolean);
-  }
 
   function setLayerVisibility(id, visible) {
     if (!map.getLayer(id)) return;
     map.setLayoutProperty(id, "visibility", visible ? "visible" : "none");
   }
 
+  function clearPopupAndHighlight() {
+    try { popup.remove(); } catch (e) {}
+    const hs = map.getSource("highlight");
+    if (hs) hs.setData({ type: "FeatureCollection", features: [] });
+  }
+
+  // ✅ 1) Captura filas válidas
+  let rows = Array.from(list.querySelectorAll(".sp-row"))
+    .filter(r => r.dataset && r.dataset.layer);
+
+  if (!rows.length) return;
+
+  // ✅ 2) Elimina listeners previos clonando nodos (muy importante)
+  rows.forEach((row) => {
+    const clone = row.cloneNode(true);
+    row.parentNode.replaceChild(clone, row);
+  });
+
+  // ✅ 3) Re-captura filas después de clonar
+  rows = Array.from(list.querySelectorAll(".sp-row"))
+    .filter(r => r.dataset && r.dataset.layer);
+
+  const rowAll = rows.find(r => r.dataset.layer === "L_ALL");
+  const groupRows = rows.filter(r => r.dataset.layer !== "L_ALL");
+
+  function getActiveGroups() {
+    return groupRows
+      .filter(r => r.classList.contains("is-active"))
+      .map(r => r.dataset.layer);
+  }
+
   function syncMapLayersFromUI() {
     const actives = getActiveGroups();
 
-    if (!actives.length) {
-      // Ninguno activo -> mostrar base
+    if (actives.length === 0) {
       setLayerVisibility("L_BASE", true);
       FILTER_GROUPS.forEach(g => setLayerVisibility(g.id, false));
       if (rowAll) rowAll.classList.add("is-active");
       return;
     }
 
-    // Hay activos -> ocultar base y mostrar activos
     setLayerVisibility("L_BASE", false);
     FILTER_GROUPS.forEach(g => setLayerVisibility(g.id, actives.includes(g.id)));
     if (rowAll) rowAll.classList.remove("is-active");
   }
 
-  // Click "Ver todos"
+  // ✅ Click "Ver todos"
   if (rowAll) {
     rowAll.addEventListener("click", () => {
       rowAll.classList.add("is-active");
       groupRows.forEach(r => r.classList.remove("is-active"));
       syncMapLayersFromUI();
-
-      try { popup.remove(); } catch (e) {}
-      const hs = map.getSource("highlight");
-      if (hs) hs.setData({ type: "FeatureCollection", features: [] });
+      clearPopupAndHighlight();
     });
   }
 
-  // Click en grupo -> toggle
+  // ✅ Click grupo -> toggle multi
   groupRows.forEach((row) => {
     row.addEventListener("click", () => {
       row.classList.toggle("is-active");
 
       if (row.classList.contains("is-active") && rowAll) rowAll.classList.remove("is-active");
-      if (!getActiveGroups().length && rowAll) rowAll.classList.add("is-active");
+
+      // si apagaron todos -> ALL se prende
+      if (getActiveGroups().length === 0 && rowAll) rowAll.classList.add("is-active");
 
       syncMapLayersFromUI();
-
-      try { popup.remove(); } catch (e) {}
-      const hs = map.getSource("highlight");
-      if (hs) hs.setData({ type: "FeatureCollection", features: [] });
+      clearPopupAndHighlight();
     });
   });
 
-  // Estado inicial
+  // ✅ Estado inicial
   if (rowAll) rowAll.classList.add("is-active");
   groupRows.forEach(r => r.classList.remove("is-active"));
   syncMapLayersFromUI();
