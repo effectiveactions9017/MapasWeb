@@ -22,34 +22,127 @@
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
 
-  <!-- ✅ Estilos del panel de filtros (si ya existen en main.css no pasa nada) -->
+  <!-- ✅ Panel premium (oscuro + blur) para el filtro -->
   <style>
-    .layer-control{
+    body { margin:0; padding:0; font-family:'Libre Franklin', sans-serif; }
+    #map { position:absolute; top:0; bottom:0; width:100%; }
+
+    /* Panel */
+    .sp-panel{
       position:absolute;
       top:15px;
       right:10px;
       z-index:30;
-      background:rgba(0,0,0,0.75);
-      padding:12px;
-      border-radius:10px;
-      width:260px;
-      color:#fff;
-      font-family:'Libre Franklin', sans-serif;
-      box-shadow:0 6px 18px rgba(0,0,0,0.35);
+
+      width:280px;
+      padding:12px 12px 14px 12px;
+      border-radius:14px;
+
+      background:rgba(0,0,0,0.72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+
       border:1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(3px);
-    }
-    .lc-title{ font-weight:800; margin-bottom:8px; letter-spacing:.2px; }
-    .lc-select{
-      width:100%;
-      padding:8px;
-      border-radius:8px;
-      border:1px solid rgba(255,255,255,0.18);
-      background:#111;
+      box-shadow:0 18px 40px rgba(0,0,0,0.35);
       color:#fff;
-      outline:none;
     }
-    .lc-help{ margin-top:8px; font-size:12px; opacity:.85; line-height:1.25; }
+
+    .sp-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .sp-title{
+      font-weight:800;
+      font-size:16px;
+      letter-spacing:.2px;
+      line-height:1.1;
+    }
+
+    .sp-close{
+      border:0;
+      background:rgba(255,255,255,0.10);
+      color:#fff;
+      width:34px;
+      height:34px;
+      border-radius:10px;
+      font-size:20px;
+      line-height:34px;
+      cursor:pointer;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .sp-close:hover{
+      background:rgba(255,255,255,0.18);
+      transform: translateY(-1px);
+    }
+
+    .sp-select{
+      width:100%;
+      height:44px;
+      border-radius:12px;
+      padding:0 12px;
+
+      background:rgba(15,15,15,0.90);
+      color:#fff;
+
+      border:1px solid rgba(255,255,255,0.14);
+      outline:none;
+      font-weight:700;
+
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+
+      /* flecha */
+      background-image:
+        linear-gradient(45deg, transparent 50%, #cfcfcf 50%),
+        linear-gradient(135deg, #cfcfcf 50%, transparent 50%);
+      background-position:
+        calc(100% - 18px) 19px,
+        calc(100% - 12px) 19px;
+      background-size:6px 6px, 6px 6px;
+      background-repeat:no-repeat;
+    }
+
+    .sp-select:focus{
+      border-color: rgba(0, 188, 212, 0.65);
+      box-shadow: 0 0 0 3px rgba(0,188,212,0.18);
+    }
+
+    .sp-help{
+      margin-top:10px;
+      font-size:12px;
+      opacity:.85;
+      line-height:1.25;
+    }
+
+    /* Botón para re-abrir (cuando cierras el panel) */
+    .sp-open{
+      position:absolute;
+      top:15px;
+      right:10px;
+      z-index:31;
+
+      display:none;
+      border:0;
+      padding:10px 12px;
+      border-radius:12px;
+      background:rgba(0,0,0,0.72);
+      color:#fff;
+      font-weight:800;
+      cursor:pointer;
+
+      border:1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow:0 18px 40px rgba(0,0,0,0.35);
+    }
+    .sp-open:hover{
+      background:rgba(0,0,0,0.82);
+    }
   </style>
 </head>
 
@@ -59,10 +152,13 @@
   <div id="map"></div>
 
   <!-- ✅ FILTRO DESPLEGABLE (SI / NO) – SERVICIOS PÚBLICOS -->
-  <div id="spControl" class="layer-control">
-    <div class="lc-title">Servicios públicos — filtro</div>
+  <div id="spControl" class="sp-panel">
+    <div class="sp-header">
+      <div class="sp-title">Servicios públicos — filtro</div>
+      <button id="spClose" class="sp-close" title="Cerrar">×</button>
+    </div>
 
-    <select id="spSelect" class="lc-select">
+    <select id="spSelect" class="sp-select">
       <option value="ALL" selected>Ver todos</option>
       <option disabled>────────────</option>
 
@@ -82,16 +178,37 @@
       <option value="BASURAS_NO">Basuras: No</option>
     </select>
 
-    <div class="lc-help">
+    <div class="sp-help">
       Filtra los puntos visibles en el mapa (según el atributo).
     </div>
   </div>
 
-  <!-- ✅ QUITAMOS LA LEYENDA DE ABAJO (ya no es necesaria) -->
-  <!-- (Se eliminó el bloque .legend-container completo) -->
+  <!-- Botón pequeño para re-abrir cuando está cerrado -->
+  <button id="spOpen" class="sp-open">Filtros</button>
 
   <!-- SCRIPT PRINCIPAL -->
   <script src="../src/index.js"></script>
+
+  <!-- ✅ Control de abrir/cerrar (no toca tu index.js) -->
+  <script>
+    (function(){
+      const panel = document.getElementById('spControl');
+      const btnClose = document.getElementById('spClose');
+      const btnOpen  = document.getElementById('spOpen');
+
+      if (btnClose && panel && btnOpen){
+        btnClose.addEventListener('click', () => {
+          panel.style.display = 'none';
+          btnOpen.style.display = 'block';
+        });
+
+        btnOpen.addEventListener('click', () => {
+          panel.style.display = 'block';
+          btnOpen.style.display = 'none';
+        });
+      }
+    })();
+  </script>
 
 </body>
 </html>
