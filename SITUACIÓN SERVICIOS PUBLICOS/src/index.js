@@ -10,6 +10,8 @@
 //     - Si no hay switches activos → muestra TODOS (capa base)
 // ✅ UI: Panel abrir/cerrar (spControl/spOpen/spClose)
 // ✅ OJO: tu HTML ya quedó con .sp-row[data-layer="L_..."] (NO data-value)
+// ✅ FIX: filtros Sí/No robustos para valores tipo "C_No", "Si_", "c_si", etc.
+//     - Vacíos / N/A NO se toman como "No"
 // =====================================================
 
 mapboxgl.accessToken =
@@ -170,25 +172,36 @@ function popupHTMLServicios(props, lngLat) {
 }
 
 // =====================================================
-// ✅ FILTROS (Mapbox Expressions)
+// ✅ FILTROS (Mapbox Expressions) — FIX Sí/No con "C_No", "Si_", etc.
 // =====================================================
+function exprNorm(fieldName) {
+  // 1) minúscula + string
+  const v = ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]];
+
+  // 2) limpiar prefijos/sufijos comunes (c_, _, -, espacios)
+  const v1 = ["replace", v, "c_", ""];
+  const v2 = ["replace", v1, "_", ""];
+  const v3 = ["replace", v2, "-", ""];
+  const v4 = ["replace", v3, " ", ""];
+
+  return v4; // "C_No"->"no", "Si_"->"si"
+}
+
 function exprTieneSi(fieldName) {
+  const v = exprNorm(fieldName);
   return [
-    "in",
-    ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]],
-    ["literal", ["si", "sí", "s", "1", "true", "x", "yes", "y"]],
+    "all",
+    ["!=", v, ""], // no vacío
+    ["in", v, ["literal", ["si", "sí"]]], // solo SI real (incluye "sí")
   ];
 }
 
 function exprTieneNo(fieldName) {
+  const v = exprNorm(fieldName);
   return [
-    "any",
-    ["==", ["to-string", ["coalesce", ["get", fieldName], ""]], ""],
-    [
-      "in",
-      ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]],
-      ["literal", ["no", "n", "0", "false", "na", "n/a", "sin", "ninguno"]],
-    ],
+    "all",
+    ["!=", v, ""],   // no vacío
+    ["==", v, "no"], // solo NO real
   ];
 }
 
@@ -207,18 +220,13 @@ function getServiciosFieldsPresent() {
 
   const sample = feats.slice(0, Math.min(50, feats.length));
   for (const [k, fieldName] of Object.entries(SP_FIELDS)) {
-    present[k] = sample.some(
-      (f) =>
-        f?.properties &&
-        Object.prototype.hasOwnProperty.call(f.properties, fieldName)
-    );
+    present[k] = sample.some((f) => f?.properties && (fieldName in f.properties));
   }
   return present;
 }
 
 // =====================================================
 // ✅ DEFINICIÓN DE "GRUPOS" (cada grupo = 1 switch + 1 color)
-// NOTA: aquí defines los colores por grupo
 // =====================================================
 const FILTER_GROUPS = [
   { id: "L_GAS_SI",       label: "Gas: Sí",            field: SP_FIELDS.GAS,       expr: () => exprTieneSi(SP_FIELDS.GAS),       color: "#00bcd4" },
@@ -239,8 +247,6 @@ const FILTER_GROUPS = [
 
 // =====================================================
 // ✅ LAYERS DE FILTRO: base + N capas por grupo
-// - L_BASE: muestra todos (default)
-// - L_XXXX: muestra solo los que cumplen y con su color
 // =====================================================
 function ensureServiciosFilterLayers() {
   const sourceId = "servicios_publicos";
@@ -271,10 +277,10 @@ function ensureServiciosFilterLayers() {
       type: "circle",
       source: sourceId,
       layout: { visibility: "none" },
-      filter: g.expr(), // Mapbox filter
+      filter: g.expr(),
       paint: {
         "circle-radius": 6,
-        "circle-color": g.color,        // ✅ color por grupo
+        "circle-color": g.color,
         "circle-stroke-color": "#ffffff",
         "circle-stroke-width": 1.5,
         "circle-opacity": 0.95,
@@ -285,8 +291,6 @@ function ensureServiciosFilterLayers() {
 
 // =====================================================
 // ✅ Interacción sobre servicios (click/hover)
-// Usamos la "capa top" según: si hay alguna activa → usar la primera activa;
-// si no → base
 // =====================================================
 function getTopServiciosLayerId(activeLayerIds) {
   if (activeLayerIds && activeLayerIds.length) return activeLayerIds[0];
@@ -294,15 +298,14 @@ function getTopServiciosLayerId(activeLayerIds) {
 }
 
 function wireServiciosLayerInteractions(activeLayerIdsGetter) {
-  // Limpia handlers en todas las capas de servicios para evitar duplicados
   const all = ["L_BASE", ...FILTER_GROUPS.map(g => g.id)];
+
   for (const lid of all) {
     safeOff("mouseenter", lid);
     safeOff("mouseleave", lid);
     safeOff("click", lid);
   }
 
-  // Handler helper
   function attach(lid) {
     map.on("mouseenter", lid, () => (map.getCanvas().style.cursor = "pointer"));
     map.on("mouseleave", lid, () => (map.getCanvas().style.cursor = ""));
@@ -323,17 +326,11 @@ function wireServiciosLayerInteractions(activeLayerIdsGetter) {
     });
   }
 
-  // Adjunta en todas (para que siempre responda)
   all.forEach(attach);
-
-  // Para prioridad de predios usaremos queryRenderedFeatures con TODAS las capas visibles (ver abajo)
 }
 
 // =====================================================
 // ✅ LISTA CON SWITCHES: MULTI-SELECT
-// - Puedes prender varios
-// - "Ver todos" apaga los demás y deja base visible
-// - Si hay al menos 1 activo → base se oculta y se muestran las capas activas
 // =====================================================
 function wireServiciosToggleList() {
   const list = document.getElementById("spToggleList");
@@ -341,17 +338,18 @@ function wireServiciosToggleList() {
 
   // Oculta filas si no existe el campo
   const present = getServiciosFieldsPresent();
-  FILTER_GROUPS.forEach((g) => {
-    const ok = Object.entries(SP_FIELDS).some(([, fname]) => fname === g.field) ? true : true;
-    // si el campo realmente no existe en sample -> ocultar fila
-    const exists = Object.values(present).some(Boolean) ? present[Object.keys(SP_FIELDS).find(k => SP_FIELDS[k] === g.field)] : true;
-    // Más simple/robusto: si el field no está presente, ocultar
-    // (si no hay present info, no ocultamos)
-    if (Object.keys(present).length && !exists) {
-      const row = list.querySelector(`.sp-row[data-layer="${g.id}"]`);
-      if (row) row.style.display = "none";
-    }
-  });
+  const canDetect = Object.keys(present).length > 0;
+
+  if (canDetect) {
+    FILTER_GROUPS.forEach((g) => {
+      const spKey = Object.keys(SP_FIELDS).find(k => SP_FIELDS[k] === g.field);
+      const exists = spKey ? !!present[spKey] : true;
+      if (!exists) {
+        const row = list.querySelector(`.sp-row[data-layer="${g.id}"]`);
+        if (row) row.style.display = "none";
+      }
+    });
+  }
 
   const rowAll = list.querySelector(`.sp-row[data-layer="L_ALL"]`);
   const groupRows = Array.from(list.querySelectorAll(`.sp-row[data-layer]`))
@@ -373,23 +371,19 @@ function wireServiciosToggleList() {
     const actives = getActiveGroups();
 
     if (!actives.length) {
-      // Ninguno activo -> mostrar base
       setLayerVisibility("L_BASE", true);
       FILTER_GROUPS.forEach(g => setLayerVisibility(g.id, false));
       if (rowAll) rowAll.classList.add("is-active");
       return;
     }
 
-    // Hay activos -> ocultar base y mostrar activos
     setLayerVisibility("L_BASE", false);
     FILTER_GROUPS.forEach(g => setLayerVisibility(g.id, actives.includes(g.id)));
     if (rowAll) rowAll.classList.remove("is-active");
   }
 
-  // Click "Ver todos"
   if (rowAll) {
     rowAll.addEventListener("click", () => {
-      // activar ALL, apagar otros
       rowAll.classList.add("is-active");
       groupRows.forEach(r => r.classList.remove("is-active"));
       syncMapLayersFromUI();
@@ -400,15 +394,11 @@ function wireServiciosToggleList() {
     });
   }
 
-  // Click en grupo -> toggle (multi)
   groupRows.forEach((row) => {
     row.addEventListener("click", () => {
       row.classList.toggle("is-active");
 
-      // si se activa uno, ALL se apaga
       if (row.classList.contains("is-active") && rowAll) rowAll.classList.remove("is-active");
-
-      // si se apagaron todos, ALL vuelve a prenderse
       if (!getActiveGroups().length && rowAll) rowAll.classList.add("is-active");
 
       syncMapLayersFromUI();
@@ -419,7 +409,6 @@ function wireServiciosToggleList() {
     });
   });
 
-  // Estado inicial: ALL activo, base visible
   if (rowAll) rowAll.classList.add("is-active");
   groupRows.forEach(r => r.classList.remove("is-active"));
   syncMapLayersFromUI();
@@ -427,10 +416,8 @@ function wireServiciosToggleList() {
 
 // =====================================================
 // ✅ CAPA PREDIOS (PRIORIDAD: si hay punto encima, NO muestra predio)
-// Ahora debemos revisar "cualquier capa visible de servicios"
 // =====================================================
 function isServiciosHitAtPoint(point) {
-  // revisa todas las capas de servicios (base + grupos)
   const layers = ["L_BASE", ...FILTER_GROUPS.map(g => g.id)];
   const hits = map.queryRenderedFeatures(point, { layers });
   return hits && hits.length;
@@ -478,7 +465,6 @@ function addPrediosBase() {
       map.on("mouseleave", "predios_base_click", () => (map.getCanvas().style.cursor = ""));
 
       map.on("click", "predios_base_click", (e) => {
-        // ✅ PRIORIDAD
         if (isServiciosHitAtPoint(e.point)) return;
 
         const f = e.features && e.features[0];
@@ -512,25 +498,19 @@ function addServiciosPublicos() {
       if (map.getSource("servicios_publicos")) map.getSource("servicios_publicos").setData(data);
       else map.addSource("servicios_publicos", { type: "geojson", data });
 
-      // ✅ crea capas base + grupos (colores)
       ensureServiciosFilterLayers();
 
-      // ✅ interacciones (click/hover) en todas las capas
       wireServiciosLayerInteractions(() => []);
 
-      // ✅ UI switches multi-select
       setTimeout(() => {
         try { wireServiciosToggleList(); } catch (e) {}
       }, 0);
 
-      // ✅ UI abrir/cerrar panel
       setTimeout(() => {
         try { wireFilterPanelToggle(); } catch (e) {}
       }, 0);
 
-      // ✅ Orden: predios abajo, servicios arriba, highlight arriba de todo
       try {
-        // sube todas las capas de servicios
         ["L_BASE", ...FILTER_GROUPS.map(g => g.id)].forEach((lid) => {
           if (map.getLayer(lid)) map.moveLayer(lid);
         });
@@ -569,7 +549,6 @@ function addHighlight() {
 
 // =====================================================
 // ✅ BUSCADOR LOCAL (SERVICIOS)
-// Nota: busca en TODO el dataset; el popup sale igual.
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
@@ -666,7 +645,6 @@ map.on("style.load", () => {
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
       if (map.getLayer("predios_base_click")) map.moveLayer("predios_base_click");
 
-      // Sube servicios (base + grupos)
       ["L_BASE", ...FILTER_GROUPS.map(g => g.id)].forEach((lid) => {
         if (map.getLayer(lid)) map.moveLayer(lid);
       });
