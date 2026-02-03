@@ -27,14 +27,18 @@
     body { margin:0; padding:0; font-family:'Libre Franklin', sans-serif; }
     #map { position:absolute; top:0; bottom:0; width:100%; }
 
-    /* Panel */
+    /* Panel (NO se sale de pantalla) */
     .sp-panel{
       position:absolute;
       top:15px;
       right:10px;
       z-index:30;
 
-      width:280px;
+      width:320px;
+      max-height: calc(100vh - 30px);   /* ✅ clave */
+      display:flex;
+      flex-direction:column;
+
       padding:12px 12px 14px 12px;
       border-radius:14px;
 
@@ -45,6 +49,7 @@
       border:1px solid rgba(255,255,255,0.12);
       box-shadow:0 18px 40px rgba(0,0,0,0.35);
       color:#fff;
+      overflow:hidden;                 /* scroll interno abajo */
     }
 
     .sp-header{
@@ -53,6 +58,7 @@
       justify-content:space-between;
       gap:10px;
       margin-bottom:10px;
+      flex: 0 0 auto;
     }
 
     .sp-title{
@@ -84,9 +90,10 @@
       font-size:12px;
       opacity:.85;
       line-height:1.25;
+      flex: 0 0 auto;
     }
 
-    /* Botón para re-abrir (cuando cierras el panel) */
+    /* Botón para re-abrir */
     .sp-open{
       position:absolute;
       top:15px;
@@ -111,14 +118,23 @@
 
     /* ==========================================================
        ✅ LISTA CON SWITCHES (como el ejemplo)
+       - scroll solo en la lista
        ========================================================== */
-    .sp-toggles{
-      margin-top: 2px;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.10);
+    #spToggleList{
+      flex: 1 1 auto;                      /* ✅ ocupa lo disponible */
+      overflow:auto;                       /* ✅ scroll interno */
+      padding-right:6px;
+      border-radius:12px;
+      overflow-x:hidden;
+      border:1px solid rgba(255,255,255,0.10);
       background: rgba(10,10,10,0.35);
     }
+
+    /* Scrollbar */
+    #spToggleList::-webkit-scrollbar{ width:10px; }
+    #spToggleList::-webkit-scrollbar-track{ background:rgba(255,255,255,0.06); border-radius:10px; }
+    #spToggleList::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.18); border-radius:10px; }
+    #spToggleList::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,0.26); }
 
     .sp-row{
       display:flex;
@@ -131,7 +147,7 @@
       user-select:none;
 
       background: rgba(0,0,0,0.15);
-      transition: background .12s ease, transform .12s ease;
+      transition: background .12s ease;
     }
     .sp-row:hover{ background: rgba(255,255,255,0.06); }
 
@@ -178,6 +194,11 @@
       background: rgba(255,255,255,0.10);
       margin: 0;
     }
+
+    /* Mobile */
+    @media (max-width: 520px){
+      .sp-panel{ width: 260px; }
+    }
   </style>
 </head>
 
@@ -194,80 +215,86 @@
     </div>
 
     <!-- ✅ Lista fija (no dropdown) -->
-    <div id="spToggleList" class="sp-toggles">
-      <div class="sp-row is-active" data-value="ALL">
+    <div id="spToggleList">
+      <!-- ALL -->
+      <div class="sp-row is-active" data-layer="L_ALL">
         <span class="sp-label">Ver todos</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
 
       <div class="sp-sep"></div>
 
-      <div class="sp-row" data-value="GAS_SI">
+      <!-- GAS -->
+      <div class="sp-row" data-layer="L_GAS_SI">
         <span class="sp-label">Gas: Sí</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
-      <div class="sp-row" data-value="GAS_NO">
+      <div class="sp-row" data-layer="L_GAS_NO">
         <span class="sp-label">Gas: No</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
 
       <div class="sp-sep"></div>
 
-      <div class="sp-row" data-value="ACUEDUCTO_SI">
+      <!-- ACUEDUCTO -->
+      <div class="sp-row" data-layer="L_ACUEDUCTO_SI">
         <span class="sp-label">Acueducto: Sí</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
-      <div class="sp-row" data-value="ACUEDUCTO_NO">
+      <div class="sp-row" data-layer="L_ACUEDUCTO_NO">
         <span class="sp-label">Acueducto: No</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
 
       <div class="sp-sep"></div>
 
-      <div class="sp-row" data-value="ALC_SI">
+      <!-- ALC -->
+      <div class="sp-row" data-layer="L_ALC_SI">
         <span class="sp-label">Alcantarillado: Sí</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
-      <div class="sp-row" data-value="ALC_NO">
+      <div class="sp-row" data-layer="L_ALC_NO">
         <span class="sp-label">Alcantarillado: No</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
 
       <div class="sp-sep"></div>
 
-      <div class="sp-row" data-value="INTERNET_SI">
+      <!-- INTERNET -->
+      <div class="sp-row" data-layer="L_INTERNET_SI">
         <span class="sp-label">Internet: Sí</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
-      <div class="sp-row" data-value="INTERNET_NO">
+      <div class="sp-row" data-layer="L_INTERNET_NO">
         <span class="sp-label">Internet: No</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
 
       <div class="sp-sep"></div>
 
-      <div class="sp-row" data-value="BASURAS_SI">
+      <!-- BASURAS -->
+      <div class="sp-row" data-layer="L_BASURAS_SI">
         <span class="sp-label">Basuras: Sí</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
-      <div class="sp-row" data-value="BASURAS_NO">
+      <div class="sp-row" data-layer="L_BASURAS_NO">
         <span class="sp-label">Basuras: No</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
     </div>
 
     <div class="sp-help">
-      Activa un filtro para mostrar solo puntos que cumplan esa condición.
+      Activa uno o varios filtros. Cada filtro puede tener su propio color (en index.js).
     </div>
   </div>
 
-  <!-- Botón pequeño para re-abrir cuando está cerrado -->
+  <!-- Botón pequeño para re-abrir -->
   <button id="spOpen" class="sp-open">Filtros</button>
 
   <!-- SCRIPT PRINCIPAL -->
   <script src="../src/index.js"></script>
 
-  <!-- ✅ Abrir / cerrar panel (no toca tu index.js) -->
+  <!-- ✅ Abrir / cerrar panel -->
   <script>
     (function(){
       const panel = document.getElementById('spControl');
