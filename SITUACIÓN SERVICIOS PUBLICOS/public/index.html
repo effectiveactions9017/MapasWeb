@@ -22,7 +22,7 @@
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
 
-  <!-- ✅ Panel premium (oscuro + blur) para el filtro -->
+  <!-- ✅ Panel premium + ✅ Dropdown personalizado (NO nativo) -->
   <style>
     body { margin:0; padding:0; font-family:'Libre Franklin', sans-serif; }
     #map { position:absolute; top:0; bottom:0; width:100%; }
@@ -79,39 +79,6 @@
       transform: translateY(-1px);
     }
 
-    .sp-select{
-      width:100%;
-      height:44px;
-      border-radius:12px;
-      padding:0 12px;
-
-      background:rgba(15,15,15,0.90);
-      color:#fff;
-
-      border:1px solid rgba(255,255,255,0.14);
-      outline:none;
-      font-weight:700;
-
-      appearance:none;
-      -webkit-appearance:none;
-      -moz-appearance:none;
-
-      /* flecha */
-      background-image:
-        linear-gradient(45deg, transparent 50%, #cfcfcf 50%),
-        linear-gradient(135deg, #cfcfcf 50%, transparent 50%);
-      background-position:
-        calc(100% - 18px) 19px,
-        calc(100% - 12px) 19px;
-      background-size:6px 6px, 6px 6px;
-      background-repeat:no-repeat;
-    }
-
-    .sp-select:focus{
-      border-color: rgba(0, 188, 212, 0.65);
-      box-shadow: 0 0 0 3px rgba(0,188,212,0.18);
-    }
-
     .sp-help{
       margin-top:10px;
       font-size:12px;
@@ -143,6 +110,78 @@
     .sp-open:hover{
       background:rgba(0,0,0,0.82);
     }
+
+    /* ==========================================================
+       ✅ Dropdown personalizado (esto reemplaza el <select>)
+       ========================================================== */
+    .sp-field{ position:relative; }
+
+    .sp-btn{
+      width:100%;
+      height:46px;
+      border-radius:12px;
+      padding:0 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+
+      background:rgba(15,15,15,0.92);
+      color:#fff;
+      border:1px solid rgba(0,188,212,0.65);
+      box-shadow: 0 0 0 3px rgba(0,188,212,0.12);
+      font-weight:800;
+      cursor:pointer;
+    }
+    .sp-btn:focus{ outline:none; }
+
+    .sp-caret{
+      width:0; height:0;
+      border-left:6px solid transparent;
+      border-right:6px solid transparent;
+      border-top:7px solid rgba(255,255,255,0.85);
+      margin-left:8px;
+      flex: 0 0 auto;
+    }
+
+    .sp-menu{
+      position:absolute;
+      top:52px;
+      left:0;
+      width:100%;
+      max-height:320px;
+      overflow:auto;
+
+      border-radius:12px;
+      background:rgba(20,20,20,0.98);
+      border:1px solid rgba(255,255,255,0.14);
+      box-shadow:0 18px 40px rgba(0,0,0,0.45);
+      display:none;
+      z-index:50;
+    }
+    .sp-menu.open{ display:block; }
+
+    .sp-item{
+      padding:10px 12px;
+      font-weight:700;
+      color:#fff;
+      cursor:pointer;
+      user-select:none;
+    }
+    .sp-item:hover{
+      background:rgba(0,188,212,0.22);
+    }
+    .sp-item.active{
+      background:rgba(0,188,212,0.32);
+      border-left:3px solid rgba(0,188,212,0.95);
+      padding-left:9px;
+    }
+
+    .sp-sep{
+      height:1px;
+      background:rgba(255,255,255,0.10);
+      margin:6px 10px;
+    }
   </style>
 </head>
 
@@ -151,32 +190,40 @@
   <!-- MAPA -->
   <div id="map"></div>
 
-  <!-- ✅ FILTRO DESPLEGABLE (SI / NO) – SERVICIOS PÚBLICOS -->
+  <!-- ✅ PANEL FILTRO (Dropdown personalizado) -->
   <div id="spControl" class="sp-panel">
     <div class="sp-header">
       <div class="sp-title">Servicios públicos — filtro</div>
       <button id="spClose" class="sp-close" title="Cerrar">×</button>
     </div>
 
-    <select id="spSelect" class="sp-select">
-      <option value="ALL" selected>Ver todos</option>
-      <option disabled>────────────</option>
+    <!-- ✅ Ya NO usamos <select> nativo -->
+    <div class="sp-field">
+      <button id="spBtn" class="sp-btn" type="button">
+        <span id="spBtnText">Ver todos</span>
+        <span class="sp-caret"></span>
+      </button>
 
-      <option value="GAS_SI">Gas: Sí</option>
-      <option value="GAS_NO">Gas: No</option>
+      <div id="spMenu" class="sp-menu" role="menu" aria-hidden="true">
+        <div class="sp-item active" data-value="ALL">Ver todos</div>
+        <div class="sp-sep"></div>
 
-      <option value="ACUEDUCTO_SI">Acueducto: Sí</option>
-      <option value="ACUEDUCTO_NO">Acueducto: No</option>
+        <div class="sp-item" data-value="GAS_SI">Gas: Sí</div>
+        <div class="sp-item" data-value="GAS_NO">Gas: No</div>
 
-      <option value="ALC_SI">Alcantarillado: Sí</option>
-      <option value="ALC_NO">Alcantarillado: No</option>
+        <div class="sp-item" data-value="ACUEDUCTO_SI">Acueducto: Sí</div>
+        <div class="sp-item" data-value="ACUEDUCTO_NO">Acueducto: No</div>
 
-      <option value="INTERNET_SI">Internet: Sí</option>
-      <option value="INTERNET_NO">Internet: No</option>
+        <div class="sp-item" data-value="ALC_SI">Alcantarillado: Sí</div>
+        <div class="sp-item" data-value="ALC_NO">Alcantarillado: No</div>
 
-      <option value="BASURAS_SI">Basuras: Sí</option>
-      <option value="BASURAS_NO">Basuras: No</option>
-    </select>
+        <div class="sp-item" data-value="INTERNET_SI">Internet: Sí</div>
+        <div class="sp-item" data-value="INTERNET_NO">Internet: No</div>
+
+        <div class="sp-item" data-value="BASURAS_SI">Basuras: Sí</div>
+        <div class="sp-item" data-value="BASURAS_NO">Basuras: No</div>
+      </div>
+    </div>
 
     <div class="sp-help">
       Filtra los puntos visibles en el mapa (según el atributo).
@@ -189,7 +236,7 @@
   <!-- SCRIPT PRINCIPAL -->
   <script src="../src/index.js"></script>
 
-  <!-- ✅ Control de abrir/cerrar (no toca tu index.js) -->
+  <!-- ✅ Abrir / cerrar panel (no toca tu index.js) -->
   <script>
     (function(){
       const panel = document.getElementById('spControl');
