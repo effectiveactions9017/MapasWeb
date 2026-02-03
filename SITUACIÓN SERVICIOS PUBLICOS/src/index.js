@@ -12,6 +12,7 @@
 // ✅ OJO: tu HTML ya quedó con .sp-row[data-layer="L_..."] (NO data-value)
 // ✅ FIX: filtros Sí/No robustos para valores tipo "C_No", "Si_", "c_si", etc.
 //     - Vacíos / N/A NO se toman como "No"
+// ✅ FIX2: si las capas ya existían, ahora se ACTUALIZA el filter con map.setFilter()
 // =====================================================
 
 mapboxgl.accessToken =
@@ -172,37 +173,20 @@ function popupHTMLServicios(props, lngLat) {
 }
 
 // =====================================================
-// ✅ FILTROS (Mapbox Expressions) — FIX Sí/No con "C_No", "Si_", etc.
+// ✅ FILTROS (Mapbox Expressions) — ROBUSTO con match (C_No, Si_, etc.)
 // =====================================================
-function exprNorm(fieldName) {
-  // 1) minúscula + string
-  const v = ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]];
-
-  // 2) limpiar prefijos/sufijos comunes (c_, _, -, espacios)
-  const v1 = ["replace", v, "c_", ""];
-  const v2 = ["replace", v1, "_", ""];
-  const v3 = ["replace", v2, "-", ""];
-  const v4 = ["replace", v3, " ", ""];
-
-  return v4; // "C_No"->"no", "Si_"->"si"
+function exprRaw(fieldName) {
+  return ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]];
 }
 
 function exprTieneSi(fieldName) {
-  const v = exprNorm(fieldName);
-  return [
-    "all",
-    ["!=", v, ""], // no vacío
-    ["in", v, ["literal", ["si", "sí"]]], // solo SI real (incluye "sí")
-  ];
+  const v = exprRaw(fieldName);
+  return ["match", v, ["si", "sí", "si_", "c_si", "c_sí", "c_si_", "c_sí_"], true, false];
 }
 
 function exprTieneNo(fieldName) {
-  const v = exprNorm(fieldName);
-  return [
-    "all",
-    ["!=", v, ""],   // no vacío
-    ["==", v, "no"], // solo NO real
-  ];
+  const v = exprRaw(fieldName);
+  return ["match", v, ["no", "no_", "c_no", "c_no_", "c-no", "c-no_"], true, false];
 }
 
 const SP_FIELDS = {
@@ -247,6 +231,7 @@ const FILTER_GROUPS = [
 
 // =====================================================
 // ✅ LAYERS DE FILTRO: base + N capas por grupo
+// ✅ FIX2: si ya existen, actualiza filter con setFilter()
 // =====================================================
 function ensureServiciosFilterLayers() {
   const sourceId = "servicios_publicos";
@@ -268,16 +253,24 @@ function ensureServiciosFilterLayers() {
     });
   }
 
-  // Capas por grupo (inicialmente ocultas)
+  // Capas por grupo (crea o actualiza)
   for (const g of FILTER_GROUPS) {
-    if (map.getLayer(g.id)) continue;
+    const newFilter = g.expr();
 
+    if (map.getLayer(g.id)) {
+      // ✅ si existe, ACTUALIZA filtro y color
+      map.setFilter(g.id, newFilter);
+      map.setPaintProperty(g.id, "circle-color", g.color);
+      continue;
+    }
+
+    // ✅ si no existe, créala
     map.addLayer({
       id: g.id,
       type: "circle",
       source: sourceId,
       layout: { visibility: "none" },
-      filter: g.expr(),
+      filter: newFilter,
       paint: {
         "circle-radius": 6,
         "circle-color": g.color,
@@ -336,7 +329,6 @@ function wireServiciosToggleList() {
   const list = document.getElementById("spToggleList");
   if (!list) return;
 
-  // Oculta filas si no existe el campo
   const present = getServiciosFieldsPresent();
   const canDetect = Object.keys(present).length > 0;
 
@@ -499,7 +491,6 @@ function addServiciosPublicos() {
       else map.addSource("servicios_publicos", { type: "geojson", data });
 
       ensureServiciosFilterLayers();
-
       wireServiciosLayerInteractions(() => []);
 
       setTimeout(() => {
