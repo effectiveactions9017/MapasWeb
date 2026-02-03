@@ -22,7 +22,7 @@
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
 
-  <!-- ✅ Panel premium + ✅ LISTA CON SWITCHES (como tu ejemplo) -->
+  <!-- ✅ Panel premium + ✅ LISTA CON SWITCHES + ✅ CHIP DE COLOR por fila -->
   <style>
     body { margin:0; padding:0; font-family:'Libre Franklin', sans-serif; }
     #map { position:absolute; top:0; bottom:0; width:100%; }
@@ -117,8 +117,7 @@
     .sp-open:hover{ background:rgba(0,0,0,0.82); }
 
     /* ==========================================================
-       ✅ LISTA CON SWITCHES (como el ejemplo)
-       - scroll solo en la lista
+       ✅ LISTA CON SWITCHES (scroll solo en la lista)
        ========================================================== */
     #spToggleList{
       flex: 1 1 auto;                      /* ✅ ocupa lo disponible */
@@ -151,10 +150,30 @@
     }
     .sp-row:hover{ background: rgba(255,255,255,0.06); }
 
+    /* ✅ Lado izquierdo: punto de color + label */
+    .sp-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 0;
+    }
+    .sp-dot{
+      width:12px;
+      height:12px;
+      border-radius:999px;
+      background: var(--sp-accent, #00bcd4);
+      border:1px solid rgba(255,255,255,0.25);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.25);
+      flex: 0 0 auto;
+    }
+
     .sp-label{
       font-weight: 800;
       color: #fff;
       letter-spacing: .1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .sp-switch{
@@ -181,12 +200,22 @@
       transition: transform .12s ease;
     }
 
+    /* ✅ activo: switch + fila + punto “brilla” con su color */
+    .sp-row.is-active{
+      background: color-mix(in srgb, var(--sp-accent, #00bcd4) 16%, rgba(0,0,0,0.15));
+    }
     .sp-row.is-active .sp-switch{
-      background: rgba(0,188,212,0.80);
-      border-color: rgba(0,188,212,0.55);
+      background: color-mix(in srgb, var(--sp-accent, #00bcd4) 82%, rgba(255,255,255,0.10));
+      border-color: color-mix(in srgb, var(--sp-accent, #00bcd4) 60%, rgba(255,255,255,0.10));
     }
     .sp-row.is-active .sp-knob{
       transform: translateX(26px);
+      background: #0b0b0b;
+    }
+    .sp-row.is-active .sp-dot{
+      box-shadow:
+        0 0 0 3px rgba(0,0,0,0.25),
+        0 0 18px color-mix(in srgb, var(--sp-accent, #00bcd4) 70%, transparent);
     }
 
     .sp-sep{
@@ -207,7 +236,7 @@
   <!-- MAPA -->
   <div id="map"></div>
 
-  <!-- ✅ PANEL FILTRO (LISTA CON SWITCHES) -->
+  <!-- ✅ PANEL FILTRO (LISTA CON SWITCHES + COLORES) -->
   <div id="spControl" class="sp-panel">
     <div class="sp-header">
       <div class="sp-title">Servicios públicos — filtro</div>
@@ -216,75 +245,114 @@
 
     <!-- ✅ Lista fija (no dropdown) -->
     <div id="spToggleList">
-      <!-- ALL -->
-      <div class="sp-row is-active" data-layer="L_ALL">
-        <span class="sp-label">Ver todos</span>
+
+      <!-- ALL (sin color específico) -->
+      <div class="sp-row is-active" data-layer="L_ALL" style="--sp-accent:#00bcd4;">
+        <div class="sp-left">
+          <span class="sp-dot"></span>
+          <span class="sp-label">Ver todos</span>
+        </div>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
 
       <div class="sp-sep"></div>
 
       <!-- GAS -->
-      <div class="sp-row" data-layer="L_GAS_SI">
-        <span class="sp-label">Gas: Sí</span>
+      <div class="sp-row" data-layer="L_GAS_SI" style="--sp-accent:#00d1ff;">
+        <div class="sp-left">
+          <span class="sp-dot"></span>
+          <span class="sp-label">Gas: Sí</span>
+        </div>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
-      <div class="sp-row" data-layer="L_GAS_NO">
-        <span class="sp-label">Gas: No</span>
+
+      <div class="sp-row" data-layer="L_GAS_NO" style="--sp-accent:#ff4d4d;">
+        <div class="sp-left">
+          <span class="sp-dot"></span>
+          <span class="sp-label">Gas: No</span>
+        </div>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
 
       <div class="sp-sep"></div>
 
       <!-- ACUEDUCTO -->
-      <div class="sp-row" data-layer="L_ACUEDUCTO_SI">
-        <span class="sp-label">Acueducto: Sí</span>
+      <div class="sp-row" data-layer="L_ACUEDUCTO_SI" style="--sp-accent:#3b82f6;">
+        <div class="sp-left">
+          <span class="sp-dot"></span>
+          <span class="sp-label">Acueducto: Sí</span>
+        </div>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
-      <div class="sp-row" data-layer="L_ACUEDUCTO_NO">
-        <span class="sp-label">Acueducto: No</span>
+
+      <div class="sp-row" data-layer="L_ACUEDUCTO_NO" style="--sp-accent:#f59e0b;">
+        <div class="sp-left">
+          <span class="sp-dot"></span>
+          <span class="sp-label">Acueducto: No</span>
+        </div>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
 
       <div class="sp-sep"></div>
 
       <!-- ALC -->
-      <div class="sp-row" data-layer="L_ALC_SI">
-        <span class="sp-label">Alcantarillado: Sí</span>
+      <div class="sp-row" data-layer="L_ALC_SI" style="--sp-accent:#22c55e;">
+        <div class="sp-left">
+          <span class="sp-dot"></span>
+          <span class="sp-label">Alcantarillado: Sí</span>
+        </div>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
-      <div class="sp-row" data-layer="L_ALC_NO">
-        <span class="sp-label">Alcantarillado: No</span>
+
+      <div class="sp-row" data-layer="L_ALC_NO" style="--sp-accent:#06b6d4;">
+        <div class="sp-left">
+          <span class="sp-dot"></span>
+          <span class="sp-label">Alcantarillado: No</span>
+        </div>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
 
       <div class="sp-sep"></div>
 
       <!-- INTERNET -->
-      <div class="sp-row" data-layer="L_INTERNET_SI">
-        <span class="sp-label">Internet: Sí</span>
+      <div class="sp-row" data-layer="L_INTERNET_SI" style="--sp-accent:#a855f7;">
+        <div class="sp-left">
+          <span class="sp-dot"></span>
+          <span class="sp-label">Internet: Sí</span>
+        </div>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
-      <div class="sp-row" data-layer="L_INTERNET_NO">
-        <span class="sp-label">Internet: No</span>
+
+      <div class="sp-row" data-layer="L_INTERNET_NO" style="--sp-accent:#64748b;">
+        <div class="sp-left">
+          <span class="sp-dot"></span>
+          <span class="sp-label">Internet: No</span>
+        </div>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
 
       <div class="sp-sep"></div>
 
       <!-- BASURAS -->
-      <div class="sp-row" data-layer="L_BASURAS_SI">
-        <span class="sp-label">Basuras: Sí</span>
+      <div class="sp-row" data-layer="L_BASURAS_SI" style="--sp-accent:#ef4444;">
+        <div class="sp-left">
+          <span class="sp-dot"></span>
+          <span class="sp-label">Basuras: Sí</span>
+        </div>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
-      <div class="sp-row" data-layer="L_BASURAS_NO">
-        <span class="sp-label">Basuras: No</span>
+
+      <div class="sp-row" data-layer="L_BASURAS_NO" style="--sp-accent:#14b8a6;">
+        <div class="sp-left">
+          <span class="sp-dot"></span>
+          <span class="sp-label">Basuras: No</span>
+        </div>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
     </div>
 
     <div class="sp-help">
-      Activa uno o varios filtros. Cada filtro puede tener su propio color (en index.js).
+      Activa uno o varios filtros. El punto de color indica qué color corresponde en el mapa.
     </div>
   </div>
 
