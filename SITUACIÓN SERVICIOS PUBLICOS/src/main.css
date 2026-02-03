@@ -25,10 +25,10 @@ body {
   right:10px;
   z-index:30;
 
-  width:320px;                            /* ✅ igual que tu HTML */
-  max-width: calc(100vw - 20px);           /* ✅ nunca se sale horizontal */
-  max-height: calc(100vh - 30px);          /* ✅ nunca se sale vertical */
-  overflow: hidden;                        /* ✅ el scroll va adentro */
+  width:320px;
+  max-width: calc(100vw - 20px);
+  max-height: calc(100vh - 30px);
+  overflow: hidden;
 
   padding:12px 12px 14px 12px;
   border-radius:14px;
@@ -41,7 +41,6 @@ body {
   box-shadow:0 18px 40px rgba(0,0,0,0.35);
   color:#fff;
 
-  /* ✅ layout tipo columna (header fijo + lista scroll) */
   display:flex;
   flex-direction:column;
 }
@@ -52,7 +51,7 @@ body {
   justify-content:space-between;
   gap:10px;
   margin-bottom:10px;
-  flex: 0 0 auto; /* ✅ header fijo */
+  flex: 0 0 auto;
 }
 
 .sp-title{
@@ -116,21 +115,18 @@ body {
 
 /* ==========================================================
    ✅ LISTA CON SWITCHES (multi-select)
-   Requiere HTML:
-   - #spToggleList
-   - .sp-row[data-layer]  (cada fila)
    ========================================================== */
 
 /* ✅ contenedor de la lista: scroll interno si no cabe */
 #spToggleList{
   margin-top: 8px;
 
-  flex: 1 1 auto;                  /* ✅ ocupa el espacio disponible */
-  min-height: 0;                   /* ✅ CRÍTICO para overflow en flex */
-  overflow: auto;                  /* ✅ scroll vertical */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
   overflow-x: hidden;
 
-  padding-right: 6px;              /* ✅ espacio para scrollbar */
+  padding-right: 6px;
   border-radius:12px;
   border:1px solid rgba(255,255,255,0.10);
   background: rgba(10,10,10,0.35);
@@ -144,7 +140,7 @@ body {
 
 /* fila */
 .sp-row{
-  --sp-accent: rgba(0,188,212,0.85); /* fallback */
+  --sp-accent: #00bcd4; /* ✅ fallback HEX (el JS lo reemplaza por fila) */
 
   display:flex;
   align-items:center;
@@ -165,7 +161,7 @@ body {
   background:rgba(15,15,15,0.65);
 }
 
-/* ✅ lado izquierdo: punto de color + texto (si lo agregaste en HTML) */
+/* ✅ lado izquierdo: punto de color + texto */
 .sp-left{
   display:flex;
   align-items:center;
@@ -227,7 +223,6 @@ body {
 
 /* ==========================================================
    ✅ ACTIVO (multi-select): varios pueden estar activos
-   ✅ color por fila usando --sp-accent
    ========================================================== */
 .sp-row.is-active{
   background: color-mix(in srgb, var(--sp-accent) 14%, rgba(0,0,0,0.55));
@@ -238,7 +233,7 @@ body {
 }
 .sp-row.is-active .sp-switch::after{
   left: calc(100% - 23px);
-  background:#0b0b0b; /* knob oscuro */
+  background:#0b0b0b;
 }
 .sp-row.is-active .sp-dot{
   box-shadow:
@@ -309,7 +304,7 @@ body {
    ========================================================== */
 @media (max-width: 520px){
   .mapboxgl-ctrl-geocoder { width: 260px !important; min-width: 260px !important; }
-  .sp-panel{ width: 260px; }     /* ✅ coincide con HTML */
+  .sp-panel{ width: 260px; }
   .sp-switch{ width:46px; }
 }
 
