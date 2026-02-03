@@ -250,4 +250,43 @@
         <span class="sp-label">Basuras: Sí</span>
         <span class="sp-switch"><span class="sp-knob"></span></span>
       </div>
-      <div class="sp-row
+      <div class="sp-row" data-value="BASURAS_NO">
+        <span class="sp-label">Basuras: No</span>
+        <span class="sp-switch"><span class="sp-knob"></span></span>
+      </div>
+    </div>
+
+    <div class="sp-help">
+      Activa un filtro para mostrar solo puntos que cumplan esa condición.
+    </div>
+  </div>
+
+  <!-- Botón pequeño para re-abrir cuando está cerrado -->
+  <button id="spOpen" class="sp-open">Filtros</button>
+
+  <!-- SCRIPT PRINCIPAL -->
+  <script src="../src/index.js"></script>
+
+  <!-- ✅ Abrir / cerrar panel (no toca tu index.js) -->
+  <script>
+    (function(){
+      const panel = document.getElementById('spControl');
+      const btnClose = document.getElementById('spClose');
+      const btnOpen  = document.getElementById('spOpen');
+
+      if (btnClose && panel && btnOpen){
+        btnClose.addEventListener('click', () => {
+          panel.style.display = 'none';
+          btnOpen.style.display = 'block';
+        });
+
+        btnOpen.addEventListener('click', () => {
+          panel.style.display = 'block';
+          btnOpen.style.display = 'none';
+        });
+      }
+    })();
+  </script>
+
+</body>
+</html>
