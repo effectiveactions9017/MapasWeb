@@ -8,6 +8,7 @@
 // ✅ NUEVO: Filtro desplegable SI/NO por servicios (Gas/Acueducto/Alcantarillado/Internet/Basuras)
 //     - Usa SOLO campos que existan en atributos
 //     - Aplica filtro visual con map.setFilter() sobre servicios_publicos_layer
+// ✅ NUEVO (UI): botón cerrar/abrir panel de filtro (spControl/spOpen/spClose)
 // =====================================================
 
 mapboxgl.accessToken =
@@ -83,6 +84,31 @@ function formatArea(val) {
 }
 
 // =====================================================
+// ✅ UI: CERRAR / ABRIR PANEL (NO toca estilos; solo display)
+// Requiere en HTML: #spControl, #spClose, #spOpen
+// =====================================================
+function wireFilterPanelToggle() {
+  const panel = document.getElementById("spControl");
+  const btnClose = document.getElementById("spClose");
+  const btnOpen = document.getElementById("spOpen");
+
+  if (!panel || !btnClose || !btnOpen) return;
+
+  // Estado inicial: panel visible, botón "Filtros" oculto
+  btnOpen.style.display = "none";
+
+  btnClose.addEventListener("click", () => {
+    panel.style.display = "none";
+    btnOpen.style.display = "block";
+  });
+
+  btnOpen.addEventListener("click", () => {
+    panel.style.display = "block";
+    btnOpen.style.display = "none";
+  });
+}
+
+// =====================================================
 // ✅ POPUP PREDIOS (CLIC)
 // =====================================================
 function popupHTMLPredio(props) {
@@ -147,7 +173,7 @@ function popupHTMLServicios(props, lngLat) {
 
 // =====================================================
 // ✅ FILTRO DESPLEGABLE (SI / NO) – SOLO SERVICIOS
-// Requiere que en tu HTML exista: <select id="spSelect">...</select>
+// Requiere en tu HTML: <select id="spSelect">...</select>
 // =====================================================
 
 // Expr Mapbox para “SI”
@@ -155,7 +181,7 @@ function exprTieneSi(fieldName) {
   return [
     "in",
     ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]],
-    ["literal", ["si", "sí", "s", "1", "true", "x", "yes", "y"]]
+    ["literal", ["si", "sí", "s", "1", "true", "x", "yes", "y"]],
   ];
 }
 
@@ -164,10 +190,11 @@ function exprTieneNo(fieldName) {
   return [
     "any",
     ["==", ["to-string", ["coalesce", ["get", fieldName], ""]], ""],
-    ["in",
+    [
+      "in",
       ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]],
-      ["literal", ["no", "n", "0", "false", "na", "n/a", "sin", "ninguno"]]
-    ]
+      ["literal", ["no", "n", "0", "false", "na", "n/a", "sin", "ninguno"]],
+    ],
   ];
 }
 
@@ -188,7 +215,11 @@ function getServiciosFieldsPresent() {
   // revisa en las primeras ~50 features para no gastar mucho
   const sample = feats.slice(0, Math.min(50, feats.length));
   for (const [k, fieldName] of Object.entries(SP_FIELDS)) {
-    present[k] = sample.some(f => f?.properties && Object.prototype.hasOwnProperty.call(f.properties, fieldName));
+    present[k] = sample.some(
+      (f) =>
+        f?.properties &&
+        Object.prototype.hasOwnProperty.call(f.properties, fieldName)
+    );
   }
   return present;
 }
@@ -205,22 +236,43 @@ function applyServiciosSelectFilter(value) {
   let filter = null;
 
   switch (value) {
-    case "GAS_SI":       filter = exprTieneSi(SP_FIELDS.GAS); break;
-    case "GAS_NO":       filter = exprTieneNo(SP_FIELDS.GAS); break;
+    case "GAS_SI":
+      filter = exprTieneSi(SP_FIELDS.GAS);
+      break;
+    case "GAS_NO":
+      filter = exprTieneNo(SP_FIELDS.GAS);
+      break;
 
-    case "ACUEDUCTO_SI": filter = exprTieneSi(SP_FIELDS.ACUEDUCTO); break;
-    case "ACUEDUCTO_NO": filter = exprTieneNo(SP_FIELDS.ACUEDUCTO); break;
+    case "ACUEDUCTO_SI":
+      filter = exprTieneSi(SP_FIELDS.ACUEDUCTO);
+      break;
+    case "ACUEDUCTO_NO":
+      filter = exprTieneNo(SP_FIELDS.ACUEDUCTO);
+      break;
 
-    case "ALC_SI":       filter = exprTieneSi(SP_FIELDS.ALC); break;
-    case "ALC_NO":       filter = exprTieneNo(SP_FIELDS.ALC); break;
+    case "ALC_SI":
+      filter = exprTieneSi(SP_FIELDS.ALC);
+      break;
+    case "ALC_NO":
+      filter = exprTieneNo(SP_FIELDS.ALC);
+      break;
 
-    case "INTERNET_SI":  filter = exprTieneSi(SP_FIELDS.INTERNET); break;
-    case "INTERNET_NO":  filter = exprTieneNo(SP_FIELDS.INTERNET); break;
+    case "INTERNET_SI":
+      filter = exprTieneSi(SP_FIELDS.INTERNET);
+      break;
+    case "INTERNET_NO":
+      filter = exprTieneNo(SP_FIELDS.INTERNET);
+      break;
 
-    case "BASURAS_SI":   filter = exprTieneSi(SP_FIELDS.BASURAS); break;
-    case "BASURAS_NO":   filter = exprTieneNo(SP_FIELDS.BASURAS); break;
+    case "BASURAS_SI":
+      filter = exprTieneSi(SP_FIELDS.BASURAS);
+      break;
+    case "BASURAS_NO":
+      filter = exprTieneNo(SP_FIELDS.BASURAS);
+      break;
 
-    default: filter = null;
+    default:
+      filter = null;
   }
 
   map.setFilter(layerId, filter);
@@ -387,6 +439,11 @@ function addServiciosPublicos() {
       // ✅ Conectar el filtro desplegable cuando YA cargó servicios
       setTimeout(() => {
         try { wireServiciosSelect(); } catch (e) {}
+      }, 0);
+
+      // ✅ Conectar UI de abrir/cerrar panel (una vez existan nodos)
+      setTimeout(() => {
+        try { wireFilterPanelToggle(); } catch (e) {}
       }, 0);
 
       // ✅ Blindaje de orden cuando ya existen capas
