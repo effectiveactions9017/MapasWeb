@@ -1,17 +1,14 @@
 // =====================================================
-// ✅ Visor Contribuyentes Sesquilé - Mapbox GL JS (ACTUALIZADO)
+// ✅ Visor Contribuyentes Sesquilé - Mapbox GL JS (SOLO PUNTOS)
 // ✅ Base predial: SOLO CONTORNO (sin relleno) y SIEMPRE ABAJO
 // ✅ Capas:
-//    🟩 Predios Contribuyentes NATURAL (polígono)
-//    🟥 Predios Contribuyentes JURIDICOS (polígono)
 //    🟩 Persona NATURAL (punto)
 //    🟥 Persona JURIDICA (punto)
 // ✅ Popup: campos seleccionados + botón Street View (para TODOS)
-// ✅ Buscador: busca en las 4 capas
-// ✅ Highlight: polígonos (fill+line) y puntos (circle)
+// ✅ Buscador: busca SOLO en las 2 capas de puntos
+// ✅ Highlight: SOLO puntos (circle)
 // ✅ Leyenda: usar SOLO la del HTML (#legend). NO se inyecta leyenda extra.
 // ✅ FIX: código predial = "codigo" (minúscula)
-// ✅ NUEVO: Control UI (dropdown + checks) sincroniza NATURAL/JURÍDICO
 // =====================================================
 
 mapboxgl.accessToken =
@@ -46,10 +43,8 @@ let popup = new mapboxgl.Popup({
 });
 
 // ============================
-// ✅ DATASETS COMPLETOS (BUSCADOR)
+// ✅ DATASETS (BUSCADOR) — SOLO PUNTOS
 // ============================
-let NATURAL_DATA = null;            // predios natural (polígonos)
-let JURIDICOS_DATA = null;          // predios jurídicos (polígonos)
 let PERSONA_NATURAL_DATA = null;    // puntos persona natural
 let PERSONA_JURIDICA_DATA = null;   // puntos persona jurídica
 
@@ -85,28 +80,6 @@ function getPointLngLat(feature) {
   } catch {
     return [-73.79724, 5.04463];
   }
-}
-
-function getFeatureLngLat(feature, fallbackLngLat = null) {
-  if (
-    fallbackLngLat &&
-    typeof fallbackLngLat.lng === "number" &&
-    typeof fallbackLngLat.lat === "number"
-  ) {
-    return [fallbackLngLat.lng, fallbackLngLat.lat];
-  }
-
-  const c = feature?.geometry?.coordinates;
-  if (Array.isArray(c) && c.length >= 2 && typeof c[0] === "number") {
-    return [Number(c[0]), Number(c[1])];
-  }
-
-  try {
-    const pt = turf.pointOnFeature(feature).geometry.coordinates;
-    return [Number(pt[0]), Number(pt[1])];
-  } catch (e) {}
-
-  return [-73.79724, 5.04463];
 }
 
 function streetViewUrl([lng, lat]) {
@@ -180,78 +153,6 @@ function addBaseOutlineLayer(geojsonFile, sourceId, layerId, lineColor = "#fffff
 }
 
 // =====================================================
-// ✅ CAPAS POLÍGONO INTERACTIVAS
-// =====================================================
-function addInteractivePolygonLayer({ geojsonFile, sourceId, layerId, baseColor, datasetKey }) {
-  fetch(`../src/data/${geojsonFile}`)
-    .then((r) => r.json())
-    .then((data) => {
-      if (datasetKey === "NATURAL") NATURAL_DATA = data;
-      if (datasetKey === "JURIDICOS") JURIDICOS_DATA = data;
-
-      if (map.getSource(sourceId)) map.getSource(sourceId).setData(data);
-      else map.addSource(sourceId, { type: "geojson", data });
-
-      if (!map.getLayer(layerId)) {
-        map.addLayer({
-          id: layerId,
-          source: sourceId,
-          type: "fill",
-          minzoom: 12,
-          paint: {
-            "fill-color": [
-              "case",
-              ["==", ["coalesce", ["get", "Nombre del contribuyente"], ""], ""],
-              "#ffb703",
-              baseColor,
-            ],
-            "fill-opacity": 0.75,
-            "fill-outline-color": "#ffffff",
-          },
-        });
-      }
-
-      safeOff("mouseenter", layerId);
-      safeOff("mouseleave", layerId);
-      safeOff("click", layerId);
-
-      map.on("mouseenter", layerId, () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", layerId, () => (map.getCanvas().style.cursor = ""));
-
-      map.on("click", layerId, (e) => {
-        const f = e.features && e.features[0];
-        if (!f) return;
-
-        const props = f.properties || {};
-        const center = turf.centroid(f).geometry.coordinates;
-
-        const hl = map.getSource("poly_highlight");
-        if (hl) hl.setData({ type: "FeatureCollection", features: [f] });
-
-        const titulo =
-          datasetKey === "NATURAL"
-            ? "Predios contribuyentes natural"
-            : datasetKey === "JURIDICOS"
-            ? "Predios contribuyentes jurídico"
-            : "Información";
-
-        const svLngLat = getFeatureLngLat(f, e.lngLat);
-
-        popup
-          .setLngLat(center)
-          .setHTML(popupHTMLCamposSeleccionados(props, titulo, svLngLat))
-          .addTo(map);
-      });
-
-      // ✅ si el control de capas existe, re-aplica modo al terminar de cargar la capa
-      if (typeof applyLayerMode === "function") {
-        setTimeout(() => { try { applyLayerMode(); } catch(e){} }, 0);
-      }
-    })
-    .catch((err) => console.error("Error capa polígono:", err));
-}
-
-// =====================================================
 // ✅ CAPAS PUNTO INTERACTIVAS
 // =====================================================
 function addInteractivePointLayer({ geojsonFile, sourceId, layerId, color, datasetKey }) {
@@ -308,42 +209,14 @@ function addInteractivePointLayer({ geojsonFile, sourceId, layerId, color, datas
           .setHTML(popupHTMLCamposSeleccionados(props, titulo, lngLat))
           .addTo(map);
       });
-
-      // ✅ si el control de capas existe, re-aplica modo al terminar de cargar la capa
-      if (typeof applyLayerMode === "function") {
-        setTimeout(() => { try { applyLayerMode(); } catch(e){} }, 0);
-      }
     })
     .catch((err) => console.error("Error capa punto:", err));
 }
 
 // =====================================================
-// ✅ HIGHLIGHTS (polígonos y puntos)
+// ✅ HIGHLIGHT (SOLO PUNTOS)
 // =====================================================
 function ensureHighlightLayers() {
-  if (!map.getSource("poly_highlight")) {
-    map.addSource("poly_highlight", {
-      type: "geojson",
-      data: { type: "FeatureCollection", features: [] },
-    });
-  }
-  if (!map.getLayer("poly_highlight_fill")) {
-    map.addLayer({
-      id: "poly_highlight_fill",
-      type: "fill",
-      source: "poly_highlight",
-      paint: { "fill-color": "#ffff00", "fill-opacity": 0.25 },
-    });
-  }
-  if (!map.getLayer("poly_highlight_line")) {
-    map.addLayer({
-      id: "poly_highlight_line",
-      type: "line",
-      source: "poly_highlight",
-      paint: { "line-color": "#ffff00", "line-width": 4 },
-    });
-  }
-
   if (!map.getSource("point_highlight")) {
     map.addSource("point_highlight", {
       type: "geojson",
@@ -367,11 +240,9 @@ function ensureHighlightLayers() {
 }
 
 // =====================================================
-// ✅ CONTROL UI: dropdown + checks (SINCRONIZA MODO)
+// ✅ CONTROL UI (SOLO CHECKS DE PUNTOS)
 // =====================================================
 const LAYERS = {
-  PREDIOS_NATURAL: "predios_natural_layer",
-  PREDIOS_JURIDICO: "predios_juridicos_layer",
   PERSONA_NATURAL: "persona_natural_layer",
   PERSONA_JURIDICO: "persona_juridica_layer",
 };
@@ -381,77 +252,31 @@ function setLayerVisibility(layerId, visible) {
   map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
 }
 
-// ✅ ESTA ES LA FUNCIÓN CLAVE (sincroniza checks + aplica visibilidad)
-function applyLayerMode() {
-  const mode = document.getElementById("lcMode")?.value || "ALL";
-
-  const cbPredNat = document.getElementById("toggle_predios_natural");
-  const cbPredJur = document.getElementById("toggle_predios_juridicos");
-  const cbPerNat  = document.getElementById("toggle_persona_natural");
-  const cbPerJur  = document.getElementById("toggle_persona_juridica");
+function wireLayerControls() {
+  const cbPerNat = document.getElementById("toggle_persona_natural");
+  const cbPerJur = document.getElementById("toggle_persona_juridica");
 
   // Si el HTML aún no está montado, no hacemos nada
-  if (!cbPredNat || !cbPredJur || !cbPerNat || !cbPerJur) return;
+  if (!cbPerNat || !cbPerJur) return;
 
-  // 1) Sincroniza checkboxes con el modo
-  if (mode === "NATURAL") {
-    cbPredNat.checked = true;
-    cbPerNat.checked  = true;
-    cbPredJur.checked = false;
-    cbPerJur.checked  = false;
-  } else if (mode === "JURIDICO") {
-    cbPredNat.checked = false;
-    cbPerNat.checked  = false;
-    cbPredJur.checked = true;
-    cbPerJur.checked  = true;
-  } else { // ALL
-    cbPredNat.checked = true;
-    cbPerNat.checked  = true;
-    cbPredJur.checked = true;
-    cbPerJur.checked  = true;
-  }
+  // Estado inicial (si no vienen “checked”, los dejamos prendidos por defecto)
+  if (typeof cbPerNat.checked !== "boolean") cbPerNat.checked = true;
+  if (typeof cbPerJur.checked !== "boolean") cbPerJur.checked = true;
 
-  // 2) Aplica visibilidad
-  setLayerVisibility(LAYERS.PREDIOS_NATURAL,  cbPredNat.checked);
-  setLayerVisibility(LAYERS.PERSONA_NATURAL,  cbPerNat.checked);
-  setLayerVisibility(LAYERS.PREDIOS_JURIDICO, cbPredJur.checked);
-  setLayerVisibility(LAYERS.PERSONA_JURIDICO, cbPerJur.checked);
+  const apply = () => {
+    setLayerVisibility(LAYERS.PERSONA_NATURAL, cbPerNat.checked);
+    setLayerVisibility(LAYERS.PERSONA_JURIDICO, cbPerJur.checked);
+    try { popup.remove(); } catch(e){}
+  };
 
-  // 3) Limpia popup viejo para evitar “info” de capa apagada
-  try { popup.remove(); } catch(e){}
-}
+  cbPerNat.addEventListener("change", apply);
+  cbPerJur.addEventListener("change", apply);
 
-function wireLayerControls() {
-  const modeSel = document.getElementById("lcMode");
-  if (!modeSel) return;
-
-  modeSel.addEventListener("change", applyLayerMode);
-
-  // Si estás en ALL, puedes cambiar checks; si estás en NATURAL/JURIDICO,
-  // los checks se re-sincronizan cuando cambies el modo.
-  ["toggle_predios_natural","toggle_predios_juridicos","toggle_persona_natural","toggle_persona_juridica"]
-    .forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener("change", () => {
-        // solo respeta checks cuando está en ALL
-        const mode = document.getElementById("lcMode")?.value || "ALL";
-        if (mode === "ALL") {
-          setLayerVisibility(LAYERS.PREDIOS_NATURAL,  document.getElementById("toggle_predios_natural")?.checked);
-          setLayerVisibility(LAYERS.PERSONA_NATURAL,  document.getElementById("toggle_persona_natural")?.checked);
-          setLayerVisibility(LAYERS.PREDIOS_JURIDICO, document.getElementById("toggle_predios_juridicos")?.checked);
-          setLayerVisibility(LAYERS.PERSONA_JURIDICO, document.getElementById("toggle_persona_juridica")?.checked);
-          try { popup.remove(); } catch(e){}
-        } else {
-          applyLayerMode();
-        }
-      });
-    });
-
-  applyLayerMode();
+  apply();
 }
 
 // =====================================================
-// ✅ GEOCODER: BUSCA EN LAS 4 CAPAS
+// ✅ GEOCODER: BUSCA SOLO EN LAS 2 CAPAS DE PUNTOS
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
@@ -477,8 +302,6 @@ const geocoder = new MapboxGeocoder({
         const match = (cod && cod.includes(q)) || (doc && doc.includes(q)) || (nom && nom.includes(q));
         if (!match) return;
 
-        const center = turf.centroid(feature).geometry.coordinates;
-
         let matchField = null;
         let matchValue = null;
 
@@ -487,6 +310,8 @@ const geocoder = new MapboxGeocoder({
         else if (nom && nom.includes(q)) { matchField = "Nombre del contribuyente"; matchValue = (p["Nombre del contribuyente"] ?? "").toString().trim(); }
 
         const props2 = { ...p, __dataset: datasetTag, __matchField: matchField, __matchValue: matchValue };
+
+        const center = getPointLngLat(feature);
 
         results.push({
           type: "Feature",
@@ -500,8 +325,6 @@ const geocoder = new MapboxGeocoder({
       });
     }
 
-    scan(NATURAL_DATA, "PREDIO_NATURAL");
-    scan(JURIDICOS_DATA, "PREDIO_JURIDICO");
     scan(PERSONA_NATURAL_DATA, "PERSONA_NATURAL");
     scan(PERSONA_JURIDICA_DATA, "PERSONA_JURIDICA");
 
@@ -524,22 +347,6 @@ map.on("style.load", () => {
     "#ffffff"
   );
 
-  addInteractivePolygonLayer({
-    geojsonFile: "PREDIOS_CONTRIBUYENTES_NATURAL.geojson",
-    sourceId: "predios_natural",
-    layerId: "predios_natural_layer",
-    baseColor: COLOR_NATURAL,
-    datasetKey: "NATURAL",
-  });
-
-  addInteractivePolygonLayer({
-    geojsonFile: "PREDIOS_CONTRIBUYENTES_JURIDICOS.geojson",
-    sourceId: "predios_juridicos",
-    layerId: "predios_juridicos_layer",
-    baseColor: COLOR_JURIDICO,
-    datasetKey: "JURIDICOS",
-  });
-
   addInteractivePointLayer({
     geojsonFile: "Contribuyentes_Persona_Natural.geojson",
     sourceId: "persona_natural",
@@ -558,28 +365,25 @@ map.on("style.load", () => {
 
   ensureHighlightLayers();
 
-  // ✅ Conecta el UI y aplica modo inicial
   setTimeout(() => {
     wireLayerControls();
-    applyLayerMode();
+
     try {
+      // Base siempre abajo
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
 
-      if (map.getLayer("predios_natural_layer")) map.moveLayer("predios_natural_layer");
-      if (map.getLayer("predios_juridicos_layer")) map.moveLayer("predios_juridicos_layer");
-
+      // Puntos arriba
       if (map.getLayer("persona_natural_layer")) map.moveLayer("persona_natural_layer");
       if (map.getLayer("persona_juridica_layer")) map.moveLayer("persona_juridica_layer");
 
-      if (map.getLayer("poly_highlight_fill")) map.moveLayer("poly_highlight_fill");
-      if (map.getLayer("poly_highlight_line")) map.moveLayer("poly_highlight_line");
+      // Highlight arriba del todo
       if (map.getLayer("point_highlight_circle")) map.moveLayer("point_highlight_circle");
     } catch (e) {}
   }, 600);
 });
 
 // =====================================================
-// ✅ RESULTADO DEL BUSCADOR
+// ✅ RESULTADO DEL BUSCADOR (SOLO PUNTOS)
 // =====================================================
 geocoder.on("result", (e) => {
   const result = e.result;
@@ -591,8 +395,6 @@ geocoder.on("result", (e) => {
   const matchValue = (props.__matchValue ?? "").toString().trim();
 
   let fc = null;
-  if (dataset === "PREDIO_NATURAL") fc = NATURAL_DATA;
-  if (dataset === "PREDIO_JURIDICO") fc = JURIDICOS_DATA;
   if (dataset === "PERSONA_NATURAL") fc = PERSONA_NATURAL_DATA;
   if (dataset === "PERSONA_JURIDICA") fc = PERSONA_JURIDICA_DATA;
 
@@ -612,52 +414,25 @@ geocoder.on("result", (e) => {
 
   const highlightFC = { type: "FeatureCollection", features: toHighlight };
 
+  // zoom al resultado
   const bounds = turf.bbox(highlightFC);
   map.fitBounds(bounds, { padding: 40 });
 
-  const isPoint = (result.geometry?.type || "").toLowerCase().includes("point");
+  // highlight
+  const hs = map.getSource("point_highlight");
+  if (hs) hs.setData(highlightFC);
 
-  if (isPoint) {
-    const hs = map.getSource("point_highlight");
-    if (hs) hs.setData(highlightFC);
+  const center = result.center || getPointLngLat(result);
 
-    const center = result.center || getPointLngLat(result);
+  const titulo =
+    dataset === "PERSONA_NATURAL"
+      ? "Persona natural"
+      : dataset === "PERSONA_JURIDICA"
+      ? "Persona jurídica"
+      : "Información";
 
-    const titulo =
-      dataset === "PERSONA_NATURAL"
-        ? "Persona natural"
-        : dataset === "PERSONA_JURIDICA"
-        ? "Persona jurídica"
-        : "Información";
-
-    popup
-      .setLngLat(center)
-      .setHTML(popupHTMLCamposSeleccionados(props, titulo, center))
-      .addTo(map);
-
-  } else {
-    const hs = map.getSource("poly_highlight");
-    if (hs) hs.setData(highlightFC);
-
-    const center = result.center || turf.centroid(result).geometry.coordinates;
-
-    const titulo =
-      dataset === "PREDIO_NATURAL"
-        ? "Predios contribuyentes natural"
-        : dataset === "PREDIO_JURIDICO"
-        ? "Predios contribuyentes jurídico"
-        : "Información";
-
-    const b = turf.bbox(highlightFC);
-    const svCenter = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
-
-    popup
-      .setLngLat(center)
-      .setHTML(popupHTMLCamposSeleccionados(props, titulo, svCenter))
-      .addTo(map);
-  }
-
-  // ✅ Si estás en modo NATURAL/JURIDICO, el buscador podría traerte algo “apagado”
-  // Re-aplicamos el modo al final para mantener coherencia visual.
-  setTimeout(() => { try { applyLayerMode(); } catch(e){} }, 0);
+  popup
+    .setLngLat(center)
+    .setHTML(popupHTMLCamposSeleccionados(props, titulo, center))
+    .addTo(map);
 });
