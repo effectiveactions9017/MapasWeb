@@ -36,9 +36,7 @@
       box-sizing:border-box;
     }
 
-    /* Iconos */
-    .predios-natural{ background:#2ec4b6; border-radius:3px; }
-    .predios-juridicos{ background:#ff006e; border-radius:3px; }
+    /* Iconos (SOLO PUNTOS) */
     .persona-natural{ background:#2ec4b6; border-radius:999px; }
     .persona-juridica{ background:#ff006e; border-radius:999px; }
 
@@ -95,29 +93,17 @@
   <!-- CONTENEDOR DEL MAPA -->
   <div id="map"></div>
 
-  <!-- ✅ CONTROL DE CAPAS (NATURAL / JURÍDICO) -->
+  <!-- ✅ CONTROL DE CAPAS (SOLO PUNTOS) -->
   <div id="layerControl" class="layer-control">
     <div class="lc-title">Filtros de visualización</div>
 
     <select id="lcMode" class="lc-select">
-      <option value="ALL" selected>Ver todo</option>
-      <option value="NATURAL">Solo NATURAL (predios + puntos)</option>
-      <option value="JURIDICO">Solo JURÍDICO (predios + puntos)</option>
+      <option value="ALL" selected>Ver ambos (Natural + Jurídica)</option>
+      <option value="NATURAL">Solo Persona NATURAL (puntos)</option>
+      <option value="JURIDICO">Solo Persona JURÍDICA (puntos)</option>
     </select>
 
     <div class="lc-group">
-      <label class="lc-item">
-        <input type="checkbox" id="toggle_predios_natural" checked />
-        <span class="legend-color predios-natural"></span>
-        Predios contribuyentes natural
-      </label>
-
-      <label class="lc-item">
-        <input type="checkbox" id="toggle_predios_juridicos" checked />
-        <span class="legend-color predios-juridicos"></span>
-        Predios contribuyentes jurídicos
-      </label>
-
       <label class="lc-item">
         <input type="checkbox" id="toggle_persona_natural" checked />
         <span class="legend-color persona-natural"></span>
@@ -141,7 +127,7 @@
   <div class="info-box">
     <h3>Información</h3>
     <div class="info-content">
-      Busca un contribuyente/predio para ver detalles
+      Busca un contribuyente para ver detalles
     </div>
   </div>
 
