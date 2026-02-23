@@ -3,7 +3,7 @@
 // ✅ + Contribuyentes Persona Jurídica (puntos)
 // ✅ + ICA muestra FOTO (campo FOTOS) en el popup
 // ✅ Popup ICA organizado + Foto ampliable (clic)
-// ✅ Popup siempre visible (auto-pan al abrir)
+// ✅ Popup siempre visible (SMART pan automático, no se recorta)
 // ❌ (ELIMINADO) Predios Contribuyentes Jurídicos (polígono)
 // =====================================================
 
@@ -20,7 +20,7 @@ const map = new mapboxgl.Map({
 
 map.addControl(new mapboxgl.NavigationControl());
 
-// ✅ Popup: maxWidth + offset para que no “pegue” al borde
+// ✅ Popup: maxWidth + offset para mejor posicionamiento
 const popup = new mapboxgl.Popup({
   closeButton: true,
   closeOnClick: true,
@@ -68,20 +68,32 @@ function streetViewUrl([lng, lat]) {
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 }
 
-// ✅ Asegura que el popup se vea completo (no quede cortado)
-function ensurePopupVisible(lngLat) {
-  const isMobile = window.matchMedia("(max-width: 640px)").matches;
+// =====================================================
+// ✅ Popup visible "SMART": mide el popup y pan automático
+// (Evita recortes arriba/abajo/izq/der)
+// =====================================================
+function ensurePopupVisibleSmart(padding = 14) {
+  requestAnimationFrame(() => {
+    const el = document.querySelector(".mapboxgl-popup");
+    if (!el) return;
 
-  map.easeTo({
-    center: lngLat,
-    zoom: Math.max(map.getZoom(), 17),
-    duration: 320,
+    const rect = el.getBoundingClientRect();
+
+    let dx = 0;
+    let dy = 0;
+
+    if (rect.top < padding) dy = rect.top - padding;
+    if (rect.bottom > window.innerHeight - padding)
+      dy = rect.bottom - (window.innerHeight - padding);
+
+    if (rect.left < padding) dx = rect.left - padding;
+    if (rect.right > window.innerWidth - padding)
+      dx = rect.right - (window.innerWidth - padding);
+
+    if (dx || dy) {
+      map.panBy([dx, dy], { duration: 0 });
+    }
   });
-
-  // Empuja el mapa hacia abajo para que el popup tenga “espacio” arriba
-  setTimeout(() => {
-    map.panBy([0, isMobile ? 160 : 110], { duration: 0 });
-  }, 340);
 }
 
 // =====================================================
@@ -237,8 +249,7 @@ function popupHTMLICA(props, lngLat) {
 }
 
 // =====================================================
-// ✅ POPUP CONTRIBUYENTES PERSONA JURÍDICA (puntos)
-// (Sin cambios)
+// ✅ POPUP CONTRIBUYENTES PERSONA JURÍDICA (puntos) (sin cambios)
 // =====================================================
 function popupHTMLContribJuridica(props, lngLat) {
   props = props || {};
@@ -393,7 +404,7 @@ function addICALayer() {
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
 
         popup.setLngLat(lngLat).setHTML(popupHTMLICA(f.properties || {}, lngLat)).addTo(map);
-        ensurePopupVisible(lngLat);
+        ensurePopupVisibleSmart();
       });
     })
     .catch((err) => console.error("Error cargando ICA:", err));
@@ -464,7 +475,7 @@ function addContribJuridicaLayer() {
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
 
         popup.setLngLat(lngLat).setHTML(popupHTMLContribJuridica(f.properties || {}, lngLat)).addTo(map);
-        ensurePopupVisible(lngLat);
+        ensurePopupVisibleSmart();
       });
     })
     .catch((err) => console.error("Error cargando contribuyentes jurídicos:", err));
@@ -562,7 +573,7 @@ geocoder.on("result", (e) => {
     map.flyTo({ center: lngLat, zoom: 18 });
 
     popup.setLngLat(lngLat).setHTML(popupHTMLICA(r.properties || {}, lngLat)).addTo(map);
-    ensurePopupVisible(lngLat);
+    ensurePopupVisibleSmart();
     return;
   }
 
@@ -575,7 +586,7 @@ geocoder.on("result", (e) => {
     map.flyTo({ center: lngLat, zoom: 18 });
 
     popup.setLngLat(lngLat).setHTML(popupHTMLContribJuridica(r.properties || {}, lngLat)).addTo(map);
-    ensurePopupVisible(lngLat);
+    ensurePopupVisibleSmart();
     return;
   }
 });
