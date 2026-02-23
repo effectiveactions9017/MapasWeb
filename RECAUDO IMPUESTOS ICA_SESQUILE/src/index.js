@@ -2,6 +2,8 @@
 // ✅ Visor Predial + Recaudo impuesto ICA – Sesquilé
 // ✅ + Contribuyentes Persona Jurídica (puntos)
 // ✅ + ICA muestra FOTO (campo FOTOS) en el popup
+// ✅ Popup ICA organizado + Foto ampliable (clic)
+// ✅ Popup siempre visible (auto-pan al abrir)
 // ❌ (ELIMINADO) Predios Contribuyentes Jurídicos (polígono)
 // =====================================================
 
@@ -18,10 +20,13 @@ const map = new mapboxgl.Map({
 
 map.addControl(new mapboxgl.NavigationControl());
 
+// ✅ Popup: maxWidth + offset para que no “pegue” al borde
 const popup = new mapboxgl.Popup({
   closeButton: true,
   closeOnClick: true,
   className: "custom-popup",
+  maxWidth: "360px",
+  offset: 18,
 });
 
 // =====================================================
@@ -63,6 +68,74 @@ function streetViewUrl([lng, lat]) {
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 }
 
+// ✅ Asegura que el popup se vea completo (no quede cortado)
+function ensurePopupVisible(lngLat) {
+  const isMobile = window.matchMedia("(max-width: 640px)").matches;
+
+  map.easeTo({
+    center: lngLat,
+    zoom: Math.max(map.getZoom(), 17),
+    duration: 320,
+  });
+
+  // Empuja el mapa hacia abajo para que el popup tenga “espacio” arriba
+  setTimeout(() => {
+    map.panBy([0, isMobile ? 160 : 110], { duration: 0 });
+  }, 340);
+}
+
+// =====================================================
+// ✅ LIGHTBOX para agrandar foto (clic)
+// =====================================================
+function openLightbox(url) {
+  if (!url) return;
+
+  const old = document.getElementById("ea-lightbox");
+  if (old) old.remove();
+
+  const lb = document.createElement("div");
+  lb.id = "ea-lightbox";
+  lb.style.cssText = `
+    position:fixed; inset:0; z-index:99999;
+    background:rgba(0,0,0,0.78);
+    display:flex; align-items:center; justify-content:center;
+    padding:18px;
+  `;
+
+  lb.innerHTML = `
+    <div style="position:relative; max-width:92vw; max-height:92vh;">
+      <button id="ea-lb-close" aria-label="Cerrar"
+        style="position:absolute; top:-12px; right:-12px;
+               width:36px; height:36px; border:0; cursor:pointer;
+               border-radius:999px; font-weight:900;
+               background:#00bcd4; color:#000;">
+        ✕
+      </button>
+      <img src="${url}" alt="Foto ampliada"
+           style="max-width:92vw; max-height:92vh; border-radius:14px; display:block; object-fit:contain;" />
+    </div>
+  `;
+
+  lb.addEventListener("click", (e) => {
+    if (e.target === lb) lb.remove();
+  });
+
+  lb.querySelector("#ea-lb-close").addEventListener("click", () => lb.remove());
+
+  document.addEventListener(
+    "keydown",
+    (ev) => {
+      if (ev.key === "Escape") {
+        const x = document.getElementById("ea-lightbox");
+        if (x) x.remove();
+      }
+    },
+    { once: true }
+  );
+
+  document.body.appendChild(lb);
+}
+
 // =====================================================
 // ✅ HELPERS FOTO ICA (QField attachments)
 // =====================================================
@@ -82,44 +155,90 @@ function buildIcaPhotoUrl(props) {
 }
 
 // =====================================================
-// POPUP ICA (imagenes_limpias) ✅ + FOTO
+// POPUP ICA (imagenes_limpias) ✅ ORGANIZADO + FOTO AMPLIABLE
+// Campos reales: NOMBRE, codigo, FOTOS
+// ✅ Street View se deja tal cual
 // =====================================================
 function popupHTMLICA(props, lngLat) {
   props = props || {};
-  const texto = props.texto ?? props.TEXTO ?? props.nombre ?? props.NOMBRE ?? "N/A";
+
+  const nombre = (props.NOMBRE ?? "N/A").toString().trim() || "N/A";
+  const codigo = (props.codigo ?? "N/A").toString().trim() || "N/A";
 
   const fotoUrl = buildIcaPhotoUrl(props);
 
-  const fotoHTML = fotoUrl
-    ? `
-      <div style="margin-top:10px;">
-        <img src="${fotoUrl}" alt="Foto"
-             style="width:100%; max-width:320px; border-radius:10px; display:block;"
-             loading="lazy"
-             onerror="this.style.display='none';" />
-      </div>
-    `
-    : "";
+  const fotoHTML = `
+    <div style="
+      margin-top:10px;
+      border-radius:14px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.06);
+    ">
+      ${
+        fotoUrl
+          ? `<img
+               src="${fotoUrl}"
+               alt="Foto del establecimiento"
+               loading="lazy"
+               style="width:100%; height:320px; object-fit:cover; display:block; cursor:zoom-in;"
+               onclick="openLightbox('${fotoUrl}')"
+               onerror="this.outerHTML='<div style=&quot;height:320px;display:flex;align-items:center;justify-content:center;opacity:.75;font-size:12px;padding:12px;text-align:center;&quot;>Sin foto disponible</div>';"
+             />`
+          : `<div style="height:320px;display:flex;align-items:center;justify-content:center;opacity:.75;font-size:12px;padding:12px;text-align:center;">
+               Sin foto disponible
+             </div>`
+      }
+    </div>
+  `;
 
   return `
-    <div style="font-weight:700; margin-bottom:6px;">Unidades Productivas Identificadas</div>
-    <strong>Texto:</strong> ${texto}<br>
-    ${fotoHTML}
+    <div style="
+      width: 340px;
+      max-width: 340px;
+      padding: 12px;
+      box-sizing: border-box;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.65);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(6px);
+    ">
+      <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
+        Unidades Productivas Identificadas
+      </div>
 
-    <div style="margin-top:10px;">
-      <a href="${streetViewUrl(lngLat)}" target="_blank"
-         style="display:inline-block; padding:6px 10px; border-radius:6px;
-                background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
-        📷 Street View
-      </a>
+      <div style="
+        display:grid;
+        grid-template-columns: 120px 1fr;
+        gap: 6px 10px;
+        font-size:12px;
+        line-height:1.25;
+      ">
+        <div style="opacity:.75; font-weight:700;">Nombre</div>
+        <div style="font-weight:700;">${nombre}</div>
+
+        <div style="opacity:.75; font-weight:700;">Código predial</div>
+        <div>${codigo}</div>
+      </div>
+
+      ${fotoHTML}
+
+      <div style="margin-top:10px;">
+        <a href="${streetViewUrl(lngLat)}" target="_blank"
+           style="display:inline-block; padding:6px 10px; border-radius:6px;
+                  background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+          📷 Street View
+        </a>
+      </div>
+
+      <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
     </div>
-
-    <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
   `;
 }
 
 // =====================================================
 // ✅ POPUP CONTRIBUYENTES PERSONA JURÍDICA (puntos)
+// (Sin cambios)
 // =====================================================
 function popupHTMLContribJuridica(props, lngLat) {
   props = props || {};
@@ -274,6 +393,7 @@ function addICALayer() {
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
 
         popup.setLngLat(lngLat).setHTML(popupHTMLICA(f.properties || {}, lngLat)).addTo(map);
+        ensurePopupVisible(lngLat);
       });
     })
     .catch((err) => console.error("Error cargando ICA:", err));
@@ -344,6 +464,7 @@ function addContribJuridicaLayer() {
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
 
         popup.setLngLat(lngLat).setHTML(popupHTMLContribJuridica(f.properties || {}, lngLat)).addTo(map);
+        ensurePopupVisible(lngLat);
       });
     })
     .catch((err) => console.error("Error cargando contribuyentes jurídicos:", err));
@@ -368,7 +489,7 @@ const geocoder = new MapboxGeocoder({
     if (ICA_DATA && Array.isArray(ICA_DATA.features)) {
       for (const f of ICA_DATA.features) {
         const p = f.properties || {};
-        const txt = norm(p.texto ?? p.TEXTO ?? p.nombre ?? p.NOMBRE);
+        const txt = norm(p.NOMBRE);
         if (txt && txt.includes(query)) {
           const center = getPointLngLat(f);
           results.push({
@@ -376,8 +497,8 @@ const geocoder = new MapboxGeocoder({
             geometry: f.geometry,
             center,
             properties: { ...p, __tipo: "ICA" },
-            place_name: `ICA: ${(p.texto ?? p.TEXTO ?? p.nombre ?? p.NOMBRE ?? "N/A").toString()}`,
-            text: (p.texto ?? p.TEXTO ?? p.nombre ?? p.NOMBRE ?? "ICA").toString(),
+            place_name: `ICA: ${(p.NOMBRE ?? "N/A").toString()}`,
+            text: (p.NOMBRE ?? "ICA").toString(),
             place_type: ["place"],
           });
           if (results.length >= 10) break;
@@ -441,6 +562,7 @@ geocoder.on("result", (e) => {
     map.flyTo({ center: lngLat, zoom: 18 });
 
     popup.setLngLat(lngLat).setHTML(popupHTMLICA(r.properties || {}, lngLat)).addTo(map);
+    ensurePopupVisible(lngLat);
     return;
   }
 
@@ -453,6 +575,7 @@ geocoder.on("result", (e) => {
     map.flyTo({ center: lngLat, zoom: 18 });
 
     popup.setLngLat(lngLat).setHTML(popupHTMLContribJuridica(r.properties || {}, lngLat)).addTo(map);
+    ensurePopupVisible(lngLat);
     return;
   }
 });
