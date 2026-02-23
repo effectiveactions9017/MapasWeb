@@ -1,3 +1,6 @@
+/* =========================================================
+   BASE
+   ========================================================= */
 body {
     margin: 0;
     padding: 0;
@@ -11,9 +14,9 @@ body {
     width: 100%;
 }
 
-/* =========================
+/* =========================================================
    LEYENDA
-   ========================= */
+   ========================================================= */
 .legend-container {
     position: absolute;
     bottom: 25px;
@@ -22,7 +25,7 @@ body {
     background-color: rgba(0, 0, 0, 0.7);
     padding: 15px;
     border-radius: 8px;
-    width: 220px; /* un poco más para los textos nuevos */
+    width: 220px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     color: white;
 }
@@ -41,11 +44,10 @@ body {
     margin: 0;
 }
 
-/* ====== FIX LEYENDA: que se vean los cuadros ====== */
 .legend-list li {
     display: flex;
     align-items: center;
-    gap: 10px; /* espacio entre cuadro y texto */
+    gap: 10px;
     margin-bottom: 8px;
     font-size: 0.9rem;
     color: white;
@@ -55,44 +57,42 @@ body {
     display: inline-block !important;
     width: 18px !important;
     height: 18px !important;
-    min-width: 18px !important;   /* CLAVE para que no colapse */
-    min-height: 18px !important;  /* CLAVE para que no colapse */
+    min-width: 18px !important;
+    min-height: 18px !important;
     border-radius: 3px;
     border: 1px solid #ffffff;
-    flex: 0 0 18px; /* CLAVE para flex */
+    flex: 0 0 18px;
 }
 
-/* =========================
-   COLORES DE LA LEYENDA (ACTUALIZADOS)
-   ========================= */
+/* ===== COLORES LEYENDA ===== */
 
-/* 🔵 Predial (base) – se representa como cuadro blanco (contorno en mapa) */
+/* Predial base */
 .legend-color.predios-municipio {
     background-color: #ffffff;
 }
 
-/* 🟣 Recaudo impuesto ICA (puntos) */
+/* ✅ ICA – verde (coincide con mapa) */
 .legend-color.ica-puntos {
-    background-color: #b5179e;
+    background-color: #00c853;
 }
 
-/* (Opcional) si aún quieres conservar un color para "seleccionado" */
+/* Seleccionado */
 .legend-color.predio-seleccionado {
     background-color: #ffff00;
 }
 
-/* =========================
+/* =========================================================
    CLASES ANTIGUAS (SE CONSERVAN)
-   ========================= */
+   ========================================================= */
 .c_viejas { background-color: #AAB7B8; }
 .c_nuevas { background-color: #A569BD; }
 .c_aumento { background-color: #F7DC6F; }
 .dem_p { background-color: #F5B041; }
 .dem_t { background-color: #E74C3C; }
 
-/* =========================
+/* =========================================================
    CAJA DE INFORMACIÓN
-   ========================= */
+   ========================================================= */
 .info-box {
     left: 10px;
     top: 310px;
@@ -115,18 +115,33 @@ body {
     font-size: 14px;
 }
 
-/* =========================
-   POPUP PERSONALIZADO
-   ========================= */
-.custom-popup .mapboxgl-popup-content {
-    font-size: 0.8rem;
-    padding: 10px 15px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    border-radius: 8px;
-    max-width: 260px;
+/* =========================================================
+   POPUP MAPBOX — TARJETA LIMPIA (NO SE CORTA)
+   ========================================================= */
+
+/* contenedor popup */
+.mapboxgl-popup {
+    z-index: 20;
 }
 
+/* contenido popup */
+.mapboxgl-popup-content {
+    padding: 0 !important;                /* el padding lo maneja el HTML */
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    background: transparent !important;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.35) !important;
+}
+
+/* botón cerrar */
+.mapboxgl-popup-close-button {
+    font-size: 18px !important;
+    padding: 6px 10px !important;
+    color: #ffffff !important;
+    z-index: 30 !important;
+}
+
+/* links del popup */
 .mapboxgl-popup-content a {
     color: #00bcd4;
     text-decoration: none;
@@ -136,7 +151,7 @@ body {
     text-decoration: underline;
 }
 
-/* Flechas del popup */
+/* Flechas del popup (color oscuro) */
 .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
@@ -157,9 +172,24 @@ body {
     border-left-color: rgba(0, 0, 0, 0.8);
 }
 
-/* =========================
+/* ===== MÓVIL: evita popup gigante o cortado ===== */
+@media (max-width: 640px) {
+    .mapboxgl-popup,
+    .mapboxgl-popup-content {
+        max-width: 92vw !important;
+    }
+}
+
+/* =========================================================
+   LIGHTBOX FOTO (AMPLIAR IMAGEN)
+   ========================================================= */
+#ea-lightbox {
+    z-index: 99999 !important;
+}
+
+/* =========================================================
    GEOCODER
-   ========================= */
+   ========================================================= */
 .mapboxgl-ctrl-geocoder {
     width: 300px !important;
 }
