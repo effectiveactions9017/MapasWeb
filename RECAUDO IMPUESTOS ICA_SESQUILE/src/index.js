@@ -2,6 +2,7 @@
 // ✅ Visor Predial + Recaudo impuesto ICA – Sesquilé
 // ✅ + Predios Contribuyentes Jurídicos (polígono)
 // ✅ + Contribuyentes Persona Jurídica (puntos)
+// ✅ + ICA muestra FOTO (campo FOTOS) en el popup
 // =====================================================
 
 mapboxgl.accessToken =
@@ -64,15 +65,51 @@ function streetViewUrl([lng, lat]) {
 }
 
 // =====================================================
-// POPUP ICA (imagenes_limpias)
+// ✅ HELPERS FOTO ICA (QField attachments)
+// =====================================================
+function sanitizePhotoRelPath(p) {
+  // Espera algo como: "DCIM/JPEG_....jpg"
+  // Limpia backslashes, espacios, y evita rutas peligrosas
+  let s = (p ?? "").toString().trim();
+  if (!s) return "";
+  s = s.replace(/\\/g, "/");
+  s = s.replace(/^\/+/, "");
+  s = s.replace(/\.\.\//g, "");
+  return s;
+}
+
+function buildIcaPhotoUrl(props) {
+  const rel = sanitizePhotoRelPath(props?.FOTOS ?? props?.fotos ?? props?.Foto ?? props?.FOTO ?? "");
+  if (!rel) return "";
+  // ✅ Tu HTML está un nivel "abajo" de /src (usas ../src/..), entonces:
+  // ../src/data/fotos_ica/ + DCIM/archivo.jpg
+  return `../src/data/fotos_ica/${rel}`;
+}
+
+// =====================================================
+// POPUP ICA (imagenes_limpias) ✅ + FOTO
 // =====================================================
 function popupHTMLICA(props, lngLat) {
   props = props || {};
   const texto = props.texto ?? props.TEXTO ?? props.nombre ?? props.NOMBRE ?? "N/A";
 
+  const fotoUrl = buildIcaPhotoUrl(props);
+
+  const fotoHTML = fotoUrl
+    ? `
+      <div style="margin-top:10px;">
+        <img src="${fotoUrl}" alt="Foto"
+             style="width:100%; max-width:320px; border-radius:10px; display:block;"
+             loading="lazy"
+             onerror="this.style.display='none';" />
+      </div>
+    `
+    : "";
+
   return `
     <div style="font-weight:700; margin-bottom:6px;">Unidades Productivas Identificadas</div>
     <strong>Texto:</strong> ${texto}<br>
+    ${fotoHTML}
 
     <div style="margin-top:10px;">
       <a href="${streetViewUrl(lngLat)}" target="_blank"
@@ -276,7 +313,7 @@ function addPrediosJuridicosLayer() {
           source: "predios_juridicos",
           minzoom: 12,
           paint: {
-            "fill-color": "#ff00ff",  // ✅ FUCSIA
+            "fill-color": "#ff00ff", // ✅ FUCSIA
             "fill-opacity": 0.35,
           },
         });
@@ -290,7 +327,7 @@ function addPrediosJuridicosLayer() {
           source: "predios_juridicos",
           minzoom: 12,
           paint: {
-            "line-color": "#ff00ff",  // ✅ FUCSIA
+            "line-color": "#ff00ff", // ✅ FUCSIA
             "line-width": 2.0,
             "line-opacity": 0.95,
           },
