@@ -4,6 +4,8 @@
 // ✅ + ICA muestra FOTO (campo FOTOS) en el popup
 // ✅ Popup ICA organizado + Foto ampliable (clic)
 // ✅ Popup siempre visible (SMART pan automático, no se recorta)
+// ✅ FIX: ICA ya NO se ve tan oscuro
+// ✅ FIX: Jurídicos ya NO se ven transparentes (tarjeta con fondo)
 // ❌ (ELIMINADO) Predios Contribuyentes Jurídicos (polígono)
 // =====================================================
 
@@ -90,9 +92,7 @@ function ensurePopupVisibleSmart(padding = 14) {
     if (rect.right > window.innerWidth - padding)
       dx = rect.right - (window.innerWidth - padding);
 
-    if (dx || dy) {
-      map.panBy([dx, dy], { duration: 0 });
-    }
+    if (dx || dy) map.panBy([dx, dy], { duration: 0 });
   });
 }
 
@@ -161,15 +161,16 @@ function sanitizePhotoRelPath(p) {
 }
 
 function buildIcaPhotoUrl(props) {
-  const rel = sanitizePhotoRelPath(props?.FOTOS ?? props?.fotos ?? props?.Foto ?? props?.FOTO ?? "");
+  const rel = sanitizePhotoRelPath(
+    props?.FOTOS ?? props?.fotos ?? props?.Foto ?? props?.FOTO ?? ""
+  );
   if (!rel) return "";
   return `../src/data/fotos_ica/${rel}`;
 }
 
 // =====================================================
 // POPUP ICA (imagenes_limpias) ✅ ORGANIZADO + FOTO AMPLIABLE
-// Campos reales: NOMBRE, codigo, FOTOS
-// ✅ Street View se deja tal cual
+// ✅ FIX: fondo menos oscuro (0.45)
 // =====================================================
 function popupHTMLICA(props, lngLat) {
   props = props || {};
@@ -211,9 +212,10 @@ function popupHTMLICA(props, lngLat) {
       padding: 12px;
       box-sizing: border-box;
       border-radius: 14px;
-      background: rgba(0,0,0,0.65);
+      background: rgba(0,0,0,0.45);
       border: 1px solid rgba(255,255,255,0.12);
       backdrop-filter: blur(6px);
+      color:#fff;
     ">
       <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
         Unidades Productivas Identificadas
@@ -249,7 +251,8 @@ function popupHTMLICA(props, lngLat) {
 }
 
 // =====================================================
-// ✅ POPUP CONTRIBUYENTES PERSONA JURÍDICA (puntos) (sin cambios)
+// ✅ POPUP CONTRIBUYENTES PERSONA JURÍDICA (puntos)
+// ✅ FIX: tarjeta con fondo (ya NO transparente)
 // =====================================================
 function popupHTMLContribJuridica(props, lngLat) {
   props = props || {};
@@ -290,23 +293,57 @@ function popupHTMLContribJuridica(props, lngLat) {
   const estado = props["Estado"] ?? props["ESTADO"] ?? "N/A";
 
   return `
-    <div style="font-weight:700; margin-bottom:6px;">Contribuyentes persona jurídica</div>
-    <strong>Código predial:</strong> ${codigoPredial}<br>
-    <strong>Número documento:</strong> ${numDoc}<br>
-    <strong>Contribuyente:</strong> ${contribuyente}<br>
-    <strong>Naturaleza jurídica:</strong> ${naturaleza}<br>
-    <strong>Razón social:</strong> ${razonSocial}<br>
-    <strong>Estado:</strong> ${estado}<br>
+    <div style="
+      width: 340px;
+      max-width: 340px;
+      padding: 12px;
+      box-sizing: border-box;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(6px);
+      color:#fff;
+    ">
+      <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
+        Contribuyentes persona jurídica
+      </div>
 
-    <div style="margin-top:10px;">
-      <a href="${streetViewUrl(lngLat)}" target="_blank"
-         style="display:inline-block; padding:6px 10px; border-radius:6px;
-                background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
-        📷 Street View
-      </a>
+      <div style="
+        display:grid;
+        grid-template-columns: 120px 1fr;
+        gap: 6px 10px;
+        font-size:12px;
+        line-height:1.25;
+      ">
+        <div style="opacity:.75; font-weight:700;">Código predial</div>
+        <div>${(codigoPredial ?? "N/A").toString()}</div>
+
+        <div style="opacity:.75; font-weight:700;">Número documento</div>
+        <div>${(numDoc ?? "N/A").toString()}</div>
+
+        <div style="opacity:.75; font-weight:700;">Contribuyente</div>
+        <div>${(contribuyente ?? "N/A").toString()}</div>
+
+        <div style="opacity:.75; font-weight:700;">Naturaleza</div>
+        <div>${(naturaleza ?? "N/A").toString()}</div>
+
+        <div style="opacity:.75; font-weight:700;">Razón social</div>
+        <div>${(razonSocial ?? "N/A").toString()}</div>
+
+        <div style="opacity:.75; font-weight:700;">Estado</div>
+        <div>${(estado ?? "N/A").toString()}</div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <a href="${streetViewUrl(lngLat)}" target="_blank"
+           style="display:inline-block; padding:6px 10px; border-radius:6px;
+                  background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+          📷 Street View
+        </a>
+      </div>
+
+      <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
     </div>
-
-    <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
   `;
 }
 
