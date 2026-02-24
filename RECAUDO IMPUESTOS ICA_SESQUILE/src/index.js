@@ -351,8 +351,6 @@ function popupHTMLCoinciden(props, lngLat) {
 
 // =====================================================
 // ✅ POPUP CONTRIBUYENTES PERSONA JURÍDICA (puntos)
-// ✅ FIX: tarjeta con fondo (ya NO transparente)
-// ✅ FIX: campos largos NO se recortan (wrap)
 // =====================================================
 function popupHTMLContribJuridica(props, lngLat) {
   props = props || {};
@@ -451,7 +449,6 @@ function popupHTMLContribJuridica(props, lngLat) {
   `;
 }
 
-// ✅ Popup NATURAL = misma tarjeta de jurídica pero con título diferente
 function popupHTMLContribNatural(props, lngLat) {
   const html = popupHTMLContribJuridica(props, lngLat);
   return html.replace("Contribuyentes persona jurídica", "Contribuyentes persona natural");
@@ -559,9 +556,10 @@ function addICALayer() {
 
 // =====================================================
 // ✅ CONSTRUCCIONES QUE COINCIDEN (PUNTOS) — ✅ NUEVO
+// ✅ FIX: nombre real del archivo en tu repo: "Contrucciones_que_coinciden.geojson"
 // =====================================================
 function addCoincidenLayer() {
-  fetch("../src/data/Construcciones_que_coinciden.geojson")
+  fetch("../src/data/Contrucciones_que_coinciden.geojson")
     .then((r) => r.json())
     .then((data) => {
       COINCIDEN_DATA = data;
@@ -576,7 +574,7 @@ function addCoincidenLayer() {
           source: "coinciden_points",
           paint: {
             "circle-radius": 6,
-            "circle-color": "#00b0ff", // ✅ azul
+            "circle-color": "#00b0ff",
             "circle-stroke-width": 1.5,
             "circle-stroke-color": "#ffffff",
             "circle-opacity": 0.95,
@@ -709,7 +707,6 @@ function addContribJuridicaLayer() {
 
 // =====================================================
 // ✅ CONTRIBUYENTES PERSONA NATURAL (PUNTOS) — ✅ NUEVO
-// (mismos atributos que jurídica)
 // =====================================================
 function addContribNaturalLayer() {
   fetch("../src/data/Contribuyentes_Persona_Natural.geojson")
@@ -727,7 +724,7 @@ function addContribNaturalLayer() {
           source: "contrib_natural",
           paint: {
             "circle-radius": 6,
-            "circle-color": "#00e5ff", // ✅ celeste
+            "circle-color": "#00e5ff",
             "circle-stroke-width": 1.5,
             "circle-stroke-color": "#ffffff",
             "circle-opacity": 0.95,
@@ -840,7 +837,6 @@ const geocoder = new MapboxGeocoder({
       }
     }
 
-    // helper búsqueda contribuyentes (jurídico/natural)
     function matchContrib(p) {
       const cod = norm(p["Código predial"] ?? p.CODIGO_PREDIAL ?? p.codigo_predial ?? p.codigo);
       const doc = norm(p["Número documento"] ?? p.NUMERO_DOCUMENTO ?? p["No Documento"] ?? p.NO_DOCUMENTO);
@@ -855,7 +851,7 @@ const geocoder = new MapboxGeocoder({
       );
     }
 
-    // --- CONTRIBUYENTES PERSONA JURÍDICA (puntos) ---
+    // --- JURÍDICA ---
     if (
       CONTRIB_JURIDICA_DATA &&
       Array.isArray(CONTRIB_JURIDICA_DATA.features) &&
@@ -881,7 +877,7 @@ const geocoder = new MapboxGeocoder({
       }
     }
 
-    // --- CONTRIBUYENTES PERSONA NATURAL (puntos) ---
+    // --- NATURAL ---
     if (
       CONTRIB_NATURAL_DATA &&
       Array.isArray(CONTRIB_NATURAL_DATA.features) &&
@@ -913,7 +909,6 @@ const geocoder = new MapboxGeocoder({
 
 map.addControl(geocoder, "top-left");
 
-// Resultado del buscador
 geocoder.on("result", (e) => {
   const r = e.result;
   if (!r) return;
@@ -954,11 +949,7 @@ geocoder.on("result", (e) => {
 
     map.flyTo({ center: lngLat, zoom: 18 });
 
-    popup
-      .setLngLat(lngLat)
-      .setHTML(popupHTMLContribJuridica(r.properties || {}, lngLat))
-      .addTo(map);
-
+    popup.setLngLat(lngLat).setHTML(popupHTMLContribJuridica(r.properties || {}, lngLat)).addTo(map);
     ensurePopupVisibleSmart();
     return;
   }
@@ -971,11 +962,7 @@ geocoder.on("result", (e) => {
 
     map.flyTo({ center: lngLat, zoom: 18 });
 
-    popup
-      .setLngLat(lngLat)
-      .setHTML(popupHTMLContribNatural(r.properties || {}, lngLat))
-      .addTo(map);
-
+    popup.setLngLat(lngLat).setHTML(popupHTMLContribNatural(r.properties || {}, lngLat)).addTo(map);
     ensurePopupVisibleSmart();
     return;
   }
@@ -987,22 +974,19 @@ geocoder.on("result", (e) => {
 map.on("style.load", () => {
   addPrediosBase();
   addICALayer();
-  addCoincidenLayer(); // ✅ NUEVO
+  addCoincidenLayer();
   addContribJuridicaLayer();
-  addContribNaturalLayer(); // ✅ NUEVO
+  addContribNaturalLayer();
 
   setTimeout(() => {
     try {
-      // base visual abajo
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
 
-      // puntos arriba
       if (map.getLayer("ica_points_layer")) map.moveLayer("ica_points_layer");
       if (map.getLayer("coinciden_points_layer")) map.moveLayer("coinciden_points_layer");
       if (map.getLayer("contrib_juridica_layer")) map.moveLayer("contrib_juridica_layer");
       if (map.getLayer("contrib_natural_layer")) map.moveLayer("contrib_natural_layer");
 
-      // highlights arriba
       if (map.getLayer("highlight_ica_circle")) map.moveLayer("highlight_ica_circle");
       if (map.getLayer("highlight_coinciden_circle")) map.moveLayer("highlight_coinciden_circle");
       if (map.getLayer("highlight_contrib_juridica_circle"))
