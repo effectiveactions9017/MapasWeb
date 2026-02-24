@@ -2,7 +2,7 @@
 // ✅ Visor Bonos de Carbono Sesquilé - Mapbox GL JS
 // ✅ 4 GeoJSON: Límite municipal, Urbano, Oportunidad y Pérdidas
 // ✅ Popup SOLO con clic en TODAS las capas
-// ✅ Oportunidad/Pérdidas: popup con 2 campos renombrados
+// ✅ Oportunidad y Pérdidas: popup con 3 campos (Carbono, Area (ha), Tipo de bosque)
 // =====================================================
 
 mapboxgl.accessToken =
@@ -38,17 +38,50 @@ let OPORTUNIDAD_DATA = null;
 let PERDIDAS_DATA = null;
 
 // =============================
-// PopupFields (2 campos renombrados)
+// PopupFields personalizados
 // =============================
-const POPUP_CARBONO_FIELDS = [
+
+// ✅ OPORTUNIDAD (bosque actual)
+// Campos reales:
+// - sum_Stock_Carbono_Total_tC
+// - sum_Area_Poligono_ha
+// - vals_Nombre_Tipo_Bosque_Predom
+const POPUP_OPORTUNIDAD_FIELDS = [
   {
     label: 'Toneladas de Carbono',
     key: 'sum_Stock_Carbono_Total_tC',
     format: 'number'
   },
   {
+    label: 'Area (ha)',
+    key: 'sum_Area_Poligono_ha',
+    format: 'number'
+  },
+  {
     label: 'Tipo de bosque',
     key: 'vals_Nombre_Tipo_Bosque_Predom'
+  }
+];
+
+// ✅ PÉRDIDAS (pérdida de bosque)
+// Campos reales:
+// - Carbono_Perdido_tC
+// - Area_ha
+// - Nombre_Tipo_Bosque_Predom
+const POPUP_PERDIDAS_FIELDS = [
+  {
+    label: 'Toneladas de Carbono',
+    key: 'Carbono_Perdido_tC',
+    format: 'number'
+  },
+  {
+    label: 'Area (ha)',
+    key: 'Area_ha',
+    format: 'number'
+  },
+  {
+    label: 'Tipo de bosque',
+    key: 'Nombre_Tipo_Bosque_Predom'
   }
 ];
 
@@ -98,7 +131,6 @@ function buildPopupContent(feature, popupFields) {
 const clickHandlers = {}; // { [layerId]: fn }
 
 function bindClickPopup(layerId, popupFields) {
-  // quitar si existía
   if (clickHandlers[layerId]) {
     map.off('click', layerId, clickHandlers[layerId]);
   }
@@ -117,7 +149,6 @@ function bindClickPopup(layerId, popupFields) {
   clickHandlers[layerId] = fn;
   map.on('click', layerId, fn);
 
-  // cursor pointer
   map.on('mouseenter', layerId, () => (map.getCanvas().style.cursor = 'pointer'));
   map.on('mouseleave', layerId, () => (map.getCanvas().style.cursor = ''));
 }
@@ -144,14 +175,12 @@ function addLayer({
       if (sourceId === 'oportunidad') OPORTUNIDAD_DATA = data;
       if (sourceId === 'perdidas') PERDIDAS_DATA = data;
 
-      // Source seguro
       if (map.getSource(sourceId)) {
         map.getSource(sourceId).setData(data);
       } else {
         map.addSource(sourceId, { type: 'geojson', data });
       }
 
-      // Layer seguro
       if (!map.getLayer(layerId)) {
         map.addLayer({
           id: layerId,
@@ -190,12 +219,12 @@ map.on('style.load', () => {
     layerId: 'limite_municipal_layer',
     type: 'line',
     color: '#adb5bd',
-    width: 3.5,   // más fácil de clicar
+    width: 3.5,
     opacity: 0.8,
     popupFields: null
   });
 
-  // 2) OPORTUNIDAD (popup con 2 campos renombrados)
+  // 2) OPORTUNIDAD (popup 3 campos)
   addLayer({
     geojsonFile: 'bosque_actual_final_ajustado_UNIDO.geojson',
     sourceId: 'oportunidad',
@@ -203,10 +232,10 @@ map.on('style.load', () => {
     type: 'fill',
     color: '#2ec4b6',
     opacity: 0.6,
-    popupFields: POPUP_CARBONO_FIELDS
+    popupFields: POPUP_OPORTUNIDAD_FIELDS
   });
 
-  // 3) PÉRDIDAS (popup con 2 campos renombrados)
+  // 3) PÉRDIDAS (popup 3 campos)
   addLayer({
     geojsonFile: 'perdida_bosque_con_carbono_2001_2024.geojson',
     sourceId: 'perdidas',
@@ -214,7 +243,7 @@ map.on('style.load', () => {
     type: 'fill',
     color: '#ff595e',
     opacity: 0.6,
-    popupFields: POPUP_CARBONO_FIELDS
+    popupFields: POPUP_PERDIDAS_FIELDS
   });
 
   // 4) LÍMITE URBANO (popup automático) ✅ ARRIBA
@@ -224,7 +253,7 @@ map.on('style.load', () => {
     layerId: 'limite_urbano_layer',
     type: 'line',
     color: '#ffd166',
-    width: 5,     // más fácil de clicar
+    width: 5,
     opacity: 1,
     popupFields: null
   });
