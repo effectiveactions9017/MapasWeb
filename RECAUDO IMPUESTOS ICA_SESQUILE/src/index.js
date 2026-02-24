@@ -6,6 +6,7 @@
 // ✅ Popup siempre visible (SMART pan automático, no se recorta)
 // ✅ FIX: ICA ya NO se ve tan oscuro
 // ✅ FIX: Jurídicos ya NO se ven transparentes (tarjeta con fondo)
+// ✅ FIX: Código predial ya NO se recorta (wrap inteligente en grid)
 // ❌ (ELIMINADO) Predios Contribuyentes Jurídicos (polígono)
 // =====================================================
 
@@ -148,6 +149,10 @@ function openLightbox(url) {
   document.body.appendChild(lb);
 }
 
+// ✅ IMPORTANTE: para que el onclick="" funcione siempre
+window.openLightbox = openLightbox;
+window.ensurePopupVisibleSmart = ensurePopupVisibleSmart;
+
 // =====================================================
 // ✅ HELPERS FOTO ICA (QField attachments)
 // =====================================================
@@ -171,6 +176,7 @@ function buildIcaPhotoUrl(props) {
 // =====================================================
 // POPUP ICA (imagenes_limpias) ✅ ORGANIZADO + FOTO AMPLIABLE
 // ✅ FIX: fondo menos oscuro (0.45)
+// ✅ FIX: Código predial NO se recorta (wrap)
 // =====================================================
 function popupHTMLICA(props, lngLat) {
   props = props || {};
@@ -196,6 +202,7 @@ function popupHTMLICA(props, lngLat) {
                loading="lazy"
                style="width:100%; height:320px; object-fit:cover; display:block; cursor:zoom-in;"
                onclick="openLightbox('${fotoUrl}')"
+               onload="ensurePopupVisibleSmart()"
                onerror="this.outerHTML='<div style=&quot;height:320px;display:flex;align-items:center;justify-content:center;opacity:.75;font-size:12px;padding:12px;text-align:center;&quot;>Sin foto disponible</div>';"
              />`
           : `<div style="height:320px;display:flex;align-items:center;justify-content:center;opacity:.75;font-size:12px;padding:12px;text-align:center;">
@@ -227,12 +234,15 @@ function popupHTMLICA(props, lngLat) {
         gap: 6px 10px;
         font-size:12px;
         line-height:1.25;
+        min-width:0;              /* ✅ clave para que 1fr pueda encoger */
       ">
         <div style="opacity:.75; font-weight:700;">Nombre</div>
-        <div style="font-weight:700;">${nombre}</div>
+        <div style="font-weight:700; min-width:0;">${nombre}</div>
 
         <div style="opacity:.75; font-weight:700;">Código predial</div>
-        <div>${codigo}</div>
+        <div style="min-width:0; overflow-wrap:anywhere; word-break:break-word;">
+          ${codigo}
+        </div>
       </div>
 
       ${fotoHTML}
@@ -253,6 +263,7 @@ function popupHTMLICA(props, lngLat) {
 // =====================================================
 // ✅ POPUP CONTRIBUYENTES PERSONA JURÍDICA (puntos)
 // ✅ FIX: tarjeta con fondo (ya NO transparente)
+// ✅ FIX: campos largos NO se recortan (wrap)
 // =====================================================
 function popupHTMLContribJuridica(props, lngLat) {
   props = props || {};
@@ -292,6 +303,10 @@ function popupHTMLContribJuridica(props, lngLat) {
 
   const estado = props["Estado"] ?? props["ESTADO"] ?? "N/A";
 
+  // helper inline para evitar recortes en valores largos
+  const wrap = (v) =>
+    `<div style="min-width:0; overflow-wrap:anywhere; word-break:break-word;">${(v ?? "N/A").toString()}</div>`;
+
   return `
     <div style="
       width: 340px;
@@ -314,24 +329,25 @@ function popupHTMLContribJuridica(props, lngLat) {
         gap: 6px 10px;
         font-size:12px;
         line-height:1.25;
+        min-width:0; /* ✅ */
       ">
         <div style="opacity:.75; font-weight:700;">Código predial</div>
-        <div>${(codigoPredial ?? "N/A").toString()}</div>
+        ${wrap(codigoPredial)}
 
         <div style="opacity:.75; font-weight:700;">Número documento</div>
-        <div>${(numDoc ?? "N/A").toString()}</div>
+        ${wrap(numDoc)}
 
         <div style="opacity:.75; font-weight:700;">Contribuyente</div>
-        <div>${(contribuyente ?? "N/A").toString()}</div>
+        ${wrap(contribuyente)}
 
         <div style="opacity:.75; font-weight:700;">Naturaleza</div>
-        <div>${(naturaleza ?? "N/A").toString()}</div>
+        ${wrap(naturaleza)}
 
         <div style="opacity:.75; font-weight:700;">Razón social</div>
-        <div>${(razonSocial ?? "N/A").toString()}</div>
+        ${wrap(razonSocial)}
 
         <div style="opacity:.75; font-weight:700;">Estado</div>
-        <div>${(estado ?? "N/A").toString()}</div>
+        ${wrap(estado)}
       </div>
 
       <div style="margin-top:10px;">
@@ -555,7 +571,11 @@ const geocoder = new MapboxGeocoder({
     }
 
     // --- CONTRIBUYENTES PERSONA JURÍDICA (puntos) ---
-    if (CONTRIB_JURIDICA_DATA && Array.isArray(CONTRIB_JURIDICA_DATA.features) && results.length < 10) {
+    if (
+      CONTRIB_JURIDICA_DATA &&
+      Array.isArray(CONTRIB_JURIDICA_DATA.features) &&
+      results.length < 10
+    ) {
       for (const f of CONTRIB_JURIDICA_DATA.features) {
         const p = f.properties || {};
 
