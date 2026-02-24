@@ -39,15 +39,21 @@
       border:1px solid rgba(255,255,255,0.9);
     }
 
-    /* ✅ ICA (verde) */
+    /* ✅ Posibilidades de recaudo del ICA (verde) */
     .legend-color.ica-puntos{
       background:#00c853;
       border:1px solid rgba(255,255,255,0.9);
     }
 
-    /* ✅ Jurídicos (fucsia) */
-    .legend-color.juridicos{
+    /* ✅ Contribuyentes activos (morado: jurídica + natural) */
+    .legend-color.contribuyentes-activos{
       background:#ff00ff;
+      border:1px solid rgba(255,255,255,0.9);
+    }
+
+    /* ✅ Fachadas con letreros encontradas (azul) */
+    .legend-color.fachadas-letreros{
+      background:#00b0ff;
       border:1px solid rgba(255,255,255,0.9);
     }
 
@@ -109,13 +115,18 @@
       </li>
 
       <li>
-        <span class="legend-color juridicos"></span>
-        Contribuyentes Persona Jurídica
+        <span class="legend-color contribuyentes-activos"></span>
+        Contribuyentes activos
       </li>
 
       <li>
         <span class="legend-color ica-puntos"></span>
-        Unidades Productivas Identificadas
+        Posibilidades de recaudo del ICA
+      </li>
+
+      <li>
+        <span class="legend-color fachadas-letreros"></span>
+        Fachadas con letreros encontradas
       </li>
     </ul>
 
