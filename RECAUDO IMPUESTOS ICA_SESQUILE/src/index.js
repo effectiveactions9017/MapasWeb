@@ -1,6 +1,8 @@
 // =====================================================
 // ✅ Visor Predial + Recaudo impuesto ICA – Sesquilé
 // ✅ + Contribuyentes Persona Jurídica (puntos)
+// ✅ + Contribuyentes Persona Natural (puntos)  ✅ NUEVO
+// ✅ + Construcciones que coinciden (puntos)    ✅ NUEVO
 // ✅ + ICA muestra FOTO (campo FOTOS) en el popup
 // ✅ Popup ICA organizado + Foto ampliable (clic)
 // ✅ Popup siempre visible (SMART pan automático, no se recorta)
@@ -38,6 +40,8 @@ const popup = new mapboxgl.Popup({
 let PREDIOS_DATA = null; // (solo visual)
 let ICA_DATA = null;
 let CONTRIB_JURIDICA_DATA = null;
+let CONTRIB_NATURAL_DATA = null; // ✅ NUEVO
+let COINCIDEN_DATA = null; // ✅ NUEVO
 
 // =====================================================
 // HELPERS
@@ -234,7 +238,92 @@ function popupHTMLICA(props, lngLat) {
         gap: 6px 10px;
         font-size:12px;
         line-height:1.25;
-        min-width:0;              /* ✅ clave para que 1fr pueda encoger */
+        min-width:0;
+      ">
+        <div style="opacity:.75; font-weight:700;">Nombre</div>
+        <div style="font-weight:700; min-width:0;">${nombre}</div>
+
+        <div style="opacity:.75; font-weight:700;">Código predial</div>
+        <div style="min-width:0; overflow-wrap:anywhere; word-break:break-word;">
+          ${codigo}
+        </div>
+      </div>
+
+      ${fotoHTML}
+
+      <div style="margin-top:10px;">
+        <a href="${streetViewUrl(lngLat)}" target="_blank"
+           style="display:inline-block; padding:6px 10px; border-radius:6px;
+                  background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+          📷 Street View
+        </a>
+      </div>
+
+      <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
+    </div>
+  `;
+}
+
+// =====================================================
+// ✅ POPUP CONSTRUCCIONES QUE COINCIDEN (puntos) — ✅ NUEVO
+// (mismos atributos/foto que ICA)
+// =====================================================
+function popupHTMLCoinciden(props, lngLat) {
+  props = props || {};
+
+  const nombre = (props.NOMBRE ?? "N/A").toString().trim() || "N/A";
+  const codigo = (props.codigo ?? "N/A").toString().trim() || "N/A";
+  const fotoUrl = buildIcaPhotoUrl(props);
+
+  const fotoHTML = `
+    <div style="
+      margin-top:10px;
+      border-radius:14px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.06);
+    ">
+      ${
+        fotoUrl
+          ? `<img
+               src="${fotoUrl}"
+               alt="Foto"
+               loading="lazy"
+               style="width:100%; height:320px; object-fit:cover; display:block; cursor:zoom-in;"
+               onclick="openLightbox('${fotoUrl}')"
+               onload="ensurePopupVisibleSmart()"
+               onerror="this.outerHTML='<div style=&quot;height:320px;display:flex;align-items:center;justify-content:center;opacity:.75;font-size:12px;padding:12px;text-align:center;&quot;>Sin foto disponible</div>';"
+             />`
+          : `<div style="height:320px;display:flex;align-items:center;justify-content:center;opacity:.75;font-size:12px;padding:12px;text-align:center;">
+               Sin foto disponible
+             </div>`
+      }
+    </div>
+  `;
+
+  return `
+    <div style="
+      width: 340px;
+      max-width: 340px;
+      padding: 12px;
+      box-sizing: border-box;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(6px);
+      color:#fff;
+    ">
+      <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
+        Construcciones que coinciden
+      </div>
+
+      <div style="
+        display:grid;
+        grid-template-columns: 120px 1fr;
+        gap: 6px 10px;
+        font-size:12px;
+        line-height:1.25;
+        min-width:0;
       ">
         <div style="opacity:.75; font-weight:700;">Nombre</div>
         <div style="font-weight:700; min-width:0;">${nombre}</div>
@@ -303,7 +392,6 @@ function popupHTMLContribJuridica(props, lngLat) {
 
   const estado = props["Estado"] ?? props["ESTADO"] ?? "N/A";
 
-  // helper inline para evitar recortes en valores largos
   const wrap = (v) =>
     `<div style="min-width:0; overflow-wrap:anywhere; word-break:break-word;">${(v ?? "N/A").toString()}</div>`;
 
@@ -329,7 +417,7 @@ function popupHTMLContribJuridica(props, lngLat) {
         gap: 6px 10px;
         font-size:12px;
         line-height:1.25;
-        min-width:0; /* ✅ */
+        min-width:0;
       ">
         <div style="opacity:.75; font-weight:700;">Código predial</div>
         ${wrap(codigoPredial)}
@@ -361,6 +449,12 @@ function popupHTMLContribJuridica(props, lngLat) {
       <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
     </div>
   `;
+}
+
+// ✅ Popup NATURAL = misma tarjeta de jurídica pero con título diferente
+function popupHTMLContribNatural(props, lngLat) {
+  const html = popupHTMLContribJuridica(props, lngLat);
+  return html.replace("Contribuyentes persona jurídica", "Contribuyentes persona natural");
 }
 
 // =====================================================
@@ -464,6 +558,81 @@ function addICALayer() {
 }
 
 // =====================================================
+// ✅ CONSTRUCCIONES QUE COINCIDEN (PUNTOS) — ✅ NUEVO
+// =====================================================
+function addCoincidenLayer() {
+  fetch("../src/data/Construcciones_que_coinciden.geojson")
+    .then((r) => r.json())
+    .then((data) => {
+      COINCIDEN_DATA = data;
+
+      if (map.getSource("coinciden_points")) map.getSource("coinciden_points").setData(data);
+      else map.addSource("coinciden_points", { type: "geojson", data });
+
+      if (!map.getLayer("coinciden_points_layer")) {
+        map.addLayer({
+          id: "coinciden_points_layer",
+          type: "circle",
+          source: "coinciden_points",
+          paint: {
+            "circle-radius": 6,
+            "circle-color": "#00b0ff", // ✅ azul
+            "circle-stroke-width": 1.5,
+            "circle-stroke-color": "#ffffff",
+            "circle-opacity": 0.95,
+          },
+        });
+      }
+
+      if (!map.getSource("highlight_coinciden")) {
+        map.addSource("highlight_coinciden", {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+      }
+      if (!map.getLayer("highlight_coinciden_circle")) {
+        map.addLayer({
+          id: "highlight_coinciden_circle",
+          type: "circle",
+          source: "highlight_coinciden",
+          paint: {
+            "circle-radius": 11,
+            "circle-color": "#ffff00",
+            "circle-opacity": 0.35,
+            "circle-stroke-width": 4,
+            "circle-stroke-color": "#ffff00",
+          },
+        });
+      }
+
+      safeOff("mouseenter", "coinciden_points_layer");
+      safeOff("mouseleave", "coinciden_points_layer");
+      safeOff("click", "coinciden_points_layer");
+
+      map.on("mouseenter", "coinciden_points_layer", () => (map.getCanvas().style.cursor = "pointer"));
+      map.on("mouseleave", "coinciden_points_layer", () => (map.getCanvas().style.cursor = ""));
+
+      map.on("click", "coinciden_points_layer", (e) => {
+        const f = e.features && e.features[0];
+        if (!f) return;
+
+        const lngLat = getPointLngLat(f);
+
+        const hs = map.getSource("highlight_coinciden");
+        if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
+
+        popup
+          .setLngLat(lngLat)
+          .setHTML(popupHTMLCoinciden(f.properties || {}, lngLat))
+          .addTo(map);
+
+        ensurePopupVisibleSmart();
+      });
+    })
+    .catch((err) => console.error("Error cargando construcciones que coinciden:", err));
+}
+
+// =====================================================
 // ✅ CONTRIBUYENTES PERSONA JURÍDICA (PUNTOS) — ✅ FUCSIA
 // =====================================================
 function addContribJuridicaLayer() {
@@ -527,7 +696,11 @@ function addContribJuridicaLayer() {
         const hs = map.getSource("highlight_contrib_juridica");
         if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
 
-        popup.setLngLat(lngLat).setHTML(popupHTMLContribJuridica(f.properties || {}, lngLat)).addTo(map);
+        popup
+          .setLngLat(lngLat)
+          .setHTML(popupHTMLContribJuridica(f.properties || {}, lngLat))
+          .addTo(map);
+
         ensurePopupVisibleSmart();
       });
     })
@@ -535,14 +708,90 @@ function addContribJuridicaLayer() {
 }
 
 // =====================================================
-// BUSCADOR LOCAL (ICA + CONTRIBUYENTE JURÍDICO PUNTOS) — ❌ sin polígonos
+// ✅ CONTRIBUYENTES PERSONA NATURAL (PUNTOS) — ✅ NUEVO
+// (mismos atributos que jurídica)
+// =====================================================
+function addContribNaturalLayer() {
+  fetch("../src/data/Contribuyentes_Persona_Natural.geojson")
+    .then((r) => r.json())
+    .then((data) => {
+      CONTRIB_NATURAL_DATA = data;
+
+      if (map.getSource("contrib_natural")) map.getSource("contrib_natural").setData(data);
+      else map.addSource("contrib_natural", { type: "geojson", data });
+
+      if (!map.getLayer("contrib_natural_layer")) {
+        map.addLayer({
+          id: "contrib_natural_layer",
+          type: "circle",
+          source: "contrib_natural",
+          paint: {
+            "circle-radius": 6,
+            "circle-color": "#00e5ff", // ✅ celeste
+            "circle-stroke-width": 1.5,
+            "circle-stroke-color": "#ffffff",
+            "circle-opacity": 0.95,
+          },
+        });
+      }
+
+      if (!map.getSource("highlight_contrib_natural")) {
+        map.addSource("highlight_contrib_natural", {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+      }
+      if (!map.getLayer("highlight_contrib_natural_circle")) {
+        map.addLayer({
+          id: "highlight_contrib_natural_circle",
+          type: "circle",
+          source: "highlight_contrib_natural",
+          paint: {
+            "circle-radius": 11,
+            "circle-color": "#ffff00",
+            "circle-opacity": 0.35,
+            "circle-stroke-width": 4,
+            "circle-stroke-color": "#ffff00",
+          },
+        });
+      }
+
+      safeOff("mouseenter", "contrib_natural_layer");
+      safeOff("mouseleave", "contrib_natural_layer");
+      safeOff("click", "contrib_natural_layer");
+
+      map.on("mouseenter", "contrib_natural_layer", () => (map.getCanvas().style.cursor = "pointer"));
+      map.on("mouseleave", "contrib_natural_layer", () => (map.getCanvas().style.cursor = ""));
+
+      map.on("click", "contrib_natural_layer", (e) => {
+        const f = e.features && e.features[0];
+        if (!f) return;
+
+        const lngLat = getPointLngLat(f);
+
+        const hs = map.getSource("highlight_contrib_natural");
+        if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
+
+        popup
+          .setLngLat(lngLat)
+          .setHTML(popupHTMLContribNatural(f.properties || {}, lngLat))
+          .addTo(map);
+
+        ensurePopupVisibleSmart();
+      });
+    })
+    .catch((err) => console.error("Error cargando contribuyentes natural:", err));
+}
+
+// =====================================================
+// BUSCADOR LOCAL (ICA + COINCIDEN + JURÍDICO + NATURAL) — ❌ sin polígonos
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
   mapboxgl,
   marker: false,
   localGeocoderOnly: true,
-  placeholder: "Buscar ICA / contribuyente jurídico",
+  placeholder: "Buscar ICA / coinciden / contribuyentes",
   localGeocoder: (q) => {
     const query = norm(q);
     if (!query) return [];
@@ -570,6 +819,42 @@ const geocoder = new MapboxGeocoder({
       }
     }
 
+    // --- CONSTRUCCIONES QUE COINCIDEN ---
+    if (COINCIDEN_DATA && Array.isArray(COINCIDEN_DATA.features) && results.length < 10) {
+      for (const f of COINCIDEN_DATA.features) {
+        const p = f.properties || {};
+        const txt = norm(p.NOMBRE);
+        if (txt && txt.includes(query)) {
+          const center = getPointLngLat(f);
+          results.push({
+            type: "Feature",
+            geometry: f.geometry,
+            center,
+            properties: { ...p, __tipo: "COINCIDEN" },
+            place_name: `Coinciden: ${(p.NOMBRE ?? "N/A").toString()}`,
+            text: (p.NOMBRE ?? "Coinciden").toString(),
+            place_type: ["place"],
+          });
+          if (results.length >= 10) break;
+        }
+      }
+    }
+
+    // helper búsqueda contribuyentes (jurídico/natural)
+    function matchContrib(p) {
+      const cod = norm(p["Código predial"] ?? p.CODIGO_PREDIAL ?? p.codigo_predial ?? p.codigo);
+      const doc = norm(p["Número documento"] ?? p.NUMERO_DOCUMENTO ?? p["No Documento"] ?? p.NO_DOCUMENTO);
+      const razon = norm(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Razon Social"]);
+      const contrib = norm(p["Contribuyente"] ?? p.NOMBRE ?? p.Nombre ?? p.RAZON_SOCIAL);
+
+      return (
+        (cod && cod.includes(query)) ||
+        (doc && doc.includes(query)) ||
+        (razon && razon.includes(query)) ||
+        (contrib && contrib.includes(query))
+      );
+    }
+
     // --- CONTRIBUYENTES PERSONA JURÍDICA (puntos) ---
     if (
       CONTRIB_JURIDICA_DATA &&
@@ -578,19 +863,7 @@ const geocoder = new MapboxGeocoder({
     ) {
       for (const f of CONTRIB_JURIDICA_DATA.features) {
         const p = f.properties || {};
-
-        const cod = norm(p["Código predial"] ?? p.CODIGO_PREDIAL ?? p.codigo_predial ?? p.codigo);
-        const doc = norm(p["Número documento"] ?? p.NUMERO_DOCUMENTO ?? p["No Documento"] ?? p.NO_DOCUMENTO);
-        const razon = norm(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Razon Social"]);
-        const contrib = norm(p["Contribuyente"] ?? p.NOMBRE ?? p.Nombre ?? p.RAZON_SOCIAL);
-
-        const ok =
-          (cod && cod.includes(query)) ||
-          (doc && doc.includes(query)) ||
-          (razon && razon.includes(query)) ||
-          (contrib && contrib.includes(query));
-
-        if (!ok) continue;
+        if (!matchContrib(p)) continue;
 
         const center = getPointLngLat(f);
 
@@ -601,6 +874,32 @@ const geocoder = new MapboxGeocoder({
           properties: { ...p, __tipo: "CONTRIB_JURIDICA" },
           place_name: `Jurídico: ${(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A").toString()}`,
           text: (p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "Jurídico").toString(),
+          place_type: ["place"],
+        });
+
+        if (results.length >= 10) break;
+      }
+    }
+
+    // --- CONTRIBUYENTES PERSONA NATURAL (puntos) ---
+    if (
+      CONTRIB_NATURAL_DATA &&
+      Array.isArray(CONTRIB_NATURAL_DATA.features) &&
+      results.length < 10
+    ) {
+      for (const f of CONTRIB_NATURAL_DATA.features) {
+        const p = f.properties || {};
+        if (!matchContrib(p)) continue;
+
+        const center = getPointLngLat(f);
+
+        results.push({
+          type: "Feature",
+          geometry: f.geometry,
+          center,
+          properties: { ...p, __tipo: "CONTRIB_NATURAL" },
+          place_name: `Natural: ${(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A").toString()}`,
+          text: (p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "Natural").toString(),
           place_type: ["place"],
         });
 
@@ -634,6 +933,19 @@ geocoder.on("result", (e) => {
     return;
   }
 
+  if (tipo === "COINCIDEN") {
+    const lngLat = r.center || getPointLngLat(r);
+
+    const hs = map.getSource("highlight_coinciden");
+    if (hs) hs.setData({ type: "FeatureCollection", features: [r] });
+
+    map.flyTo({ center: lngLat, zoom: 18 });
+
+    popup.setLngLat(lngLat).setHTML(popupHTMLCoinciden(r.properties || {}, lngLat)).addTo(map);
+    ensurePopupVisibleSmart();
+    return;
+  }
+
   if (tipo === "CONTRIB_JURIDICA") {
     const lngLat = r.center || getPointLngLat(r);
 
@@ -642,7 +954,28 @@ geocoder.on("result", (e) => {
 
     map.flyTo({ center: lngLat, zoom: 18 });
 
-    popup.setLngLat(lngLat).setHTML(popupHTMLContribJuridica(r.properties || {}, lngLat)).addTo(map);
+    popup
+      .setLngLat(lngLat)
+      .setHTML(popupHTMLContribJuridica(r.properties || {}, lngLat))
+      .addTo(map);
+
+    ensurePopupVisibleSmart();
+    return;
+  }
+
+  if (tipo === "CONTRIB_NATURAL") {
+    const lngLat = r.center || getPointLngLat(r);
+
+    const hs = map.getSource("highlight_contrib_natural");
+    if (hs) hs.setData({ type: "FeatureCollection", features: [r] });
+
+    map.flyTo({ center: lngLat, zoom: 18 });
+
+    popup
+      .setLngLat(lngLat)
+      .setHTML(popupHTMLContribNatural(r.properties || {}, lngLat))
+      .addTo(map);
+
     ensurePopupVisibleSmart();
     return;
   }
@@ -654,7 +987,9 @@ geocoder.on("result", (e) => {
 map.on("style.load", () => {
   addPrediosBase();
   addICALayer();
+  addCoincidenLayer(); // ✅ NUEVO
   addContribJuridicaLayer();
+  addContribNaturalLayer(); // ✅ NUEVO
 
   setTimeout(() => {
     try {
@@ -663,11 +998,17 @@ map.on("style.load", () => {
 
       // puntos arriba
       if (map.getLayer("ica_points_layer")) map.moveLayer("ica_points_layer");
+      if (map.getLayer("coinciden_points_layer")) map.moveLayer("coinciden_points_layer");
       if (map.getLayer("contrib_juridica_layer")) map.moveLayer("contrib_juridica_layer");
+      if (map.getLayer("contrib_natural_layer")) map.moveLayer("contrib_natural_layer");
 
       // highlights arriba
       if (map.getLayer("highlight_ica_circle")) map.moveLayer("highlight_ica_circle");
-      if (map.getLayer("highlight_contrib_juridica_circle")) map.moveLayer("highlight_contrib_juridica_circle");
+      if (map.getLayer("highlight_coinciden_circle")) map.moveLayer("highlight_coinciden_circle");
+      if (map.getLayer("highlight_contrib_juridica_circle"))
+        map.moveLayer("highlight_contrib_juridica_circle");
+      if (map.getLayer("highlight_contrib_natural_circle"))
+        map.moveLayer("highlight_contrib_natural_circle");
     } catch (e) {}
   }, 450);
 });
