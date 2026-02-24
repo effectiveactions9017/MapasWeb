@@ -1,13 +1,13 @@
 // =====================================================
 // ✅ Visor Predial + Recaudo impuesto ICA – Sesquilé
-// ✅ + Contribuyentes Persona Jurídica (puntos)
-// ✅ + Contribuyentes Persona Natural (puntos)  ✅ NUEVO
-// ✅ + Construcciones que coinciden (puntos)    ✅ NUEVO
+// ✅ + Contribuyentes Activos (Jurídica + Natural) (puntos) ✅ MISMO COLOR + MISMO NOMBRE
+// ✅ + Fachadas con letreros encontradas (puntos)           ✅ NUEVO (antes: construcciones que coinciden)
+// ✅ + Posibilidades de recaudo del ICA (puntos)            ✅ NUEVO NOMBRE (antes: unidades productivas identificadas)
 // ✅ + ICA muestra FOTO (campo FOTOS) en el popup
-// ✅ Popup ICA organizado + Foto ampliable (clic)
+// ✅ Popup organizado + Foto ampliable (clic)
 // ✅ Popup siempre visible (SMART pan automático, no se recorta)
 // ✅ FIX: ICA ya NO se ve tan oscuro
-// ✅ FIX: Jurídicos ya NO se ven transparentes (tarjeta con fondo)
+// ✅ FIX: Activos ya NO se ven transparentes (tarjeta con fondo)
 // ✅ FIX: Código predial ya NO se recorta (wrap inteligente en grid)
 // ❌ (ELIMINADO) Predios Contribuyentes Jurídicos (polígono)
 // =====================================================
@@ -40,8 +40,8 @@ const popup = new mapboxgl.Popup({
 let PREDIOS_DATA = null; // (solo visual)
 let ICA_DATA = null;
 let CONTRIB_JURIDICA_DATA = null;
-let CONTRIB_NATURAL_DATA = null; // ✅ NUEVO
-let COINCIDEN_DATA = null; // ✅ NUEVO
+let CONTRIB_NATURAL_DATA = null;
+let COINCIDEN_DATA = null;
 
 // =====================================================
 // HELPERS
@@ -179,8 +179,7 @@ function buildIcaPhotoUrl(props) {
 
 // =====================================================
 // POPUP ICA (imagenes_limpias) ✅ ORGANIZADO + FOTO AMPLIABLE
-// ✅ FIX: fondo menos oscuro (0.45)
-// ✅ FIX: Código predial NO se recorta (wrap)
+// ✅ CAMBIO NOMBRE: "Posibilidades de recaudo del ICA"
 // =====================================================
 function popupHTMLICA(props, lngLat) {
   props = props || {};
@@ -229,7 +228,7 @@ function popupHTMLICA(props, lngLat) {
       color:#fff;
     ">
       <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
-        Unidades Productivas Identificadas
+        Posibilidades de recaudo del ICA
       </div>
 
       <div style="
@@ -265,7 +264,7 @@ function popupHTMLICA(props, lngLat) {
 }
 
 // =====================================================
-// ✅ POPUP CONSTRUCCIONES QUE COINCIDEN (puntos) — ✅ NUEVO
+// ✅ POPUP "Fachadas con letreros encontradas" (antes: construcciones que coinciden)
 // (mismos atributos/foto que ICA)
 // =====================================================
 function popupHTMLCoinciden(props, lngLat) {
@@ -314,7 +313,7 @@ function popupHTMLCoinciden(props, lngLat) {
       color:#fff;
     ">
       <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
-        Construcciones que coinciden
+        Fachadas con letreros encontradas
       </div>
 
       <div style="
@@ -350,9 +349,10 @@ function popupHTMLCoinciden(props, lngLat) {
 }
 
 // =====================================================
-// ✅ POPUP CONTRIBUYENTES PERSONA JURÍDICA (puntos)
+// ✅ POPUP CONTRIBUYENTES ACTIVOS (Jurídica + Natural)
+// ✅ MISMO TITULO: "Contribuyentes activos"
 // =====================================================
-function popupHTMLContribJuridica(props, lngLat) {
+function popupHTMLContribActivos(props, lngLat) {
   props = props || {};
 
   const codigoPredial =
@@ -406,7 +406,7 @@ function popupHTMLContribJuridica(props, lngLat) {
       color:#fff;
     ">
       <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
-        Contribuyentes persona jurídica
+        Contribuyentes activos
       </div>
 
       <div style="
@@ -447,11 +447,6 @@ function popupHTMLContribJuridica(props, lngLat) {
       <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
     </div>
   `;
-}
-
-function popupHTMLContribNatural(props, lngLat) {
-  const html = popupHTMLContribJuridica(props, lngLat);
-  return html.replace("Contribuyentes persona jurídica", "Contribuyentes persona natural");
 }
 
 // =====================================================
@@ -555,7 +550,7 @@ function addICALayer() {
 }
 
 // =====================================================
-// ✅ CONSTRUCCIONES QUE COINCIDEN (PUNTOS) — ✅ NUEVO
+// ✅ "Fachadas con letreros encontradas" (PUNTOS) — ✅ AZUL
 // ✅ FIX: nombre real del archivo en tu repo: "Contrucciones_que_coinciden.geojson"
 // =====================================================
 function addCoincidenLayer() {
@@ -627,11 +622,11 @@ function addCoincidenLayer() {
         ensurePopupVisibleSmart();
       });
     })
-    .catch((err) => console.error("Error cargando construcciones que coinciden:", err));
+    .catch((err) => console.error("Error cargando fachadas con letreros:", err));
 }
 
 // =====================================================
-// ✅ CONTRIBUYENTES PERSONA JURÍDICA (PUNTOS) — ✅ FUCSIA
+// ✅ CONTRIBUYENTES PERSONA JURÍDICA (PUNTOS) — ✅ MORADO
 // =====================================================
 function addContribJuridicaLayer() {
   fetch("../src/data/Contribuyentes_Persona_Juridica.geojson")
@@ -696,7 +691,7 @@ function addContribJuridicaLayer() {
 
         popup
           .setLngLat(lngLat)
-          .setHTML(popupHTMLContribJuridica(f.properties || {}, lngLat))
+          .setHTML(popupHTMLContribActivos(f.properties || {}, lngLat))
           .addTo(map);
 
         ensurePopupVisibleSmart();
@@ -706,7 +701,7 @@ function addContribJuridicaLayer() {
 }
 
 // =====================================================
-// ✅ CONTRIBUYENTES PERSONA NATURAL (PUNTOS) — ✅ NUEVO
+// ✅ CONTRIBUYENTES PERSONA NATURAL (PUNTOS) — ✅ MISMO MORADO + MISMO POPUP
 // =====================================================
 function addContribNaturalLayer() {
   fetch("../src/data/Contribuyentes_Persona_Natural.geojson")
@@ -724,7 +719,7 @@ function addContribNaturalLayer() {
           source: "contrib_natural",
           paint: {
             "circle-radius": 6,
-            "circle-color": "#00e5ff",
+            "circle-color": "#ff00ff", // ✅ mismo color que jurídica
             "circle-stroke-width": 1.5,
             "circle-stroke-color": "#ffffff",
             "circle-opacity": 0.95,
@@ -771,7 +766,7 @@ function addContribNaturalLayer() {
 
         popup
           .setLngLat(lngLat)
-          .setHTML(popupHTMLContribNatural(f.properties || {}, lngLat))
+          .setHTML(popupHTMLContribActivos(f.properties || {}, lngLat))
           .addTo(map);
 
         ensurePopupVisibleSmart();
@@ -781,21 +776,21 @@ function addContribNaturalLayer() {
 }
 
 // =====================================================
-// BUSCADOR LOCAL (ICA + COINCIDEN + JURÍDICO + NATURAL) — ❌ sin polígonos
+// BUSCADOR LOCAL (ICA + Fachadas + Contribuyentes activos)
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
   mapboxgl,
   marker: false,
   localGeocoderOnly: true,
-  placeholder: "Buscar ICA / coinciden / contribuyentes",
+  placeholder: "Buscar ICA / fachadas / contribuyentes activos",
   localGeocoder: (q) => {
     const query = norm(q);
     if (!query) return [];
 
     const results = [];
 
-    // --- ICA ---
+    // --- ICA (Posibilidades) ---
     if (ICA_DATA && Array.isArray(ICA_DATA.features)) {
       for (const f of ICA_DATA.features) {
         const p = f.properties || {};
@@ -807,8 +802,8 @@ const geocoder = new MapboxGeocoder({
             geometry: f.geometry,
             center,
             properties: { ...p, __tipo: "ICA" },
-            place_name: `ICA: ${(p.NOMBRE ?? "N/A").toString()}`,
-            text: (p.NOMBRE ?? "ICA").toString(),
+            place_name: `Posibilidades ICA: ${(p.NOMBRE ?? "N/A").toString()}`,
+            text: (p.NOMBRE ?? "Posibilidades ICA").toString(),
             place_type: ["place"],
           });
           if (results.length >= 10) break;
@@ -816,7 +811,7 @@ const geocoder = new MapboxGeocoder({
       }
     }
 
-    // --- CONSTRUCCIONES QUE COINCIDEN ---
+    // --- Fachadas con letreros encontradas ---
     if (COINCIDEN_DATA && Array.isArray(COINCIDEN_DATA.features) && results.length < 10) {
       for (const f of COINCIDEN_DATA.features) {
         const p = f.properties || {};
@@ -828,8 +823,8 @@ const geocoder = new MapboxGeocoder({
             geometry: f.geometry,
             center,
             properties: { ...p, __tipo: "COINCIDEN" },
-            place_name: `Coinciden: ${(p.NOMBRE ?? "N/A").toString()}`,
-            text: (p.NOMBRE ?? "Coinciden").toString(),
+            place_name: `Fachadas: ${(p.NOMBRE ?? "N/A").toString()}`,
+            text: (p.NOMBRE ?? "Fachadas").toString(),
             place_type: ["place"],
           });
           if (results.length >= 10) break;
@@ -851,25 +846,20 @@ const geocoder = new MapboxGeocoder({
       );
     }
 
-    // --- JURÍDICA ---
-    if (
-      CONTRIB_JURIDICA_DATA &&
-      Array.isArray(CONTRIB_JURIDICA_DATA.features) &&
-      results.length < 10
-    ) {
+    // --- Contribuyentes activos (Jurídica) ---
+    if (CONTRIB_JURIDICA_DATA && Array.isArray(CONTRIB_JURIDICA_DATA.features) && results.length < 10) {
       for (const f of CONTRIB_JURIDICA_DATA.features) {
         const p = f.properties || {};
         if (!matchContrib(p)) continue;
 
         const center = getPointLngLat(f);
-
         results.push({
           type: "Feature",
           geometry: f.geometry,
           center,
-          properties: { ...p, __tipo: "CONTRIB_JURIDICA" },
-          place_name: `Jurídico: ${(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A").toString()}`,
-          text: (p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "Jurídico").toString(),
+          properties: { ...p, __tipo: "CONTRIB_ACTIVOS" },
+          place_name: `Contribuyentes activos: ${(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A").toString()}`,
+          text: (p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "Activos").toString(),
           place_type: ["place"],
         });
 
@@ -877,25 +867,20 @@ const geocoder = new MapboxGeocoder({
       }
     }
 
-    // --- NATURAL ---
-    if (
-      CONTRIB_NATURAL_DATA &&
-      Array.isArray(CONTRIB_NATURAL_DATA.features) &&
-      results.length < 10
-    ) {
+    // --- Contribuyentes activos (Natural) ---
+    if (CONTRIB_NATURAL_DATA && Array.isArray(CONTRIB_NATURAL_DATA.features) && results.length < 10) {
       for (const f of CONTRIB_NATURAL_DATA.features) {
         const p = f.properties || {};
         if (!matchContrib(p)) continue;
 
         const center = getPointLngLat(f);
-
         results.push({
           type: "Feature",
           geometry: f.geometry,
           center,
-          properties: { ...p, __tipo: "CONTRIB_NATURAL" },
-          place_name: `Natural: ${(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A").toString()}`,
-          text: (p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "Natural").toString(),
+          properties: { ...p, __tipo: "CONTRIB_ACTIVOS" },
+          place_name: `Contribuyentes activos: ${(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A").toString()}`,
+          text: (p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "Activos").toString(),
           place_type: ["place"],
         });
 
@@ -941,28 +926,23 @@ geocoder.on("result", (e) => {
     return;
   }
 
-  if (tipo === "CONTRIB_JURIDICA") {
+  if (tipo === "CONTRIB_ACTIVOS") {
     const lngLat = r.center || getPointLngLat(r);
 
-    const hs = map.getSource("highlight_contrib_juridica");
-    if (hs) hs.setData({ type: "FeatureCollection", features: [r] });
+    // 🔥 si viene de jurídica, prende ese highlight; si viene de natural, prende el de natural.
+    // Como ambos tienen __tipo = CONTRIB_ACTIVOS, escogemos por existencia de campos:
+    const isNatural = !!(r.properties && (r.properties["Contribuyente"] || r.properties["Razón social"] || r.properties.RAZON_SOCIAL));
+
+    // Intento de highlight en ambos (sin romper si falta)
+    const hsJ = map.getSource("highlight_contrib_juridica");
+    if (hsJ) hsJ.setData({ type: "FeatureCollection", features: [r] });
+
+    const hsN = map.getSource("highlight_contrib_natural");
+    if (hsN) hsN.setData({ type: "FeatureCollection", features: [r] });
 
     map.flyTo({ center: lngLat, zoom: 18 });
 
-    popup.setLngLat(lngLat).setHTML(popupHTMLContribJuridica(r.properties || {}, lngLat)).addTo(map);
-    ensurePopupVisibleSmart();
-    return;
-  }
-
-  if (tipo === "CONTRIB_NATURAL") {
-    const lngLat = r.center || getPointLngLat(r);
-
-    const hs = map.getSource("highlight_contrib_natural");
-    if (hs) hs.setData({ type: "FeatureCollection", features: [r] });
-
-    map.flyTo({ center: lngLat, zoom: 18 });
-
-    popup.setLngLat(lngLat).setHTML(popupHTMLContribNatural(r.properties || {}, lngLat)).addTo(map);
+    popup.setLngLat(lngLat).setHTML(popupHTMLContribActivos(r.properties || {}, lngLat)).addTo(map);
     ensurePopupVisibleSmart();
     return;
   }
@@ -973,10 +953,10 @@ geocoder.on("result", (e) => {
 // =====================================================
 map.on("style.load", () => {
   addPrediosBase();
-  addICALayer();
-  addCoincidenLayer();
-  addContribJuridicaLayer();
-  addContribNaturalLayer();
+  addICALayer();          // ✅ verde = Posibilidades ICA
+  addCoincidenLayer();    // ✅ azul  = Fachadas con letreros
+  addContribJuridicaLayer(); // ✅ morado = Activos (jurídica)
+  addContribNaturalLayer();  // ✅ morado = Activos (natural)
 
   setTimeout(() => {
     try {
