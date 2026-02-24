@@ -10,6 +10,7 @@
 // ✅ FIX: Activos ya NO se ven transparentes (tarjeta con fondo)
 // ✅ FIX: Código predial ya NO se recorta (wrap inteligente en grid)
 // ❌ (ELIMINADO) Predios Contribuyentes Jurídicos (polígono)
+// ✅ NUEVO: Leyenda con ON/OFF + orden fijo de capas
 // =====================================================
 
 mapboxgl.accessToken =
@@ -776,6 +777,111 @@ function addContribNaturalLayer() {
 }
 
 // =====================================================
+// ✅ LEYENDA (ON/OFF) + ORDEN FIJO DE CAPAS
+// =====================================================
+function setLayerVisible(layerId, visible) {
+  if (!map.getLayer(layerId)) return;
+  map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
+}
+
+function isLayerVisible(layerId) {
+  if (!map.getLayer(layerId)) return false;
+  const v = map.getLayoutProperty(layerId, "visibility");
+  return v !== "none";
+}
+
+// Orden fijo: Predios (abajo) -> Letreros -> Posible recaudo -> Contribuyentes (arriba) -> Highlights (arriba del todo)
+function applyFixedOrder() {
+  try {
+    if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
+    if (map.getLayer("coinciden_points_layer")) map.moveLayer("coinciden_points_layer");
+    if (map.getLayer("ica_points_layer")) map.moveLayer("ica_points_layer");
+    if (map.getLayer("contrib_juridica_layer")) map.moveLayer("contrib_juridica_layer");
+    if (map.getLayer("contrib_natural_layer")) map.moveLayer("contrib_natural_layer");
+
+    if (map.getLayer("highlight_ica_circle")) map.moveLayer("highlight_ica_circle");
+    if (map.getLayer("highlight_coinciden_circle")) map.moveLayer("highlight_coinciden_circle");
+    if (map.getLayer("highlight_contrib_juridica_circle"))
+      map.moveLayer("highlight_contrib_juridica_circle");
+    if (map.getLayer("highlight_contrib_natural_circle"))
+      map.moveLayer("highlight_contrib_natural_circle");
+  } catch (e) {}
+}
+
+function buildLegend() {
+  const el = document.getElementById("ea-legend");
+  if (!el) return;
+
+  el.innerHTML = `
+    <div style="font-weight:900; font-size:13px; margin-bottom:8px;">Capas</div>
+
+    <div class="row">
+      <div class="left">
+        <span class="dot" style="background:#ffffff;"></span>
+        <span class="name">Predios</span>
+      </div>
+      <input id="tg_predios" type="checkbox" checked />
+    </div>
+
+    <div class="row">
+      <div class="left">
+        <span class="dot" style="background:#00b0ff;"></span>
+        <span class="name">Letreros encontrados</span>
+      </div>
+      <input id="tg_letreros" type="checkbox" checked />
+    </div>
+
+    <div class="row">
+      <div class="left">
+        <span class="dot" style="background:#00c853;"></span>
+        <span class="name">Posible recaudo ICA</span>
+      </div>
+      <input id="tg_recaudo" type="checkbox" checked />
+    </div>
+
+    <div class="row">
+      <div class="left">
+        <span class="dot" style="background:#ff00ff;"></span>
+        <span class="name">Contribuyentes activos</span>
+      </div>
+      <input id="tg_contrib" type="checkbox" checked />
+    </div>
+  `;
+
+  const tg_predios = el.querySelector("#tg_predios");
+  const tg_letreros = el.querySelector("#tg_letreros");
+  const tg_recaudo = el.querySelector("#tg_recaudo");
+  const tg_contrib = el.querySelector("#tg_contrib");
+
+  tg_predios.checked = isLayerVisible("predios_base_outline");
+  tg_letreros.checked = isLayerVisible("coinciden_points_layer");
+  tg_recaudo.checked = isLayerVisible("ica_points_layer");
+  tg_contrib.checked =
+    isLayerVisible("contrib_juridica_layer") || isLayerVisible("contrib_natural_layer");
+
+  tg_predios.addEventListener("change", () => {
+    setLayerVisible("predios_base_outline", tg_predios.checked);
+    applyFixedOrder();
+  });
+
+  tg_letreros.addEventListener("change", () => {
+    setLayerVisible("coinciden_points_layer", tg_letreros.checked);
+    applyFixedOrder();
+  });
+
+  tg_recaudo.addEventListener("change", () => {
+    setLayerVisible("ica_points_layer", tg_recaudo.checked);
+    applyFixedOrder();
+  });
+
+  tg_contrib.addEventListener("change", () => {
+    setLayerVisible("contrib_juridica_layer", tg_contrib.checked);
+    setLayerVisible("contrib_natural_layer", tg_contrib.checked);
+    applyFixedOrder();
+  });
+}
+
+// =====================================================
 // BUSCADOR LOCAL (ICA + Fachadas + Contribuyentes activos)
 // =====================================================
 const geocoder = new MapboxGeocoder({
@@ -834,7 +940,9 @@ const geocoder = new MapboxGeocoder({
 
     function matchContrib(p) {
       const cod = norm(p["Código predial"] ?? p.CODIGO_PREDIAL ?? p.codigo_predial ?? p.codigo);
-      const doc = norm(p["Número documento"] ?? p.NUMERO_DOCUMENTO ?? p["No Documento"] ?? p.NO_DOCUMENTO);
+      const doc = norm(
+        p["Número documento"] ?? p.NUMERO_DOCUMENTO ?? p["No Documento"] ?? p.NO_DOCUMENTO
+      );
       const razon = norm(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Razon Social"]);
       const contrib = norm(p["Contribuyente"] ?? p.NOMBRE ?? p.Nombre ?? p.RAZON_SOCIAL);
 
@@ -858,7 +966,9 @@ const geocoder = new MapboxGeocoder({
           geometry: f.geometry,
           center,
           properties: { ...p, __tipo: "CONTRIB_ACTIVOS" },
-          place_name: `Contribuyentes activos: ${(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A").toString()}`,
+          place_name: `Contribuyentes activos: ${(
+            p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A"
+          ).toString()}`,
           text: (p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "Activos").toString(),
           place_type: ["place"],
         });
@@ -879,7 +989,9 @@ const geocoder = new MapboxGeocoder({
           geometry: f.geometry,
           center,
           properties: { ...p, __tipo: "CONTRIB_ACTIVOS" },
-          place_name: `Contribuyentes activos: ${(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A").toString()}`,
+          place_name: `Contribuyentes activos: ${(
+            p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A"
+          ).toString()}`,
           text: (p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "Activos").toString(),
           place_type: ["place"],
         });
@@ -929,11 +1041,6 @@ geocoder.on("result", (e) => {
   if (tipo === "CONTRIB_ACTIVOS") {
     const lngLat = r.center || getPointLngLat(r);
 
-    // 🔥 si viene de jurídica, prende ese highlight; si viene de natural, prende el de natural.
-    // Como ambos tienen __tipo = CONTRIB_ACTIVOS, escogemos por existencia de campos:
-    const isNatural = !!(r.properties && (r.properties["Contribuyente"] || r.properties["Razón social"] || r.properties.RAZON_SOCIAL));
-
-    // Intento de highlight en ambos (sin romper si falta)
     const hsJ = map.getSource("highlight_contrib_juridica");
     if (hsJ) hsJ.setData({ type: "FeatureCollection", features: [r] });
 
@@ -953,26 +1060,18 @@ geocoder.on("result", (e) => {
 // =====================================================
 map.on("style.load", () => {
   addPrediosBase();
-  addICALayer();          // ✅ verde = Posibilidades ICA
-  addCoincidenLayer();    // ✅ azul  = Fachadas con letreros
+  addICALayer();             // ✅ verde = Posibilidades ICA
+  addCoincidenLayer();       // ✅ azul  = Letreros encontrados
   addContribJuridicaLayer(); // ✅ morado = Activos (jurídica)
   addContribNaturalLayer();  // ✅ morado = Activos (natural)
 
   setTimeout(() => {
     try {
-      if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
+      // ✅ orden fijo
+      applyFixedOrder();
 
-      if (map.getLayer("ica_points_layer")) map.moveLayer("ica_points_layer");
-      if (map.getLayer("coinciden_points_layer")) map.moveLayer("coinciden_points_layer");
-      if (map.getLayer("contrib_juridica_layer")) map.moveLayer("contrib_juridica_layer");
-      if (map.getLayer("contrib_natural_layer")) map.moveLayer("contrib_natural_layer");
-
-      if (map.getLayer("highlight_ica_circle")) map.moveLayer("highlight_ica_circle");
-      if (map.getLayer("highlight_coinciden_circle")) map.moveLayer("highlight_coinciden_circle");
-      if (map.getLayer("highlight_contrib_juridica_circle"))
-        map.moveLayer("highlight_contrib_juridica_circle");
-      if (map.getLayer("highlight_contrib_natural_circle"))
-        map.moveLayer("highlight_contrib_natural_circle");
+      // ✅ construir leyenda cuando ya existan capas
+      buildLegend();
     } catch (e) {}
-  }, 450);
+  }, 650);
 });
