@@ -25,7 +25,7 @@ body {
   background-color: rgba(0, 0, 0, 0.7);
   padding: 15px;
   border-radius: 8px;
-  width: 200px;
+  width: 260px; /* ✅ antes 200px, ahora cabe DESTINO */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
   color: white;
 }
@@ -65,7 +65,7 @@ body {
 }
 
 /* =========================
-   COLORES LEYENDA
+   COLORES LEYENDA (FIJA)
    ========================= */
 .legend-color.predios-municipales {
   background-color: #2ec4b6;
@@ -73,6 +73,99 @@ body {
 
 .legend-color.predio-seleccionado {
   background-color: #ffff00;
+}
+
+/* =========================
+   ✅ DESTINO (R1) - LEYENDA DINÁMICA
+   ========================= */
+
+/* Contenedor donde el JS inyecta los items */
+#destino-legend-list {
+  max-height: 220px;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+/* Scroll bonito (Chrome/Edge) */
+#destino-legend-list::-webkit-scrollbar {
+  width: 6px;
+}
+#destino-legend-list::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.08);
+  border-radius: 8px;
+}
+#destino-legend-list::-webkit-scrollbar-thumb {
+  background: rgba(0,188,212,0.45);
+  border-radius: 8px;
+}
+#destino-legend-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,188,212,0.7);
+}
+
+/* Label de cada opción destino */
+.destino-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+/* cuadrito de color (swatch) */
+.destino-swatch {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  min-height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.35);
+}
+
+/* checkbox */
+.destino-item input[type="checkbox"] {
+  transform: scale(1.05);
+  cursor: pointer;
+}
+
+/* Botones Todos/Ninguno */
+#destino-all,
+#destino-none {
+  background: #00bcd4;
+  color: #000;
+  font-weight: 800;
+  border: 0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+#destino-all:hover,
+#destino-none:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+#destino-all:active,
+#destino-none:active {
+  transform: translateY(0px);
+}
+
+/* Separador */
+.legend-divider {
+  margin: 10px 0;
+  height: 1px;
+  background: rgba(255,255,255,0.2);
+}
+
+/* Subtítulo */
+.legend-subtitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 8px;
 }
 
 /* =========================
@@ -109,7 +202,7 @@ body {
   background-color: rgba(0, 0, 0, 0.8);
   color: #fff;
   border-radius: 8px;
-  max-width: 250px;
+  max-width: 260px; /* ✅ un poquito más ancho */
 }
 
 .mapboxgl-popup-content a {
@@ -147,4 +240,24 @@ body {
    ========================= */
 .mapboxgl-ctrl-geocoder {
   width: 300px !important;
+}
+
+/* =========================
+   RESPONSIVE (móvil)
+   ========================= */
+@media (max-width: 600px) {
+  .legend-container {
+    width: 220px;
+    bottom: 15px;
+    right: 10px;
+    padding: 12px;
+  }
+
+  .mapboxgl-ctrl-geocoder {
+    width: 240px !important;
+  }
+
+  #destino-legend-list {
+    max-height: 180px;
+  }
 }
