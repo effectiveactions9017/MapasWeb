@@ -44,47 +44,21 @@
   <div id="map"></div>
 
   <!-- =========================
-       LEYENDA
+       LEYENDA (SOLO DESTINO)
        ========================= -->
   <div class="legend-container">
-    <div class="legend-title">
-      Predial<br>Sesquilé
-    </div>
 
-    <!-- Leyenda fija (la que ya tenías) -->
-    <ul class="legend-list">
-      <li>
-        <span class="legend-color predios-municipales"></span>
-        Predios municipales
-      </li>
-
-      <li>
-        <span class="legend-color predio-seleccionado"></span>
-        Predio seleccionado
-      </li>
-    </ul>
-
-    <!-- ✅ NUEVO: Sección Destino (R1) -->
-    <div style="margin:10px 0; height:1px; background:rgba(255,255,255,0.2);"></div>
-
-    <div style="font-size:0.95rem; font-weight:700; margin-bottom:8px;">
+    <div class="legend-subtitle">
       Destino (R1)
     </div>
 
-    <div style="display:flex; gap:8px; margin-bottom:8px;">
-      <button id="destino-all"
-        style="flex:1; padding:6px 8px; border-radius:6px; border:0; cursor:pointer; font-weight:700;">
-        Todos
-      </button>
-
-      <button id="destino-none"
-        style="flex:1; padding:6px 8px; border-radius:6px; border:0; cursor:pointer; font-weight:700;">
-        Ninguno
-      </button>
+    <div class="destino-controls">
+      <button id="destino-all">Todos</button>
+      <button id="destino-none">Ninguno</button>
     </div>
 
     <!-- Aquí JS inyecta los items -->
-    <div id="destino-legend-list" style="max-height:220px; overflow:auto;"></div>
+    <div id="destino-legend-list"></div>
 
     <a style="font-size:9px; color:#00bcd4;">
       &#9400 EffectiveActions
