@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Predios Urbanos Sesquilé</title>
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta
+    name="viewport"
+    content="initial-scale=1, maximum-scale=1, user-scalable=no"
+  />
 
   <!-- Mapbox CSS -->
   <link
@@ -27,194 +29,30 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap"
     rel="stylesheet"
-  >
+  />
   <link
     href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css"
     rel="stylesheet"
-  >
-  <script async defer src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"></script>
+  />
+  <script
+    async
+    defer
+    src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"
+  ></script>
 
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
-
-  <!-- ========================= -->
-  <!-- CSS LOGIN TERRI+ -->
-  <!-- ========================= -->
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    body.terri-locked {
-      overflow: hidden !important;
-    }
-
-    /* ✅ Ya NO ocultamos el mapa ni el resto del DOM.
-       Solo ponemos el login encima. */
-    #terri-login-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 999999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      background:
-        linear-gradient(rgba(0, 77, 77, 0.88), rgba(0, 77, 77, 0.88)),
-        url("https://huggingface.co/spaces/Davideffectiveactions/GeovisorSesquile/resolve/main/Portada%20p%C3%A1gina%20web%20sesquil%C3%A9%202.jpg") center/cover no-repeat;
-      font-family: 'Libre Franklin', 'Segoe UI', Arial, sans-serif;
-    }
-
-    .terri-login-card {
-      width: 100%;
-      max-width: 520px;
-      background: rgba(255,255,255,0.97);
-      border-radius: 22px;
-      padding: 30px 24px;
-      box-shadow: 0 18px 45px rgba(0,0,0,0.30);
-      text-align: center;
-      border: 1px solid rgba(0, 147, 160, 0.18);
-    }
-
-    .terri-login-title {
-      margin: 0 0 8px 0;
-      font-size: 30px;
-      font-weight: 800;
-      color: #004d4d;
-      line-height: 1.1;
-    }
-
-    .terri-login-subtitle {
-      margin: 0 0 20px 0;
-      font-size: 16px;
-      color: rgba(0,0,0,0.72);
-      line-height: 1.45;
-    }
-
-    .terri-login-input {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 14px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(0, 109, 119, 0.28);
-      font-size: 16px;
-      outline: none;
-      margin-bottom: 14px;
-    }
-
-    .terri-login-input:focus {
-      border-color: #0093a0;
-      box-shadow: 0 0 0 3px rgba(0,147,160,0.14);
-    }
-
-    .terri-login-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .terri-login-btn {
-      border: none;
-      border-radius: 14px;
-      padding: 12px 18px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      min-width: 130px;
-      transition: transform .15s ease, opacity .15s ease;
-    }
-
-    .terri-login-btn:hover {
-      transform: translateY(-1px);
-      opacity: 0.96;
-    }
-
-    .terri-login-btn.primary {
-      background: linear-gradient(135deg, #006d77, #0093a0);
-      color: #fff;
-    }
-
-    .terri-login-btn.secondary {
-      background: #edf6f7;
-      color: #004d4d;
-    }
-
-    .terri-login-msg {
-      min-height: 22px;
-      margin-top: 14px;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .terri-login-msg.error {
-      color: #b00020;
-    }
-
-    .terri-login-msg.ok {
-      color: #1b7f2a;
-    }
-
-    @media (max-width: 640px) {
-      .terri-login-card {
-        padding: 24px 18px;
-        border-radius: 18px;
-      }
-
-      .terri-login-title {
-        font-size: 24px;
-      }
-
-      .terri-login-subtitle {
-        font-size: 14px;
-      }
-
-      .terri-login-btn {
-        width: 100%;
-      }
-    }
-  </style>
 </head>
 
-<body class="terri-locked">
-
-  <!-- ========================= -->
-  <!-- LOGIN OVERLAY -->
-  <!-- ========================= -->
-  <div id="terri-login-overlay">
-    <div class="terri-login-card">
-      <h1 class="terri-login-title">🔒 Acceso restringido</h1>
-      <p class="terri-login-subtitle">
-        Ingresa la contraseña para visualizar este mapa de TERRI+.
-      </p>
-
-      <input
-        id="terri-password"
-        class="terri-login-input"
-        type="password"
-        placeholder="Ingresa la contraseña"
-        autocomplete="current-password"
-      >
-
-      <div class="terri-login-actions">
-        <button id="terri-login-btn" class="terri-login-btn primary">Ingresar</button>
-        <button id="terri-clear-btn" class="terri-login-btn secondary">Limpiar</button>
-      </div>
-
-      <div id="terri-login-msg" class="terri-login-msg"></div>
-    </div>
-  </div>
-
+<body>
   <!-- CONTENEDOR DEL MAPA -->
   <div id="map"></div>
 
   <!-- LEYENDA -->
   <div class="legend-container">
     <div class="legend-title">
-      Predial<br>Sesquilé
+      Predial<br />
+      Sesquilé
     </div>
 
     <ul class="legend-list">
@@ -222,24 +60,20 @@
         <span class="legend-color predios-municipales"></span>
         Predios municipales
       </li>
-
       <li>
         <span class="legend-color predios-sin-info"></span>
         Predios sin información R1
       </li>
-
       <li>
         <span class="legend-color predio-seleccionado"></span>
         Predio seleccionado
       </li>
     </ul>
 
-    <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
+    <a style="font-size: 9px; color: #00bcd4;">&#9400; EffectiveActions</a>
   </div>
 
-  <!-- ========================= -->
   <!-- CAJA DE INFORMACIÓN -->
-  <!-- ========================= -->
   <div class="info-box">
     <h3>Información del predio</h3>
     <div class="info-content">
@@ -249,108 +83,5 @@
 
   <!-- SCRIPT PRINCIPAL -->
   <script src="../src/index.js"></script>
-
-  <!-- ========================= -->
-  <!-- SCRIPT LOGIN TERRI+ -->
-  <!-- ========================= -->
-  <script>
-    (async function () {
-      const STORAGE_KEY = "terri_auth_v1";
-      const PASSWORD_HASH = "f60e1a124722fded8c25066ecd847d39c0ebed2d135b05ceb6fe170b12ae65db";
-      // Hash SHA-256 de: Sesquile_2026*
-
-      const overlay = document.getElementById("terri-login-overlay");
-      const input = document.getElementById("terri-password");
-      const loginBtn = document.getElementById("terri-login-btn");
-      const clearBtn = document.getElementById("terri-clear-btn");
-      const msg = document.getElementById("terri-login-msg");
-
-      function showMessage(text, type) {
-        msg.textContent = text || "";
-        msg.className = "terri-login-msg" + (type ? " " + type : "");
-      }
-
-      function forceMapResize() {
-        window.dispatchEvent(new Event("resize"));
-
-        setTimeout(() => window.dispatchEvent(new Event("resize")), 150);
-        setTimeout(() => window.dispatchEvent(new Event("resize")), 400);
-        setTimeout(() => window.dispatchEvent(new Event("resize")), 800);
-
-        if (window.map && typeof window.map.resize === "function") {
-          try { window.map.resize(); } catch (e) {}
-          setTimeout(() => {
-            try { window.map.resize(); } catch (e) {}
-          }, 300);
-        }
-      }
-
-      function unlock() {
-        localStorage.setItem(STORAGE_KEY, PASSWORD_HASH);
-        document.body.classList.remove("terri-locked");
-
-        if (overlay) {
-          overlay.style.display = "none";
-        }
-
-        forceMapResize();
-      }
-
-      async function sha256(text) {
-        const data = new TextEncoder().encode(text);
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-      }
-
-      async function tryLogin() {
-        const value = (input.value || "").trim();
-
-        if (!value) {
-          showMessage("Ingresa la contraseña.", "error");
-          return;
-        }
-
-        try {
-          const enteredHash = await sha256(value);
-
-          if (enteredHash === PASSWORD_HASH) {
-            showMessage("Acceso concedido.", "ok");
-            unlock();
-          } else {
-            showMessage("Contraseña incorrecta.", "error");
-            input.value = "";
-            input.focus();
-          }
-        } catch (err) {
-          showMessage("No se pudo validar la contraseña.", "error");
-          console.error(err);
-        }
-      }
-
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === PASSWORD_HASH) {
-        unlock();
-        return;
-      }
-
-      loginBtn.addEventListener("click", tryLogin);
-
-      clearBtn.addEventListener("click", function () {
-        input.value = "";
-        showMessage("", "");
-        input.focus();
-      });
-
-      input.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          tryLogin();
-        }
-      });
-
-      input.focus();
-    })();
-  </script>
-
 </body>
 </html>
