@@ -3,7 +3,7 @@
 // ✅ Búsqueda local por: codigo, NOMBRE, NUMERO_DOCUMENTO
 // ✅ Resalta 1 o varios predios (mismo codigo o documento)
 // ✅ Clasificación visual por estado_pago
-// ✅ Leyenda con encendido/apagado por categoría
+// ✅ Leyenda HTML con encendido/apagado por categoría
 // ✅ Usa PREDIOS_DATA para búsqueda completa
 // ✅ Evita errores "source/layer already exists"
 // ✅ POPUP SOLO POR CLICK (no hover)
@@ -72,7 +72,6 @@ function normalizeEstadoPagoLabel(value) {
   return v || 'N/A';
 }
 
-// ✅ Filtros por categoría exacta
 function getEstadoFilter(tipo) {
   if (tipo === 'no_dia') {
     return ['==', ['coalesce', ['get', 'estado_pago'], ''], 'NO_ESTA_AL_DIA'];
@@ -232,6 +231,12 @@ function addPrediosLayer(geojsonFile, sourceId) {
               'fill-outline-color': '#ffffff'
             }
           });
+        } else {
+          map.setLayoutProperty(
+            cfg.id,
+            'visibility',
+            estadoLayersVisibility[cfg.id] ? 'visible' : 'none'
+          );
         }
 
         bindLayerInteractions(cfg.id);
@@ -315,73 +320,32 @@ function highlightGroupFromFeature(feature) {
 }
 
 // =====================================================
-// Leyenda / control de capas
+// Leyenda HTML / checkboxes
 // =====================================================
-class EstadoPagoLegendControl {
-  onAdd(mapInstance) {
-    this._map = mapInstance;
-    this._container = document.createElement('div');
-    this._container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
-    this._container.style.background = 'rgba(20,20,20,0.92)';
-    this._container.style.color = '#fff';
-    this._container.style.padding = '12px 14px';
-    this._container.style.borderRadius = '10px';
-    this._container.style.minWidth = '220px';
-    this._container.style.fontFamily = 'Arial, sans-serif';
-    this._container.style.boxShadow = '0 2px 10px rgba(0,0,0,0.35)';
+function setupLegendCheckboxes() {
+  const chkNoDia = document.getElementById('chk_no_dia');
+  const chkSiDia = document.getElementById('chk_si_dia');
+  const chkActivos = document.getElementById('chk_activos');
 
-    this._container.innerHTML = `
-      <div style="font-size:13px; font-weight:700; margin-bottom:10px;">
-        Estado de pago
-      </div>
-
-      <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer;">
-        <input type="checkbox" id="chk_no_dia" checked />
-        <span style="display:inline-block; width:12px; height:12px; background:#e63946; border-radius:2px;"></span>
-        <span>No está al día</span>
-      </label>
-
-      <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; cursor:pointer;">
-        <input type="checkbox" id="chk_si_dia" checked />
-        <span style="display:inline-block; width:12px; height:12px; background:#2a9d8f; border-radius:2px;"></span>
-        <span>Está al día</span>
-      </label>
-
-      <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-        <input type="checkbox" id="chk_activos" checked />
-        <span style="display:inline-block; width:12px; height:12px; background:#3a86ff; border-radius:2px;"></span>
-        <span>Activos públicos</span>
-      </label>
-    `;
-
-    this._container.addEventListener('click', (e) => e.stopPropagation());
-
-    setTimeout(() => {
-      const chkNoDia = this._container.querySelector('#chk_no_dia');
-      const chkSiDia = this._container.querySelector('#chk_si_dia');
-      const chkActivos = this._container.querySelector('#chk_activos');
-
-      chkNoDia?.addEventListener('change', () => {
-        toggleLayerVisibility('predios_no_dia_layer', chkNoDia.checked);
-      });
-
-      chkSiDia?.addEventListener('change', () => {
-        toggleLayerVisibility('predios_si_dia_layer', chkSiDia.checked);
-      });
-
-      chkActivos?.addEventListener('change', () => {
-        toggleLayerVisibility('predios_activos_publicos_layer', chkActivos.checked);
-      });
-    }, 0);
-
-    return this._container;
+  if (chkNoDia) {
+    chkNoDia.checked = estadoLayersVisibility.predios_no_dia_layer;
+    chkNoDia.addEventListener('change', () => {
+      toggleLayerVisibility('predios_no_dia_layer', chkNoDia.checked);
+    });
   }
 
-  onRemove() {
-    if (this._container?.parentNode) {
-      this._container.parentNode.removeChild(this._container);
-    }
-    this._map = undefined;
+  if (chkSiDia) {
+    chkSiDia.checked = estadoLayersVisibility.predios_si_dia_layer;
+    chkSiDia.addEventListener('change', () => {
+      toggleLayerVisibility('predios_si_dia_layer', chkSiDia.checked);
+    });
+  }
+
+  if (chkActivos) {
+    chkActivos.checked = estadoLayersVisibility.predios_activos_publicos_layer;
+    chkActivos.addEventListener('change', () => {
+      toggleLayerVisibility('predios_activos_publicos_layer', chkActivos.checked);
+    });
   }
 }
 
@@ -407,11 +371,6 @@ map.on('style.load', () => {
   if (!map._navControlAdded) {
     map.addControl(new mapboxgl.NavigationControl());
     map._navControlAdded = true;
-  }
-
-  if (!map._legendControlAdded) {
-    map.addControl(new EstadoPagoLegendControl(), 'top-right');
-    map._legendControlAdded = true;
   }
 });
 
@@ -548,4 +507,11 @@ geocoder.on('result', (e) => {
     .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
     .setHTML(buildPopupHTML(properties, center, listaCodigos))
     .addTo(map);
+});
+
+// =====================================================
+// Inicializar checkboxes HTML cuando cargue el DOM
+// =====================================================
+document.addEventListener('DOMContentLoaded', () => {
+  setupLegendCheckboxes();
 });
