@@ -8,6 +8,8 @@
 // ✅ Evita errores "source/layer already exists"
 // ✅ POPUP SOLO POR CLICK (no hover)
 // ✅ + BOTÓN STREET VIEW EN POPUP
+// ✅ + Contorno blanco para identificar Predios Sesquilé
+// ✅ + CORRECCIÓN: en click NO agrupa por NUMERO_DOCUMENTO
 // =====================================================
 
 mapboxgl.accessToken =
@@ -96,7 +98,12 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
   }
 
   const c = feature?.geometry?.coordinates;
-  if (Array.isArray(c) && c.length >= 2 && c[0] != null && c[1] != null) {
+  if (
+    Array.isArray(c) &&
+    c.length >= 2 &&
+    typeof c[0] === 'number' &&
+    typeof c[1] === 'number'
+  ) {
     return [Number(c[0]), Number(c[1])];
   }
 
@@ -159,6 +166,7 @@ function bindLayerInteractions(layerId) {
     const props = feature.properties || {};
     const lngLatClick = e.lngLat;
 
+    // ✅ En click resalta solo el predio, o grupo por código si aplica
     highlightGroupFromFeature(feature);
 
     const svLngLat = getFeatureLngLat(feature, lngLatClick);
@@ -199,7 +207,7 @@ function addPrediosLayer(geojsonFile, sourceId) {
       const layersConfig = [
         {
           id: 'predios_no_dia_layer',
-          color: '#e63946',
+          color: '#f77f00',
           filter: getEstadoFilter('no_dia')
         },
         {
@@ -227,7 +235,7 @@ function addPrediosLayer(geojsonFile, sourceId) {
             },
             paint: {
               'fill-color': cfg.color,
-              'fill-opacity': 0.75,
+              'fill-opacity': 0.68,
               'fill-outline-color': '#ffffff'
             }
           });
@@ -290,6 +298,10 @@ function setHighlight(featuresArr) {
   if (hlSource) hlSource.setData(fc);
 }
 
+// ✅ CORREGIDO:
+// En click NO agrupa por NUMERO_DOCUMENTO, porque los Activos públicos
+// comparten el mismo documento y por eso se seleccionaban todos.
+// Aquí solo agrupa por código si existe; si no, resalta únicamente el clickeado.
 function highlightGroupFromFeature(feature) {
   const props = feature.properties || {};
   const features =
@@ -301,13 +313,9 @@ function highlightGroupFromFeature(feature) {
   }
 
   const codigo = norm(props.codigo);
-  const doc = norm(props.NUMERO_DOCUMENTO);
-
   let group = [];
 
-  if (doc) {
-    group = features.filter((f) => norm(f.properties?.NUMERO_DOCUMENTO) === doc);
-  } else if (codigo) {
+  if (codigo) {
     group = features.filter((f) => norm(f.properties?.codigo) === codigo);
   }
 
@@ -465,6 +473,7 @@ geocoder.on('result', (e) => {
 
   let toHighlight = [];
 
+  // ✅ En el geocoder sí se mantiene la agrupación por documento o código
   if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
     const mv = norm(matchValue);
     toHighlight = features.filter((f) => {
