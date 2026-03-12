@@ -51,19 +51,34 @@
   <!-- LEYENDA -->
   <div class="legend-container">
     <div class="legend-title">
-      Predial<br />
-      Sesquilé
+      Estado de pago
     </div>
 
     <ul class="legend-list">
       <li>
-        <span class="legend-color predios-municipales"></span>
-        Predios municipales
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; width:100%;">
+          <input type="checkbox" id="chk_no_dia" checked />
+          <span class="legend-color estado-no-dia"></span>
+          No está al día
+        </label>
       </li>
+
       <li>
-        <span class="legend-color predios-sin-info"></span>
-        Predios sin información R1
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; width:100%;">
+          <input type="checkbox" id="chk_si_dia" checked />
+          <span class="legend-color estado-si-dia"></span>
+          Está al día
+        </label>
       </li>
+
+      <li>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; width:100%;">
+          <input type="checkbox" id="chk_activos" checked />
+          <span class="legend-color estado-activos"></span>
+          Activos públicos
+        </label>
+      </li>
+
       <li>
         <span class="legend-color predio-seleccionado"></span>
         Predio seleccionado
