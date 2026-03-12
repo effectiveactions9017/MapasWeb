@@ -14,16 +14,17 @@ body {
 /* =========================
    LEYENDA
    ========================= */
+
 .legend-container {
     position: absolute;
     bottom: 25px;
     right: 5px;
     z-index: 10;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.85);
     padding: 15px;
     border-radius: 8px;
-    width: 200px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    width: 220px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.6);
     color: white;
 }
 
@@ -41,72 +42,95 @@ body {
     margin: 0;
 }
 
-.legend-list li {
+/* items de la leyenda */
+
+.legend-list li,
+.legend-item {
     display: flex;
     align-items: center;
+    gap: 8px;
     margin-bottom: 8px;
     font-size: 0.9rem;
     color: white;
 }
 
+/* checkboxes */
+
+.legend-item input[type="checkbox"] {
+    accent-color: #d4af37;
+    cursor: pointer;
+}
+
+/* cuadros de color */
+
 .legend-color {
     display: inline-block;
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
     border-radius: 3px;
     border: 1px solid #ffffff;
+    flex: 0 0 18px;
 }
 
 /* =========================
-   COLORES DE LA LEYENDA
+   COLORES ESTADO DE PAGO
    ========================= */
 
-/* 🟢 Predios municipales (CON nombre) */
-.legend-color.predios-municipales {
-    background-color: #2ec4b6;
+/* 🟧 No está al día */
+.estado-no-dia {
+    background-color: #f77f00;
 }
 
-/* 🟠 Predios sin información R1 (SIN nombre) */
-.legend-color.predios-sin-info {
-    background-color: #ffb703;
+/* 🟩 Está al día */
+.estado-si-dia {
+    background-color: #2a9d8f;
 }
 
-/* 🟡 Predio seleccionado (resaltado) */
-.legend-color.predio-seleccionado {
+/* 🟦 Activos públicos */
+.estado-activos {
+    background-color: #3a86ff;
+}
+
+/* ⬜ Predios Sesquilé (solo borde) */
+
+.predios-borde-blanco {
+    background: transparent;
+    border: 2px solid #ffffff;
+}
+
+/* 🟨 predio seleccionado */
+
+.predio-seleccionado {
     background-color: #ffff00;
+}
+
+/* crédito */
+
+.legend-credit {
+    font-size: 9px;
+    color: #00bcd4;
 }
 
 /* =========================
    CLASES ANTIGUAS (SE CONSERVAN)
    ========================= */
-.c_viejas {
-    background-color: #AAB7B8;
-}
 
-.c_nuevas {
-    background-color: #A569BD;
-}
-
-.c_aumento {
-    background-color: #F7DC6F;
-}
-
-.dem_p {
-    background-color: #F5B041;
-}
-
-.dem_t {
-    background-color: #E74C3C;
-}
+.c_viejas { background-color: #AAB7B8; }
+.c_nuevas { background-color: #A569BD; }
+.c_aumento { background-color: #F7DC6F; }
+.dem_p { background-color: #F5B041; }
+.dem_t { background-color: #E74C3C; }
 
 /* =========================
    CAJA DE INFORMACIÓN
    ========================= */
+
 .info-box {
     left: 10px;
     top: 310px;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.75);
     color: white;
     padding: 10px;
     font-family: Arial, sans-serif;
@@ -115,7 +139,7 @@ body {
     position: absolute;
     z-index: 10;
     width: 200px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
     display: none;
 }
 
@@ -128,10 +152,11 @@ body {
 /* =========================
    POPUP PERSONALIZADO
    ========================= */
+
 .custom-popup .mapboxgl-popup-content {
     font-size: 0.8rem;
     padding: 10px 15px;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.85);
     color: #fff;
     border-radius: 8px;
     max-width: 250px;
@@ -146,53 +171,32 @@ body {
     text-decoration: underline;
 }
 
-/* Flechas del popup */
+/* flechas popup */
+
 .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
-    border-bottom-color: rgba(0, 0, 0, 0.8);
+    border-bottom-color: rgba(0,0,0,0.85);
 }
 
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
-    border-top-color: rgba(0, 0, 0, 0.8);
+    border-top-color: rgba(0,0,0,0.85);
 }
 
 .mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
-    border-right-color: rgba(0, 0, 0, 0.8);
+    border-right-color: rgba(0,0,0,0.85);
 }
 
 .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
-    border-left-color: rgba(0, 0, 0, 0.8);
+    border-left-color: rgba(0,0,0,0.85);
 }
 
 /* =========================
    GEOCODER
    ========================= */
+
 .mapboxgl-ctrl-geocoder {
     width: 300px !important;
 }
-/* ====== FIX LEYENDA: que se vean los cuadros ====== */
-.legend-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px; /* espacio entre cuadro y texto */
-}
-
-.legend-color {
-  display: inline-block !important;
-  width: 18px !important;
-  height: 18px !important;
-  min-width: 18px !important;   /* CLAVE para que no colapse */
-  min-height: 18px !important;  /* CLAVE para que no colapse */
-  border-radius: 3px;
-  border: 1px solid #fff;
-  flex: 0 0 18px; /* CLAVE para flex */
-}
-
-/* Colores de la leyenda */
-.legend-color.predios-municipales { background-color: #2ec4b6; } /* verde */
-.legend-color.predios-sin-info    { background-color: #ffb703; } /* naranja */
-.legend-color.predio-seleccionado { background-color: #ffff00; } /* seleccionado */
-
