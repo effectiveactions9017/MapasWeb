@@ -10,6 +10,7 @@
 // ✅ + BOTÓN STREET VIEW EN POPUP
 // ✅ + Contorno blanco para identificar Predios Sesquilé
 // ✅ + CORRECCIÓN: en click NO agrupa por NUMERO_DOCUMENTO
+// ✅ + CORRECCIÓN: avalúo leído desde campo AVALUO.2026
 // =====================================================
 
 mapboxgl.accessToken =
@@ -121,7 +122,7 @@ function streetViewUrl([lng, lat]) {
 
 function buildPopupHTML(props, lngLat = null, extraHTML = '') {
   props = props || {};
-  const avaluoTxt = formatAvaluo(props['AVALUO 2026']);
+  const avaluoTxt = formatAvaluo(props['AVALUO.2026']);
   const areaTxt = formatArea(props.Shape_Area);
   const estadoPagoTxt = normalizeEstadoPagoLabel(props.estado_pago);
 
