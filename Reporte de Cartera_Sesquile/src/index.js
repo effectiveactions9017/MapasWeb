@@ -1,8 +1,6 @@
 // =====================================================
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
-// ✅ Popup con riesgo y vigencia
-// ✅ Colores por nivel de riesgo
-// ✅ Leyenda interactiva con filtros robustos
+// ✅ Base siempre visible + filtros visuales por riesgo
 // =====================================================
 
 mapboxgl.accessToken =
@@ -23,16 +21,10 @@ let popup = new mapboxgl.Popup({
 });
 
 // ================================
-// 🔹 DATA GLOBAL
-// ================================
-let PREDIOS_DATA = null;
-
-// ================================
 // 🔹 FILTROS ACTIVOS
 // ================================
 let activeFilters = {
-  riesgo: new Set(['BAJO', 'MEDIO', 'ALTO']),
-  vigencia: new Set(['1-2', '3-5', '5+'])
+  riesgo: new Set(['BAJO', 'MEDIO', 'ALTO'])
 };
 
 // =====================================================
@@ -40,8 +32,7 @@ let activeFilters = {
 // =====================================================
 function formatAvaluo(value) {
   if (!value) return 'N/A';
-  const n = Number(value);
-  return isNaN(n) ? value : n.toLocaleString('es-CO');
+  return Number(value).toLocaleString('es-CO');
 }
 
 function formatArea(value) {
@@ -51,11 +42,7 @@ function formatArea(value) {
 
 function getFeatureLngLat(feature, fallbackLngLat = null) {
   if (fallbackLngLat) return [fallbackLngLat.lng, fallbackLngLat.lat];
-  try {
-    return turf.pointOnFeature(feature).geometry.coordinates;
-  } catch {
-    return [-73.79724, 5.04463];
-  }
+  return turf.pointOnFeature(feature).geometry.coordinates;
 }
 
 function streetViewUrl([lng, lat]) {
@@ -78,72 +65,52 @@ function buildPopupHTML(props, lngLat = null) {
   return `
     <strong>Código:</strong> ${props.codigo ?? 'N/A'}<br>
     <strong>Nombre:</strong> ${props.NOMBRE ?? 'N/A'}<br>
-    <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? 'N/A'}<br>
 
     <hr>
 
-    <strong>Total acumulado:</strong> ${formatAvaluo(props.total_acumulado)}<br>
-    <strong>Categoría vigencia:</strong> ${props.categoria_vigencia ?? 'N/A'}<br>
     <strong>Nivel de riesgo:</strong> ${props.nivel_riesgo ?? 'N/A'}<br>
-    <strong>Vereda:</strong> ${props.vereda ?? 'N/A'}<br>
-
-    <hr>
-
-    <strong>Avalúo 2026:</strong> ${formatAvaluo(props['AVALUO 2026'])}<br>
-    <strong>Área:</strong> ${formatArea(props.Shape_Area)} m²<br>
+    <strong>Categoría vigencia:</strong> ${props.categoria_vigencia ?? 'N/A'}<br>
 
     ${svBtn}
   `;
 }
 
 // =====================================================
-// FILTRO ROBUSTO (CLAVE 🔥)
+// FUNCIÓN CLAVE 🔥 (COLOR DINÁMICO)
 // =====================================================
-function applyFilters() {
-  const riesgoArray = Array.from(activeFilters.riesgo);
-  const vigenciaArray = Array.from(activeFilters.vigencia);
+function updateMapStyle() {
+  const riesgos = Array.from(activeFilters.riesgo);
 
-  const filter = [
-    'all',
+  map.setPaintProperty('predios_ssk_layer', 'fill-color', [
+    'case',
 
-    // 🔹 RIESGO
+    // 🔴 ALTO
     [
-      'any',
-      ...riesgoArray.map(r =>
-        ['in', r, ['upcase', ['get', 'nivel_riesgo']]]
-      )
+      'all',
+      ['in', 'ALTO', ['upcase', ['get', 'nivel_riesgo']]],
+      ['in', 'ALTO', ['literal', riesgos]]
     ],
+    '#e74c3c',
 
-    // 🔹 VIGENCIA
+    // 🟡 MEDIO
     [
-      'any',
-      ...vigenciaArray.map(v => {
-        if (v === '1-2') {
-          return ['any',
-            ['in', '1 A 2', ['upcase', ['get', 'categoria_vigencia']]],
-            ['in', '1-2', ['upcase', ['get', 'categoria_vigencia']]]
-          ];
-        }
+      'all',
+      ['in', 'MEDIO', ['upcase', ['get', 'nivel_riesgo']]],
+      ['in', 'MEDIO', ['literal', riesgos]]
+    ],
+    '#f1c40f',
 
-        if (v === '3-5') {
-          return ['any',
-            ['in', '3 A 5', ['upcase', ['get', 'categoria_vigencia']]],
-            ['in', '3-5', ['upcase', ['get', 'categoria_vigencia']]]
-          ];
-        }
+    // 🟢 BAJO
+    [
+      'all',
+      ['in', 'BAJO', ['upcase', ['get', 'nivel_riesgo']]],
+      ['in', 'BAJO', ['literal', riesgos]]
+    ],
+    '#2ecc71',
 
-        if (v === '5+') {
-          return ['any',
-            ['in', '5', ['upcase', ['get', 'categoria_vigencia']]],
-            ['in', 'MAS DE 5', ['upcase', ['get', 'categoria_vigencia']]],
-            ['in', 'MÁS DE 5', ['upcase', ['get', 'categoria_vigencia']]]
-          ];
-        }
-      })
-    ]
-  ];
-
-  map.setFilter('predios_ssk_layer', filter);
+    // 🔘 BASE (sin categoría o apagados)
+    'rgba(200,200,200,0.2)'
+  ]);
 }
 
 // =====================================================
@@ -153,8 +120,6 @@ function addLayer() {
   fetch('../src/data/PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson')
     .then(res => res.json())
     .then(data => {
-
-      PREDIOS_DATA = data;
 
       map.addSource('predios_ssk', {
         type: 'geojson',
@@ -166,20 +131,13 @@ function addLayer() {
         type: 'fill',
         source: 'predios_ssk',
         paint: {
-          'fill-color': [
-            'match',
-            ['upcase', ['get', 'nivel_riesgo']],
-            'BAJO', '#2ecc71',
-            'MEDIO', '#f1c40f',
-            'ALTO', '#e74c3c',
-            '#999'
-          ],
-          'fill-opacity': 0.7,
-          'fill-outline-color': '#fff'
+          'fill-color': 'rgba(200,200,200,0.2)', // base
+          'fill-outline-color': '#ffffff',
+          'fill-opacity': 0.8
         }
       });
 
-      // CLICK POPUP
+      // Popup
       map.on('click', 'predios_ssk_layer', (e) => {
         const f = e.features[0];
         const coords = getFeatureLngLat(f, e.lngLat);
@@ -192,7 +150,7 @@ function addLayer() {
 
       map.addControl(new mapboxgl.NavigationControl());
 
-      applyFilters(); // 🔥 aplicar filtros al inicio
+      updateMapStyle(); // 🔥 aplicar colores iniciales
     });
 }
 
@@ -208,17 +166,17 @@ map.on('load', () => {
 // =====================================================
 document.querySelectorAll('.filter-item').forEach(el => {
   el.addEventListener('click', () => {
-    const type = el.dataset.filter;
+
     const value = el.dataset.value;
 
     el.classList.toggle('active');
 
-    if (activeFilters[type].has(value)) {
-      activeFilters[type].delete(value);
+    if (activeFilters.riesgo.has(value)) {
+      activeFilters.riesgo.delete(value);
     } else {
-      activeFilters[type].add(value);
+      activeFilters.riesgo.add(value);
     }
 
-    applyFilters();
+    updateMapStyle(); // 🔥 clave
   });
 });
