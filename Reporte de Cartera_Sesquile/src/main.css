@@ -1,12 +1,62 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Libre Franklin', sans-serif;
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
 /* =========================
-   SUBTÍTULOS LEYENDA
+   LEYENDA
    ========================= */
+.legend-container {
+  position: absolute;
+  bottom: 25px;
+  right: 5px;
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.78);
+  padding: 15px;
+  border-radius: 8px;
+  width: 220px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  color: white;
+}
+
+.legend-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-align: left;
+  color: white;
+  line-height: 1.2;
+}
+
 .legend-subtitle {
-  margin-top: 10px;
-  margin-bottom: 5px;
+  margin-top: 12px;
+  margin-bottom: 6px;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #00bcd4;
+}
+
+.legend-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.legend-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: white;
 }
 
 /* =========================
@@ -17,43 +67,166 @@
   transition: all 0.2s ease;
   padding: 4px 6px;
   border-radius: 5px;
+  user-select: none;
 }
 
-/* Hover */
 .filter-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Activo */
 .filter-item.active {
   opacity: 1;
 }
 
-/* Inactivo */
 .filter-item:not(.active) {
   opacity: 0.3;
+}
+
+/* =========================
+   CUADROS / BULLETS LEYENDA
+   ========================= */
+.legend-color {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 3px;
+  border: 1px solid #fff;
+  flex: 0 0 18px;
+}
+
+.legend-bullet {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  border-radius: 50%;
+  border: 1px solid #fff;
+  background-color: #8e9aa0;
+  flex: 0 0 18px;
 }
 
 /* =========================
    COLORES NIVEL DE RIESGO
    ========================= */
 .legend-color.riesgo-bajo {
-  background-color: #2ecc71; /* verde */
+  background-color: #2ecc71;
 }
 
 .legend-color.riesgo-medio {
-  background-color: #f1c40f; /* amarillo */
+  background-color: #f1c40f;
 }
 
 .legend-color.riesgo-alto {
-  background-color: #e74c3c; /* rojo */
+  background-color: #e74c3c;
 }
 
 /* =========================
-   AJUSTES GENERALES
+   FOOTER LEYENDA
    ========================= */
-.legend-list li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.legend-footer {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 9px;
+  color: #00bcd4;
+  text-decoration: none;
+}
+
+/* =========================
+   CLASES ANTIGUAS (SE CONSERVAN)
+   ========================= */
+.c_viejas {
+  background-color: #AAB7B8;
+}
+
+.c_nuevas {
+  background-color: #A569BD;
+}
+
+.c_aumento {
+  background-color: #F7DC6F;
+}
+
+.dem_p {
+  background-color: #F5B041;
+}
+
+.dem_t {
+  background-color: #E74C3C;
+}
+
+/* =========================
+   CAJA DE INFORMACIÓN
+   ========================= */
+.info-box {
+  left: 10px;
+  top: 310px;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 10px;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  border-radius: 8px;
+  position: absolute;
+  z-index: 10;
+  width: 200px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  display: none;
+}
+
+.info-box h3 {
+  margin: 0 0 10px 0;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* =========================
+   POPUP PERSONALIZADO
+   ========================= */
+.custom-popup .mapboxgl-popup-content {
+  font-size: 0.8rem;
+  padding: 10px 15px;
+  background-color: rgba(0, 0, 0, 0.88);
+  color: #fff;
+  border-radius: 8px;
+  max-width: 270px;
+}
+
+.mapboxgl-popup-content a {
+  color: #00bcd4;
+  text-decoration: none;
+}
+
+.mapboxgl-popup-content a:hover {
+  text-decoration: underline;
+}
+
+/* Flechas del popup */
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+  border-bottom-color: rgba(0, 0, 0, 0.88);
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+  border-top-color: rgba(0, 0, 0, 0.88);
+}
+
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+  border-right-color: rgba(0, 0, 0, 0.88);
+}
+
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+  border-left-color: rgba(0, 0, 0, 0.88);
+}
+
+/* =========================
+   GEOCODER
+   ========================= */
+.mapboxgl-ctrl-geocoder {
+  width: 300px !important;
 }
