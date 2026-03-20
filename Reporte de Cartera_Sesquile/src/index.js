@@ -1,9 +1,9 @@
 // =====================================================
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
-// ✅ Base siempre visible + filtros visuales por riesgo y vigencia
-// ✅ Popup actualizado con información tributaria y física
-// ✅ Predios sin categoría: solo contorno
-// ✅ Barra de transparencia para polígonos coloreados
+// ✅ Todos los predios siempre visibles
+// ✅ Sin categoría = solo contorno
+// ✅ Con categoría = color por riesgo + filtro por vigencia
+// ✅ Popup actualizado + slider de transparencia
 // =====================================================
 
 mapboxgl.accessToken =
@@ -107,7 +107,7 @@ function buildPopupHTML(props, lngLat = null) {
 }
 
 // =====================================================
-// NORMALIZADORES EN EXPRESIÓN MAPBOX
+// EXPRESIONES NORMALIZADAS
 // =====================================================
 function riskExpression() {
   return [
@@ -142,8 +142,8 @@ function vigenciaExpression() {
 
 // =====================================================
 // ESTILO DINÁMICO
-// - Si coincide con filtros: color por riesgo
-// - Si no coincide o no tiene categoría: sin relleno
+// - Capa base_line: todos los contornos
+// - Capa color_fill: solo los que coinciden con filtros
 // =====================================================
 function updateMapStyle() {
   const riesgos = Array.from(activeFilters.riesgo);
@@ -152,90 +152,55 @@ function updateMapStyle() {
   const riskExpr = riskExpression();
   const vigExpr = vigenciaExpression();
 
-  map.setPaintProperty('predios_ssk_layer', 'fill-color', [
+  const isAlto = [
+    'all',
+    ['==', riskExpr, 'ALTO'],
+    ['in', 'ALTO', ['literal', riesgos]],
+    ['in', vigExpr, ['literal', vigencias]]
+  ];
+
+  const isMedio = [
+    'all',
+    ['==', riskExpr, 'MEDIO'],
+    ['in', 'MEDIO', ['literal', riesgos]],
+    ['in', vigExpr, ['literal', vigencias]]
+  ];
+
+  const isBajo = [
+    'all',
+    ['==', riskExpr, 'BAJO'],
+    ['in', 'BAJO', ['literal', riesgos]],
+    ['in', vigExpr, ['literal', vigencias]]
+  ];
+
+  map.setPaintProperty('predios_ssk_fill_color', 'fill-color', [
     'case',
-
-    [
-      'all',
-      ['==', riskExpr, 'ALTO'],
-      ['in', 'ALTO', ['literal', riesgos]],
-      ['in', vigExpr, ['literal', vigencias]]
-    ],
-    '#e74c3c',
-
-    [
-      'all',
-      ['==', riskExpr, 'MEDIO'],
-      ['in', 'MEDIO', ['literal', riesgos]],
-      ['in', vigExpr, ['literal', vigencias]]
-    ],
-    '#f1c40f',
-
-    [
-      'all',
-      ['==', riskExpr, 'BAJO'],
-      ['in', 'BAJO', ['literal', riesgos]],
-      ['in', vigExpr, ['literal', vigencias]]
-    ],
-    '#2ecc71',
-
+    isAlto, '#e74c3c',
+    isMedio, '#f1c40f',
+    isBajo, '#2ecc71',
     'rgba(0,0,0,0)'
   ]);
 
-  map.setPaintProperty('predios_ssk_layer', 'fill-opacity', [
+  map.setPaintProperty('predios_ssk_fill_color', 'fill-opacity', [
     'case',
-    [
-      'any',
-      [
-        'all',
-        ['==', riskExpr, 'ALTO'],
-        ['in', 'ALTO', ['literal', riesgos]],
-        ['in', vigExpr, ['literal', vigencias]]
-      ],
-      [
-        'all',
-        ['==', riskExpr, 'MEDIO'],
-        ['in', 'MEDIO', ['literal', riesgos]],
-        ['in', vigExpr, ['literal', vigencias]]
-      ],
-      [
-        'all',
-        ['==', riskExpr, 'BAJO'],
-        ['in', 'BAJO', ['literal', riesgos]],
-        ['in', vigExpr, ['literal', vigencias]]
-      ]
-    ],
+    ['any', isAlto, isMedio, isBajo],
     polygonOpacity,
     0
   ]);
 
-  map.setPaintProperty('predios_ssk_layer', 'fill-outline-color', [
+  // contorno blanco para los coloreados, gris para el resto
+  map.setPaintProperty('predios_ssk_line_base', 'line-color', [
     'case',
-    [
-      'all',
-      ['==', riskExpr, 'ALTO'],
-      ['in', 'ALTO', ['literal', riesgos]],
-      ['in', vigExpr, ['literal', vigencias]]
-    ],
+    ['any', isAlto, isMedio, isBajo],
     '#ffffff',
-
-    [
-      'all',
-      ['==', riskExpr, 'MEDIO'],
-      ['in', 'MEDIO', ['literal', riesgos]],
-      ['in', vigExpr, ['literal', vigencias]]
-    ],
-    '#ffffff',
-
-    [
-      'all',
-      ['==', riskExpr, 'BAJO'],
-      ['in', 'BAJO', ['literal', riesgos]],
-      ['in', vigExpr, ['literal', vigencias]]
-    ],
-    '#ffffff',
-
     '#7f7f7f'
+  ]);
+
+  map.setPaintProperty('predios_ssk_line_base', 'line-width', [
+    'case',
+    ['any', isAlto, isMedio, isBajo],
+    1.4,
+    1.0
   ]);
 }
 
@@ -251,18 +216,41 @@ function addLayer() {
         data
       });
 
+      // 1) Capa invisible para interacción / click
       map.addLayer({
-        id: 'predios_ssk_layer',
+        id: 'predios_ssk_hit',
         type: 'fill',
         source: 'predios_ssk',
         paint: {
           'fill-color': 'rgba(0,0,0,0)',
-          'fill-outline-color': '#7f7f7f',
+          'fill-opacity': 0.01
+        }
+      });
+
+      // 2) Capa de relleno coloreado
+      map.addLayer({
+        id: 'predios_ssk_fill_color',
+        type: 'fill',
+        source: 'predios_ssk',
+        paint: {
+          'fill-color': 'rgba(0,0,0,0)',
           'fill-opacity': 0
         }
       });
 
-      map.on('click', 'predios_ssk_layer', (e) => {
+      // 3) Capa de contorno base para TODOS los predios
+      map.addLayer({
+        id: 'predios_ssk_line_base',
+        type: 'line',
+        source: 'predios_ssk',
+        paint: {
+          'line-color': '#7f7f7f',
+          'line-width': 1
+        }
+      });
+
+      // Popup sobre la capa hit
+      map.on('click', 'predios_ssk_hit', (e) => {
         const f = e.features && e.features[0];
         if (!f) return;
 
@@ -274,11 +262,11 @@ function addLayer() {
           .addTo(map);
       });
 
-      map.on('mouseenter', 'predios_ssk_layer', () => {
+      map.on('mouseenter', 'predios_ssk_hit', () => {
         map.getCanvas().style.cursor = 'pointer';
       });
 
-      map.on('mouseleave', 'predios_ssk_layer', () => {
+      map.on('mouseleave', 'predios_ssk_hit', () => {
         map.getCanvas().style.cursor = '';
       });
 
