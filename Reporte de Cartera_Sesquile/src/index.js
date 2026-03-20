@@ -4,13 +4,14 @@
 // ✅ Sin categoría = solo contorno
 // ✅ Con categoría = color por riesgo + filtro por vigencia
 // ✅ Popup actualizado + slider de transparencia
+// ✅ Buscador local por código, nombre y documento
 // =====================================================
 
 mapboxgl.accessToken =
   'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
 
 const map = new mapboxgl.Map({
-  style: 'mapbox://styles/mapbox/satellite-v9',
+  style: 'mapbox://styles/mapbox/dark-v11',
   center: [-73.79724, 5.04463],
   zoom: 15,
   container: 'map',
@@ -22,6 +23,11 @@ let popup = new mapboxgl.Popup({
   closeOnClick: true,
   className: 'custom-popup'
 });
+
+// ================================
+// 🔹 DATA GLOBAL
+// ================================
+let PREDIOS_DATA = null;
 
 // ================================
 // 🔹 FILTROS ACTIVOS
@@ -49,6 +55,14 @@ function formatArea(value) {
   if (value === null || value === undefined || value === '') return 'N/A';
   const n = Number(value);
   return isNaN(n) ? String(value) : String(Math.round(n));
+}
+
+function norm(v) {
+  return (v ?? '')
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .trim();
 }
 
 function getFeatureLngLat(feature, fallbackLngLat = null) {
@@ -142,8 +156,6 @@ function vigenciaExpression() {
 
 // =====================================================
 // ESTILO DINÁMICO
-// - Capa base_line: todos los contornos
-// - Capa color_fill: solo los que coinciden con filtros
 // =====================================================
 function updateMapStyle() {
   const riesgos = Array.from(activeFilters.riesgo);
@@ -188,19 +200,25 @@ function updateMapStyle() {
     0
   ]);
 
-  // contorno blanco para los coloreados, gris para el resto
   map.setPaintProperty('predios_ssk_line_base', 'line-color', [
     'case',
     ['any', isAlto, isMedio, isBajo],
     '#ffffff',
-    '#7f7f7f'
+    '#bfc5cc'
   ]);
 
   map.setPaintProperty('predios_ssk_line_base', 'line-width', [
     'case',
     ['any', isAlto, isMedio, isBajo],
-    1.4,
-    1.0
+    2.2,
+    1.6
+  ]);
+
+  map.setPaintProperty('predios_ssk_line_base', 'line-opacity', [
+    'case',
+    ['any', isAlto, isMedio, isBajo],
+    1,
+    0.95
   ]);
 }
 
@@ -211,12 +229,14 @@ function addLayer() {
   fetch('../src/data/PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson')
     .then(res => res.json())
     .then(data => {
+      PREDIOS_DATA = data;
+
       map.addSource('predios_ssk', {
         type: 'geojson',
         data
       });
 
-      // 1) Capa invisible para interacción / click
+      // Capa invisible para interacción
       map.addLayer({
         id: 'predios_ssk_hit',
         type: 'fill',
@@ -227,7 +247,7 @@ function addLayer() {
         }
       });
 
-      // 2) Capa de relleno coloreado
+      // Capa de relleno coloreado
       map.addLayer({
         id: 'predios_ssk_fill_color',
         type: 'fill',
@@ -238,18 +258,19 @@ function addLayer() {
         }
       });
 
-      // 3) Capa de contorno base para TODOS los predios
+      // Capa de contorno base para todos
       map.addLayer({
         id: 'predios_ssk_line_base',
         type: 'line',
         source: 'predios_ssk',
         paint: {
-          'line-color': '#7f7f7f',
-          'line-width': 1
+          'line-color': '#bfc5cc',
+          'line-width': 1.6,
+          'line-opacity': 0.95
         }
       });
 
-      // Popup sobre la capa hit
+      // Popup
       map.on('click', 'predios_ssk_hit', (e) => {
         const f = e.features && e.features[0];
         if (!f) return;
@@ -273,8 +294,88 @@ function addLayer() {
       map.addControl(new mapboxgl.NavigationControl());
 
       updateMapStyle();
+      addLocalGeocoder();
     })
     .catch(err => console.error('Error cargando GeoJSON:', err));
+}
+
+// =====================================================
+// BUSCADOR LOCAL
+// =====================================================
+function addLocalGeocoder() {
+  const geocoder = new MapboxGeocoder({
+    accessToken: mapboxgl.accessToken,
+    mapboxgl: mapboxgl,
+    marker: false,
+    localGeocoderOnly: true,
+    placeholder: 'Buscar por código, nombre o documento',
+    localGeocoder: function (query) {
+      const matchingFeatures = [];
+      const q = (query || '').toString().toLowerCase().trim();
+
+      if (!q) return matchingFeatures;
+
+      const features =
+        PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features)
+          ? PREDIOS_DATA.features
+          : [];
+
+      if (!features.length) return matchingFeatures;
+
+      for (const feature of features) {
+        const props = feature.properties || {};
+
+        const codigo = (props.codigo ?? '').toString().toLowerCase();
+        const nombre = (props.NOMBRE ?? '').toString().toLowerCase();
+        const documento = (props.NUMERO_DOCUMENTO ?? '').toString().toLowerCase();
+
+        const match =
+          (codigo && codigo.includes(q)) ||
+          (nombre && nombre.includes(q)) ||
+          (documento && documento.includes(q));
+
+        if (!match) continue;
+
+        const centro = getFeatureLngLat(feature);
+
+        const codTxt = (props.codigo ?? '').toString().trim();
+        const nomTxt = (props.NOMBRE ?? '').toString().trim();
+        const docTxt = (props.NUMERO_DOCUMENTO ?? '').toString().trim();
+
+        matchingFeatures.push({
+          type: 'Feature',
+          geometry: feature.geometry,
+          properties: props,
+          place_name: `Código: ${codTxt || 'N/A'} | Nombre: ${nomTxt || 'N/A'} | Doc: ${
+            docTxt || 'N/A'
+          }`,
+          center: centro,
+          place_type: ['place']
+        });
+
+        if (matchingFeatures.length >= 10) break;
+      }
+
+      return matchingFeatures;
+    }
+  });
+
+  map.addControl(geocoder, 'top-left');
+
+  geocoder.on('result', (e) => {
+    const result = e.result;
+    if (!result || !result.geometry) return;
+
+    const center = result.center || getFeatureLngLat(result);
+    const bbox = turf.bbox(result);
+
+    map.fitBounds(bbox, { padding: 60, maxZoom: 18 });
+
+    popup
+      .setLngLat(center)
+      .setHTML(buildPopupHTML(result.properties || {}, center))
+      .addTo(map);
+  });
 }
 
 // =====================================================
