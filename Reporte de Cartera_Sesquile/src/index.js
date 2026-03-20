@@ -112,7 +112,11 @@ function buildPopupHTML(props, lngLat = null) {
 
     <hr style="border:0.5px solid #555; margin:6px 0;">
 
-    <strong>Avalúo 2026:</strong> ${formatAvaluo(props['AVALUO 2026'])}<br>
+    <strong>Avalúo 2026:</strong> ${formatAvaluo(
+      props['AVALUO.2026'] ??
+      props['AVALUO 2026'] ??
+      props['AVALUO_2026']
+    )}<br>
     <strong>Área:</strong> ${formatArea(props.Shape_Area)} m²<br>
 
     ${svBtn}
