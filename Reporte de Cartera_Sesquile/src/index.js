@@ -2,6 +2,8 @@
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
 // ✅ Base siempre visible + filtros visuales por riesgo y vigencia
 // ✅ Popup actualizado con información tributaria y física
+// ✅ Predios sin categoría: solo contorno
+// ✅ Barra de transparencia para polígonos coloreados
 // =====================================================
 
 mapboxgl.accessToken =
@@ -28,6 +30,11 @@ let activeFilters = {
   riesgo: new Set(['BAJO', 'MEDIO', 'ALTO']),
   vigencia: new Set(['1-2', '3-5', '5+'])
 };
+
+// ================================
+// 🔹 OPACIDAD DINÁMICA
+// ================================
+let polygonOpacity = 0.85;
 
 // =====================================================
 // HELPERS
@@ -62,50 +69,6 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
 
 function streetViewUrl([lng, lat]) {
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-}
-
-function normalizeRiskValue(value) {
-  const v = (value ?? '').toString().trim().toUpperCase();
-  if (!v) return '';
-  if (v.includes('BAJO')) return 'BAJO';
-  if (v.includes('MEDIO')) return 'MEDIO';
-  if (v.includes('ALTO')) return 'ALTO';
-  return '';
-}
-
-function normalizeVigenciaValue(value) {
-  const v = (value ?? '').toString().trim().toUpperCase();
-
-  if (!v) return '';
-
-  if (
-    v === '1-2' ||
-    v.includes('1 A 2') ||
-    v.includes('1-2') ||
-    v.includes('UNO A DOS')
-  ) {
-    return '1-2';
-  }
-
-  if (
-    v === '3-5' ||
-    v.includes('3 A 5') ||
-    v.includes('3-5')
-  ) {
-    return '3-5';
-  }
-
-  if (
-    v === '5+' ||
-    v.includes('MAS DE 5') ||
-    v.includes('MÁS DE 5') ||
-    v.includes('>5') ||
-    v.includes('5+')
-  ) {
-    return '5+';
-  }
-
-  return '';
 }
 
 // =====================================================
@@ -144,147 +107,135 @@ function buildPopupHTML(props, lngLat = null) {
 }
 
 // =====================================================
-// FUNCIÓN CLAVE 🔥 (COLOR DINÁMICO)
-// - Todos los predios se ven siempre
-// - Los que coinciden con filtros se colorean
-// - Los demás quedan en color base
+// NORMALIZADORES EN EXPRESIÓN MAPBOX
+// =====================================================
+function riskExpression() {
+  return [
+    'case',
+    ['in', 'ALTO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'ALTO',
+    ['in', 'MEDIO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'MEDIO',
+    ['in', 'BAJO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'BAJO',
+    ''
+  ];
+}
+
+function vigenciaExpression() {
+  return [
+    'case',
+    ['any',
+      ['in', '1 A 2', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
+      ['in', '1-2', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
+    ], '1-2',
+    ['any',
+      ['in', '3 A 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
+      ['in', '3-5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
+    ], '3-5',
+    ['any',
+      ['in', 'MAS DE 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
+      ['in', 'MÁS DE 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
+      ['in', '5+', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
+      ['in', '>5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
+    ], '5+',
+    ''
+  ];
+}
+
+// =====================================================
+// ESTILO DINÁMICO
+// - Si coincide con filtros: color por riesgo
+// - Si no coincide o no tiene categoría: sin relleno
 // =====================================================
 function updateMapStyle() {
   const riesgos = Array.from(activeFilters.riesgo);
   const vigencias = Array.from(activeFilters.vigencia);
 
+  const riskExpr = riskExpression();
+  const vigExpr = vigenciaExpression();
+
   map.setPaintProperty('predios_ssk_layer', 'fill-color', [
     'case',
 
-    // 🔴 ALTO
     [
       'all',
-      ['==', ['case',
-        ['in', 'ALTO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'ALTO',
-        ['in', 'MEDIO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'MEDIO',
-        ['in', 'BAJO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'BAJO',
-        ''
-      ], 'ALTO'],
+      ['==', riskExpr, 'ALTO'],
       ['in', 'ALTO', ['literal', riesgos]],
-      ['==', ['case',
-        ['any',
-          ['in', '1 A 2', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '1-2', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '1-2',
-        ['any',
-          ['in', '3 A 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '3-5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '3-5',
-        ['any',
-          ['in', 'MAS DE 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', 'MÁS DE 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '5+', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '>5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '5+',
-        ''
-      ], ['at', 0, ['literal', vigencias]]],
+      ['in', vigExpr, ['literal', vigencias]]
     ],
     '#e74c3c',
 
-    // 🔴 ALTO (para múltiples vigencias activas)
     [
       'all',
-      ['==', ['case',
-        ['in', 'ALTO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'ALTO',
-        ['in', 'MEDIO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'MEDIO',
-        ['in', 'BAJO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'BAJO',
-        ''
-      ], 'ALTO'],
-      ['in', 'ALTO', ['literal', riesgos]],
-      ['in', ['case',
-        ['any',
-          ['in', '1 A 2', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '1-2', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '1-2',
-        ['any',
-          ['in', '3 A 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '3-5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '3-5',
-        ['any',
-          ['in', 'MAS DE 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', 'MÁS DE 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '5+', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '>5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '5+',
-        ''
-      ], ['literal', vigencias]]
-    ],
-    '#e74c3c',
-
-    // 🟡 MEDIO
-    [
-      'all',
-      ['==', ['case',
-        ['in', 'ALTO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'ALTO',
-        ['in', 'MEDIO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'MEDIO',
-        ['in', 'BAJO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'BAJO',
-        ''
-      ], 'MEDIO'],
+      ['==', riskExpr, 'MEDIO'],
       ['in', 'MEDIO', ['literal', riesgos]],
-      ['in', ['case',
-        ['any',
-          ['in', '1 A 2', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '1-2', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '1-2',
-        ['any',
-          ['in', '3 A 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '3-5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '3-5',
-        ['any',
-          ['in', 'MAS DE 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', 'MÁS DE 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '5+', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '>5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '5+',
-        ''
-      ], ['literal', vigencias]]
+      ['in', vigExpr, ['literal', vigencias]]
     ],
     '#f1c40f',
 
-    // 🟢 BAJO
     [
       'all',
-      ['==', ['case',
-        ['in', 'ALTO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'ALTO',
-        ['in', 'MEDIO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'MEDIO',
-        ['in', 'BAJO', ['upcase', ['coalesce', ['get', 'nivel_riesgo'], '']]], 'BAJO',
-        ''
-      ], 'BAJO'],
+      ['==', riskExpr, 'BAJO'],
       ['in', 'BAJO', ['literal', riesgos]],
-      ['in', ['case',
-        ['any',
-          ['in', '1 A 2', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '1-2', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '1-2',
-        ['any',
-          ['in', '3 A 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '3-5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '3-5',
-        ['any',
-          ['in', 'MAS DE 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', 'MÁS DE 5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '5+', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]],
-          ['in', '>5', ['upcase', ['coalesce', ['get', 'categoria_vigencia'], '']]]
-        ], '5+',
-        ''
-      ], ['literal', vigencias]]
+      ['in', vigExpr, ['literal', vigencias]]
     ],
     '#2ecc71',
 
-    // 🔘 BASE (sin categoría, apagados o no coinciden)
-    'rgba(200,200,200,0.20)'
+    'rgba(0,0,0,0)'
+  ]);
+
+  map.setPaintProperty('predios_ssk_layer', 'fill-opacity', [
+    'case',
+    [
+      'any',
+      [
+        'all',
+        ['==', riskExpr, 'ALTO'],
+        ['in', 'ALTO', ['literal', riesgos]],
+        ['in', vigExpr, ['literal', vigencias]]
+      ],
+      [
+        'all',
+        ['==', riskExpr, 'MEDIO'],
+        ['in', 'MEDIO', ['literal', riesgos]],
+        ['in', vigExpr, ['literal', vigencias]]
+      ],
+      [
+        'all',
+        ['==', riskExpr, 'BAJO'],
+        ['in', 'BAJO', ['literal', riesgos]],
+        ['in', vigExpr, ['literal', vigencias]]
+      ]
+    ],
+    polygonOpacity,
+    0
   ]);
 
   map.setPaintProperty('predios_ssk_layer', 'fill-outline-color', [
     'case',
-    ['==', ['coalesce', ['get', 'nivel_riesgo'], ''], ''],
-    '#999999',
-    '#ffffff'
+    [
+      'all',
+      ['==', riskExpr, 'ALTO'],
+      ['in', 'ALTO', ['literal', riesgos]],
+      ['in', vigExpr, ['literal', vigencias]]
+    ],
+    '#ffffff',
+
+    [
+      'all',
+      ['==', riskExpr, 'MEDIO'],
+      ['in', 'MEDIO', ['literal', riesgos]],
+      ['in', vigExpr, ['literal', vigencias]]
+    ],
+    '#ffffff',
+
+    [
+      'all',
+      ['==', riskExpr, 'BAJO'],
+      ['in', 'BAJO', ['literal', riesgos]],
+      ['in', vigExpr, ['literal', vigencias]]
+    ],
+    '#ffffff',
+
+    '#7f7f7f'
   ]);
 }
 
@@ -305,9 +256,9 @@ function addLayer() {
         type: 'fill',
         source: 'predios_ssk',
         paint: {
-          'fill-color': 'rgba(200,200,200,0.20)',
-          'fill-outline-color': '#ffffff',
-          'fill-opacity': 0.85
+          'fill-color': 'rgba(0,0,0,0)',
+          'fill-outline-color': '#7f7f7f',
+          'fill-opacity': 0
         }
       });
 
@@ -347,7 +298,6 @@ map.on('load', () => {
 
 // =====================================================
 // LEYENDA INTERACTIVA
-// - Soporta filtros de riesgo y vigencia
 // =====================================================
 document.querySelectorAll('.filter-item').forEach(el => {
   el.addEventListener('click', () => {
@@ -367,3 +317,17 @@ document.querySelectorAll('.filter-item').forEach(el => {
     updateMapStyle();
   });
 });
+
+// =====================================================
+// SLIDER DE TRANSPARENCIA
+// =====================================================
+const opacitySlider = document.getElementById('opacitySlider');
+const opacityValue = document.getElementById('opacityValue');
+
+if (opacitySlider && opacityValue) {
+  opacitySlider.addEventListener('input', (e) => {
+    polygonOpacity = Number(e.target.value) / 100;
+    opacityValue.textContent = `${e.target.value}%`;
+    updateMapStyle();
+  });
+}
