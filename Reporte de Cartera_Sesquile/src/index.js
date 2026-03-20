@@ -8,6 +8,7 @@
 // ✅ POPUP SOLO POR CLICK (no hover)
 // ✅ + BOTÓN STREET VIEW EN POPUP (también para predios/polígonos)
 //    (Google ajusta al panorama/vía más cercana)
+// ✅ Popup actualizado con campos tributarios/riesgo
 // =====================================================
 
 mapboxgl.accessToken =
@@ -57,7 +58,6 @@ function norm(v) {
 
 // ✅ Punto representativo del feature (para polígonos/puntos) + fallback
 function getFeatureLngLat(feature, fallbackLngLat = null) {
-  // 1) si viene del click (e.lngLat)
   if (
     fallbackLngLat &&
     typeof fallbackLngLat.lng === 'number' &&
@@ -66,19 +66,16 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
     return [fallbackLngLat.lng, fallbackLngLat.lat];
   }
 
-  // 2) si es punto
   const c = feature?.geometry?.coordinates;
   if (Array.isArray(c) && c.length >= 2 && c[0] != null && c[1] != null) {
     return [Number(c[0]), Number(c[1])];
   }
 
-  // 3) si es polígono: punto dentro del polígono (mejor que centroide)
   try {
     const pt = turf.pointOnFeature(feature).geometry.coordinates;
     return [Number(pt[0]), Number(pt[1])];
   } catch (e) {}
 
-  // 4) fallback
   return [-73.79724, 5.04463];
 }
 
@@ -88,8 +85,10 @@ function streetViewUrl([lng, lat]) {
 
 function buildPopupHTML(props, lngLat = null, extraHTML = '') {
   props = props || {};
+
   const avaluoTxt = formatAvaluo(props['AVALUO 2026']);
   const areaTxt = formatArea(props.Shape_Area);
+  const totalAcumuladoTxt = formatAvaluo(props.total_acumulado);
 
   const svBtn = lngLat
     ? `
@@ -105,11 +104,21 @@ function buildPopupHTML(props, lngLat = null, extraHTML = '') {
 
   return `
     <strong>Código:</strong> ${props.codigo ?? 'N/A'}<br>
-    <strong>Destino:</strong> ${props.DESTINO ?? 'N/A'}<br>
     <strong>Nombre:</strong> ${props.NOMBRE ?? 'N/A'}<br>
     <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? 'N/A'}<br>
+
+    <hr style="border:0.5px solid #555; margin:6px 0;">
+
+    <strong>Total acumulado:</strong> ${totalAcumuladoTxt}<br>
+    <strong>Categoría vigencia:</strong> ${props.categoria_vigencia ?? 'N/A'}<br>
+    <strong>Nivel de riesgo:</strong> ${props.nivel_riesgo ?? 'N/A'}<br>
+    <strong>Vereda:</strong> ${props.vereda ?? 'N/A'}<br>
+
+    <hr style="border:0.5px solid #555; margin:6px 0;">
+
     <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
     <strong>Área (㎡):</strong> ${areaTxt}<br>
+
     ${extraHTML}
     ${svBtn}
     <br><a style="font-size:9px;">&#9400; EffectiveActions</a>
@@ -123,10 +132,8 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
   fetch(`../src/data/${geojsonFile}`)
     .then((response) => response.json())
     .then((data) => {
-      // Guardar dataset completo
       if (sourceId === 'predios_ssk') PREDIOS_DATA = data;
 
-      // ✅ Source seguro
       if (map.getSource(sourceId)) {
         map.getSource(sourceId).setData(data);
       } else {
@@ -136,7 +143,6 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
         });
       }
 
-      // ✅ Layer seguro
       if (!map.getLayer(layerId)) {
         map.addLayer({
           id: layerId,
@@ -144,7 +150,6 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
           type: 'fill',
           minzoom: 12,
           paint: {
-            // ✅ Sin NOMBRE = naranja, Con NOMBRE = baseColor
             'fill-color': [
               'case',
               ['==', ['coalesce', ['get', 'NOMBRE'], ''], ''],
@@ -157,10 +162,6 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
         });
       }
 
-      // =====================================================
-      // ✅ POPUP SOLO POR CLICK (se quita hover)
-      // =====================================================
-      // Evitar duplicar handler si recargas el estilo
       try { map.off('click', layerId); } catch (e) {}
       try { map.off('mouseenter', layerId); } catch (e) {}
       try { map.off('mouseleave', layerId); } catch (e) {}
@@ -172,19 +173,16 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
         const props = feature.properties || {};
         const lngLatClick = e.lngLat;
 
-        // (Opcional) si quieres que al click también resalte el grupo:
         highlightGroupFromFeature(feature);
 
-        // ✅ coords para Street View (click o punto representativo)
         const svLngLat = getFeatureLngLat(feature, lngLatClick);
 
         popup
-          .setLngLat(lngLatClick) // el popup se abre donde clickeaste
-          .setHTML(buildPopupHTML(props, svLngLat)) // el botón usa svLngLat
+          .setLngLat(lngLatClick)
+          .setHTML(buildPopupHTML(props, svLngLat))
           .addTo(map);
       });
 
-      // Cursor pointer (esto NO es popup, solo cursor)
       map.on('mouseenter', layerId, () => {
         map.getCanvas().style.cursor = 'pointer';
       });
@@ -242,7 +240,6 @@ function setHighlight(featuresArr) {
 }
 
 function highlightGroupFromFeature(feature) {
-  // resalta por codigo o NUMERO_DOCUMENTO si existen
   const props = feature.properties || {};
   const features =
     PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
@@ -267,7 +264,6 @@ function highlightGroupFromFeature(feature) {
 
   setHighlight(group);
 
-  // Zoom al conjunto
   const bounds = turf.bbox({ type: 'FeatureCollection', features: group });
   map.fitBounds(bounds, { padding: 40 });
 }
@@ -289,7 +285,6 @@ map.on('style.load', () => {
 
 // =====================================================
 // Geocoder local: busca por codigo, NOMBRE, NUMERO_DOCUMENTO
-// (usando PREDIOS_DATA completo)
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
@@ -319,7 +314,7 @@ const geocoder = new MapboxGeocoder({
 
       if (!match) continue;
 
-      const centro = turf.centroid(feature).geometry.coordinates;
+      const centro = turf.pointOnFeature(feature).geometry.coordinates;
 
       const codTxt = (props.codigo ?? '').toString().trim();
       const nomTxt = (props.NOMBRE ?? '').toString().trim();
@@ -371,7 +366,7 @@ geocoder.on('result', (e) => {
   if (!result || !result.geometry) return;
 
   const properties = result.properties || {};
-  const matchField = properties.__matchField; // 'codigo' | 'NUMERO_DOCUMENTO' | 'NOMBRE'
+  const matchField = properties.__matchField;
   const matchValue = (properties.__matchValue ?? '').toString().trim();
 
   const features =
@@ -379,7 +374,6 @@ geocoder.on('result', (e) => {
 
   let toHighlight = [];
 
-  // ✅ Agrupar y resaltar todos los que compartan el mismo codigo o NUMERO_DOCUMENTO
   if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
     const mv = norm(matchValue);
     toHighlight = features.filter((f) => {
@@ -389,7 +383,6 @@ geocoder.on('result', (e) => {
     });
   }
 
-  // Fallback: si no encontró grupo, resalta el seleccionado
   if (!toHighlight.length) {
     toHighlight = [
       {
@@ -402,12 +395,10 @@ geocoder.on('result', (e) => {
 
   setHighlight(toHighlight);
 
-  // Zoom al conjunto
   const fc = { type: 'FeatureCollection', features: toHighlight };
   const bounds = turf.bbox(fc);
   map.fitBounds(bounds, { padding: 40 });
 
-  // Lista de códigos (para saber cuáles son)
   const codigos = toHighlight
     .map((f) => (f.properties?.codigo ?? '').toString().trim())
     .filter(Boolean);
@@ -418,13 +409,11 @@ geocoder.on('result', (e) => {
         .join('<br>')}${codigos.length > 10 ? '<br>…' : ''}`
     : '';
 
-  // ✅ coords para Street View desde el centro del bbox del grupo (más representativo)
   const b = turf.bbox(fc);
-  const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]; // [lng, lat]
+  const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
 
-  // Popup SOLO por selección (geocoder)
   popup
-    .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
+    .setLngLat(result.center || turf.pointOnFeature(result).geometry.coordinates)
     .setHTML(buildPopupHTML(properties, center, listaCodigos))
     .addTo(map);
 });
