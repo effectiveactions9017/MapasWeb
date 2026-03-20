@@ -22,7 +22,7 @@ body {
   background-color: rgba(0, 0, 0, 0.78);
   padding: 15px;
   border-radius: 8px;
-  width: 220px;
+  width: 230px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
   color: white;
 }
@@ -83,7 +83,7 @@ body {
 }
 
 /* =========================
-   CUADROS / BULLETS LEYENDA
+   CUADROS LEYENDA
    ========================= */
 .legend-color {
   display: inline-block;
@@ -93,18 +93,6 @@ body {
   min-height: 18px;
   border-radius: 3px;
   border: 1px solid #fff;
-  flex: 0 0 18px;
-}
-
-.legend-bullet {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
-  min-height: 18px;
-  border-radius: 50%;
-  border: 1px solid #fff;
-  background-color: #8e9aa0;
   flex: 0 0 18px;
 }
 
@@ -124,37 +112,35 @@ body {
 }
 
 /* =========================
+   CONTROL DE TRANSPARENCIA
+   ========================= */
+.opacity-control {
+  margin-top: 6px;
+}
+
+#opacitySlider {
+  width: 100%;
+  cursor: pointer;
+}
+
+.opacity-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #d9d9d9;
+}
+
+/* =========================
    FOOTER LEYENDA
    ========================= */
 .legend-footer {
   display: inline-block;
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 9px;
   color: #00bcd4;
   text-decoration: none;
-}
-
-/* =========================
-   CLASES ANTIGUAS (SE CONSERVAN)
-   ========================= */
-.c_viejas {
-  background-color: #AAB7B8;
-}
-
-.c_nuevas {
-  background-color: #A569BD;
-}
-
-.c_aumento {
-  background-color: #F7DC6F;
-}
-
-.dem_p {
-  background-color: #F5B041;
-}
-
-.dem_t {
-  background-color: #E74C3C;
 }
 
 /* =========================
@@ -203,7 +189,6 @@ body {
   text-decoration: underline;
 }
 
-/* Flechas del popup */
 .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
