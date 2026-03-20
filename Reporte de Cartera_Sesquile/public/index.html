@@ -1,40 +1,104 @@
-<!-- LEYENDA -->
-<div class="legend-container">
-  <div class="legend-title">
-    Predial<br />
-    Sesquilé
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Predios Urbanos Sesquilé</title>
+  <meta
+    name="viewport"
+    content="initial-scale=1, maximum-scale=1, user-scalable=no"
+  />
+
+  <!-- Mapbox CSS -->
+  <link
+    href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css"
+    rel="stylesheet"
+  />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+
+  <!-- Geocoder -->
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
+  />
+
+  <!-- Turf.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js"></script>
+
+  <!-- Fuentes y estilos adicionales -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css"
+    rel="stylesheet"
+  />
+  <script
+    async
+    defer
+    src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"
+  ></script>
+
+  <!-- CSS personalizado -->
+  <link rel="stylesheet" href="../src/main.css" />
+</head>
+
+<body>
+  <!-- CONTENEDOR DEL MAPA -->
+  <div id="map"></div>
+
+  <!-- LEYENDA -->
+  <div class="legend-container">
+    <div class="legend-title">
+      Predial<br />
+      Sesquilé
+    </div>
+
+    <div class="legend-subtitle">Nivel de riesgo</div>
+    <ul class="legend-list">
+      <li class="filter-item active" data-filter="riesgo" data-value="BAJO">
+        <span class="legend-color riesgo-bajo"></span>
+        Bajo
+      </li>
+      <li class="filter-item active" data-filter="riesgo" data-value="MEDIO">
+        <span class="legend-color riesgo-medio"></span>
+        Medio
+      </li>
+      <li class="filter-item active" data-filter="riesgo" data-value="ALTO">
+        <span class="legend-color riesgo-alto"></span>
+        Alto
+      </li>
+    </ul>
+
+    <div class="legend-subtitle">Categoría de vigencia</div>
+    <ul class="legend-list">
+      <li class="filter-item active" data-filter="vigencia" data-value="1-2">
+        <span class="legend-bullet"></span>
+        1 a 2 años
+      </li>
+      <li class="filter-item active" data-filter="vigencia" data-value="3-5">
+        <span class="legend-bullet"></span>
+        3 a 5 años
+      </li>
+      <li class="filter-item active" data-filter="vigencia" data-value="5+">
+        <span class="legend-bullet"></span>
+        Más de 5 años
+      </li>
+    </ul>
+
+    <a class="legend-footer">&#9400; EffectiveActions</a>
   </div>
 
-  <!-- 🔹 NIVEL DE RIESGO -->
-  <div class="legend-subtitle">Nivel de riesgo</div>
-  <ul class="legend-list">
-    <li class="filter-item active" data-filter="riesgo" data-value="BAJO">
-      <span class="legend-color riesgo-bajo"></span>
-      Bajo
-    </li>
-    <li class="filter-item active" data-filter="riesgo" data-value="MEDIO">
-      <span class="legend-color riesgo-medio"></span>
-      Medio
-    </li>
-    <li class="filter-item active" data-filter="riesgo" data-value="ALTO">
-      <span class="legend-color riesgo-alto"></span>
-      Alto
-    </li>
-  </ul>
+  <!-- CAJA DE INFORMACIÓN -->
+  <div class="info-box">
+    <h3>Información del predio</h3>
+    <div class="info-content">
+      Busca un predio para ver detalles
+    </div>
+  </div>
 
-  <!-- 🔹 CATEGORÍA DE VIGENCIA -->
-  <div class="legend-subtitle">Categoría de vigencia</div>
-  <ul class="legend-list">
-    <li class="filter-item active" data-filter="vigencia" data-value="1-2">
-      1 a 2 años
-    </li>
-    <li class="filter-item active" data-filter="vigencia" data-value="3-5">
-      3 a 5 años
-    </li>
-    <li class="filter-item active" data-filter="vigencia" data-value="5+">
-      Más de 5 años
-    </li>
-  </ul>
-
-  <a style="font-size: 9px; color: #00bcd4;">&#9400; EffectiveActions</a>
-</div>
+  <!-- SCRIPT PRINCIPAL -->
+  <script src="../src/index.js"></script>
+</body>
+</html>
