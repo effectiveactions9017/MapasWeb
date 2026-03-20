@@ -1,8 +1,8 @@
 // =====================================================
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
-// ✅ + Popup con riesgo y vigencia
-// ✅ + Colores por nivel de riesgo
-// ✅ + Leyenda interactiva (filtros combinados)
+// ✅ Popup con riesgo y vigencia
+// ✅ Colores por nivel de riesgo
+// ✅ Leyenda interactiva con filtros robustos
 // =====================================================
 
 mapboxgl.accessToken =
@@ -49,16 +49,11 @@ function formatArea(value) {
   return Math.round(value);
 }
 
-function norm(v) {
-  return (v ?? '').toString().toLowerCase().replace(/\s+/g, '').trim();
-}
-
 function getFeatureLngLat(feature, fallbackLngLat = null) {
   if (fallbackLngLat) return [fallbackLngLat.lng, fallbackLngLat.lat];
-
   try {
     return turf.pointOnFeature(feature).geometry.coordinates;
-  } catch (e) {
+  } catch {
     return [-73.79724, 5.04463];
   }
 }
@@ -70,7 +65,7 @@ function streetViewUrl([lng, lat]) {
 // =====================================================
 // POPUP
 // =====================================================
-function buildPopupHTML(props, lngLat = null, extraHTML = '') {
+function buildPopupHTML(props, lngLat = null) {
   const svBtn = lngLat
     ? `<div style="margin-top:10px;">
         <a href="${streetViewUrl(lngLat)}" target="_blank"
@@ -97,23 +92,58 @@ function buildPopupHTML(props, lngLat = null, extraHTML = '') {
     <strong>Avalúo 2026:</strong> ${formatAvaluo(props['AVALUO 2026'])}<br>
     <strong>Área:</strong> ${formatArea(props.Shape_Area)} m²<br>
 
-    ${extraHTML}
     ${svBtn}
   `;
 }
 
 // =====================================================
-// FILTROS
+// FILTRO ROBUSTO (CLAVE 🔥)
 // =====================================================
 function applyFilters() {
   const riesgoArray = Array.from(activeFilters.riesgo);
   const vigenciaArray = Array.from(activeFilters.vigencia);
 
-  map.setFilter('predios_ssk_layer', [
+  const filter = [
     'all',
-    ['in', ['get', 'nivel_riesgo'], ['literal', riesgoArray]],
-    ['in', ['get', 'categoria_vigencia'], ['literal', vigenciaArray]]
-  ]);
+
+    // 🔹 RIESGO
+    [
+      'any',
+      ...riesgoArray.map(r =>
+        ['in', r, ['upcase', ['get', 'nivel_riesgo']]]
+      )
+    ],
+
+    // 🔹 VIGENCIA
+    [
+      'any',
+      ...vigenciaArray.map(v => {
+        if (v === '1-2') {
+          return ['any',
+            ['in', '1 A 2', ['upcase', ['get', 'categoria_vigencia']]],
+            ['in', '1-2', ['upcase', ['get', 'categoria_vigencia']]]
+          ];
+        }
+
+        if (v === '3-5') {
+          return ['any',
+            ['in', '3 A 5', ['upcase', ['get', 'categoria_vigencia']]],
+            ['in', '3-5', ['upcase', ['get', 'categoria_vigencia']]]
+          ];
+        }
+
+        if (v === '5+') {
+          return ['any',
+            ['in', '5', ['upcase', ['get', 'categoria_vigencia']]],
+            ['in', 'MAS DE 5', ['upcase', ['get', 'categoria_vigencia']]],
+            ['in', 'MÁS DE 5', ['upcase', ['get', 'categoria_vigencia']]]
+          ];
+        }
+      })
+    ]
+  ];
+
+  map.setFilter('predios_ssk_layer', filter);
 }
 
 // =====================================================
@@ -123,6 +153,7 @@ function addLayer() {
   fetch('../src/data/PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson')
     .then(res => res.json())
     .then(data => {
+
       PREDIOS_DATA = data;
 
       map.addSource('predios_ssk', {
@@ -137,7 +168,7 @@ function addLayer() {
         paint: {
           'fill-color': [
             'match',
-            ['get', 'nivel_riesgo'],
+            ['upcase', ['get', 'nivel_riesgo']],
             'BAJO', '#2ecc71',
             'MEDIO', '#f1c40f',
             'ALTO', '#e74c3c',
@@ -148,6 +179,7 @@ function addLayer() {
         }
       });
 
+      // CLICK POPUP
       map.on('click', 'predios_ssk_layer', (e) => {
         const f = e.features[0];
         const coords = getFeatureLngLat(f, e.lngLat);
@@ -160,7 +192,7 @@ function addLayer() {
 
       map.addControl(new mapboxgl.NavigationControl());
 
-      applyFilters(); // 🔥 activar filtros al inicio
+      applyFilters(); // 🔥 aplicar filtros al inicio
     });
 }
 
