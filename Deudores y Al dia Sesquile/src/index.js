@@ -47,6 +47,12 @@ function formatArea(value) {
   return isNaN(n) ? String(value) : String(Math.round(n));
 }
 
+function formatCOP(value, fallback = 'N/A') {
+  if (value === null || value === undefined || value === '') return fallback;
+  const n = Number(value);
+  return isNaN(n) ? fallback : '$ ' + n.toLocaleString('es-CO');
+}
+
 function norm(v) {
   return (v ?? '')
     .toString()
@@ -88,30 +94,42 @@ function streetViewUrl([lng, lat]) {
 
 function buildPopupHTML(props, lngLat = null, extraHTML = '') {
   props = props || {};
-  const avaluoTxt = formatAvaluo(props['AVALUO 2026']);
-  const areaTxt = formatArea(props.Shape_Area);
+
+  const ultimoPagoTxt = formatCOP(props['valor ultimo pago'], 'N/A');
+  const valorMoraTxt = formatCOP(props['total valor mora'], '$ 0');
 
   const svBtn = lngLat
     ? `
-      <div style="margin-top:10px;">
-        <a href="${streetViewUrl(lngLat)}" target="_blank" rel="noopener"
-           style="display:inline-block; padding:6px 10px; border-radius:6px;
-                  background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
-          📷 Street View
-        </a>
-      </div>
+      <a href="${streetViewUrl(lngLat)}" target="_blank" rel="noopener"
+         style="display:inline-block; padding:6px 10px; border-radius:6px;
+                background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+        📷 Street View
+      </a>
     `
     : '';
 
+  const pagoBtn = `
+    <a href="https://sesquile.universo-online.com.co/WebForms/ImpuestoPredial/Liquidar_Impuesto_Predial_Usuario_1cero1.aspx"
+       target="_blank" rel="noopener"
+       style="display:inline-block; padding:6px 10px; border-radius:6px;
+              background:#2ec4b6; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+      💳 Ir a pagar impuesto
+    </a>
+  `;
+
   return `
     <strong>Código:</strong> ${props.codigo ?? 'N/A'}<br>
-    <strong>Destino:</strong> ${props.DESTINO ?? 'N/A'}<br>
     <strong>Nombre:</strong> ${props.NOMBRE ?? 'N/A'}<br>
     <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? 'N/A'}<br>
-    <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
-    <strong>Área (㎡):</strong> ${areaTxt}<br>
+    <strong>Último pago realizado:</strong> ${ultimoPagoTxt}<br>
+    <strong>Valor en mora:</strong> ${valorMoraTxt}<br>
+
+    <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+      ${pagoBtn}
+      ${svBtn}
+    </div>
+
     ${extraHTML}
-    ${svBtn}
     <br><a style="font-size:9px;">&#9400; EffectiveActions</a>
   `;
 }
