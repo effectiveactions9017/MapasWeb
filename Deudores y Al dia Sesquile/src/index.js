@@ -7,7 +7,7 @@
 // ✅ Evita errores "source/layer already exists"
 // ✅ POPUP SOLO POR CLICK (no hover)
 // ✅ + BOTÓN STREET VIEW EN POPUP (también para predios/polígonos)
-//    (Google ajusta al panorama/vía más cercana)
+// ✅ + BOTÓN IR A PAGAR IMPUESTO
 // =====================================================
 
 mapboxgl.accessToken =
@@ -35,30 +35,18 @@ let PREDIOS_DATA = null;
 // =====================================================
 // Helpers
 // =====================================================
-function formatAvaluo(value) {
-  if (value === null || value === undefined || value === '') return 'N/A';
-  const n = Number(value);
-  return isNaN(n) ? String(value) : n.toLocaleString('es-CO');
-}
-
-function formatArea(value) {
-  if (value === null || value === undefined || value === '') return 'N/A';
-  const n = Number(value);
-  return isNaN(n) ? String(value) : String(Math.round(n));
-}
-
-function formatCOP(value, fallback = 'N/A') {
-  if (value === null || value === undefined || value === '') return fallback;
-  const n = Number(value);
-  return isNaN(n) ? fallback : '$ ' + n.toLocaleString('es-CO');
-}
-
 function norm(v) {
   return (v ?? '')
     .toString()
     .toLowerCase()
     .replace(/\s+/g, '')
     .trim();
+}
+
+function formatCOP(value, fallback = 'N/A') {
+  if (value === null || value === undefined || value === '') return fallback;
+  const n = Number(value);
+  return isNaN(n) ? fallback : '$ ' + n.toLocaleString('es-CO');
 }
 
 // ✅ Punto representativo del feature (para polígonos/puntos) + fallback
@@ -74,11 +62,16 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
 
   // 2) si es punto
   const c = feature?.geometry?.coordinates;
-  if (Array.isArray(c) && c.length >= 2 && c[0] != null && c[1] != null) {
+  if (
+    Array.isArray(c) &&
+    c.length >= 2 &&
+    typeof c[0] === 'number' &&
+    typeof c[1] === 'number'
+  ) {
     return [Number(c[0]), Number(c[1])];
   }
 
-  // 3) si es polígono: punto dentro del polígono (mejor que centroide)
+  // 3) si es polígono
   try {
     const pt = turf.pointOnFeature(feature).geometry.coordinates;
     return [Number(pt[0]), Number(pt[1])];
@@ -95,8 +88,36 @@ function streetViewUrl([lng, lat]) {
 function buildPopupHTML(props, lngLat = null, extraHTML = '') {
   props = props || {};
 
-  const ultimoPagoTxt = formatCOP(props['valor ultimo pago'], 'N/A');
-  const valorMoraTxt = formatCOP(props['total valor mora'], '$ 0');
+  const tieneUltimoPago =
+    props['valor ultimo pago'] !== null &&
+    props['valor ultimo pago'] !== undefined &&
+    props['valor ultimo pago'] !== '';
+
+  const tieneValorMora =
+    props['total valor mora'] !== null &&
+    props['total valor mora'] !== undefined &&
+    props['total valor mora'] !== '';
+
+  const ultimoPagoTxt = tieneUltimoPago
+    ? formatCOP(props['valor ultimo pago'], 'N/A')
+    : '';
+
+  const valorMoraTxt = tieneValorMora
+    ? formatCOP(props['total valor mora'], '$ 0')
+    : '';
+
+  let infoPagoHTML = '';
+
+  if (!tieneUltimoPago && !tieneValorMora) {
+    infoPagoHTML = `<strong>Información de pago:</strong> No se tiene información<br>`;
+  } else {
+    if (tieneUltimoPago) {
+      infoPagoHTML += `<strong>Último pago realizado:</strong> ${ultimoPagoTxt}<br>`;
+    }
+    if (tieneValorMora) {
+      infoPagoHTML += `<strong>Valor en mora:</strong> ${valorMoraTxt}<br>`;
+    }
+  }
 
   const svBtn = lngLat
     ? `
@@ -121,8 +142,7 @@ function buildPopupHTML(props, lngLat = null, extraHTML = '') {
     <strong>Código:</strong> ${props.codigo ?? 'N/A'}<br>
     <strong>Nombre:</strong> ${props.NOMBRE ?? 'N/A'}<br>
     <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? 'N/A'}<br>
-    <strong>Último pago realizado:</strong> ${ultimoPagoTxt}<br>
-    <strong>Valor en mora:</strong> ${valorMoraTxt}<br>
+    ${infoPagoHTML}
 
     <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
       ${pagoBtn}
@@ -176,9 +196,8 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
       }
 
       // =====================================================
-      // ✅ POPUP SOLO POR CLICK (se quita hover)
+      // ✅ POPUP SOLO POR CLICK
       // =====================================================
-      // Evitar duplicar handler si recargas el estilo
       try { map.off('click', layerId); } catch (e) {}
       try { map.off('mouseenter', layerId); } catch (e) {}
       try { map.off('mouseleave', layerId); } catch (e) {}
@@ -190,19 +209,18 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
         const props = feature.properties || {};
         const lngLatClick = e.lngLat;
 
-        // (Opcional) si quieres que al click también resalte el grupo:
+        // Resaltar grupo
         highlightGroupFromFeature(feature);
 
-        // ✅ coords para Street View (click o punto representativo)
+        // coords para Street View
         const svLngLat = getFeatureLngLat(feature, lngLatClick);
 
         popup
-          .setLngLat(lngLatClick) // el popup se abre donde clickeaste
-          .setHTML(buildPopupHTML(props, svLngLat)) // el botón usa svLngLat
+          .setLngLat(lngLatClick)
+          .setHTML(buildPopupHTML(props, svLngLat))
           .addTo(map);
       });
 
-      // Cursor pointer (esto NO es popup, solo cursor)
       map.on('mouseenter', layerId, () => {
         map.getCanvas().style.cursor = 'pointer';
       });
@@ -260,7 +278,6 @@ function setHighlight(featuresArr) {
 }
 
 function highlightGroupFromFeature(feature) {
-  // resalta por codigo o NUMERO_DOCUMENTO si existen
   const props = feature.properties || {};
   const features =
     PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
@@ -285,7 +302,6 @@ function highlightGroupFromFeature(feature) {
 
   setHighlight(group);
 
-  // Zoom al conjunto
   const bounds = turf.bbox({ type: 'FeatureCollection', features: group });
   map.fitBounds(bounds, { padding: 40 });
 }
@@ -306,8 +322,7 @@ map.on('style.load', () => {
 });
 
 // =====================================================
-// Geocoder local: busca por codigo, NOMBRE, NUMERO_DOCUMENTO
-// (usando PREDIOS_DATA completo)
+// Geocoder local
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
@@ -381,15 +396,14 @@ const geocoder = new MapboxGeocoder({
 map.addControl(geocoder, 'top-left');
 
 // =====================================================
-// Al seleccionar resultado: zoom + resaltar 1 o varios predios vinculados
-// + popup SOLO cuando selecciona (no hover)
+// Al seleccionar resultado
 // =====================================================
 geocoder.on('result', (e) => {
   const result = e.result;
   if (!result || !result.geometry) return;
 
   const properties = result.properties || {};
-  const matchField = properties.__matchField; // 'codigo' | 'NUMERO_DOCUMENTO' | 'NOMBRE'
+  const matchField = properties.__matchField;
   const matchValue = (properties.__matchValue ?? '').toString().trim();
 
   const features =
@@ -397,7 +411,6 @@ geocoder.on('result', (e) => {
 
   let toHighlight = [];
 
-  // ✅ Agrupar y resaltar todos los que compartan el mismo codigo o NUMERO_DOCUMENTO
   if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
     const mv = norm(matchValue);
     toHighlight = features.filter((f) => {
@@ -407,7 +420,6 @@ geocoder.on('result', (e) => {
     });
   }
 
-  // Fallback: si no encontró grupo, resalta el seleccionado
   if (!toHighlight.length) {
     toHighlight = [
       {
@@ -420,12 +432,10 @@ geocoder.on('result', (e) => {
 
   setHighlight(toHighlight);
 
-  // Zoom al conjunto
   const fc = { type: 'FeatureCollection', features: toHighlight };
   const bounds = turf.bbox(fc);
   map.fitBounds(bounds, { padding: 40 });
 
-  // Lista de códigos (para saber cuáles son)
   const codigos = toHighlight
     .map((f) => (f.properties?.codigo ?? '').toString().trim())
     .filter(Boolean);
@@ -436,11 +446,9 @@ geocoder.on('result', (e) => {
         .join('<br>')}${codigos.length > 10 ? '<br>…' : ''}`
     : '';
 
-  // ✅ coords para Street View desde el centro del bbox del grupo (más representativo)
   const b = turf.bbox(fc);
-  const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]; // [lng, lat]
+  const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
 
-  // Popup SOLO por selección (geocoder)
   popup
     .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
     .setHTML(buildPopupHTML(properties, center, listaCodigos))
