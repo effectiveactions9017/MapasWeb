@@ -2,12 +2,12 @@
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
 // ✅ Búsqueda local por: codigo, NOMBRE, NUMERO_DOCUMENTO
 // ✅ Resalta 1 o varios predios (mismo codigo o documento)
-// ✅ Predios SIN NOMBRE en naranja
 // ✅ Usa PREDIOS_DATA para búsqueda completa (sin querySourceFeatures)
 // ✅ Evita errores "source/layer already exists"
 // ✅ POPUP SOLO POR CLICK (no hover)
 // ✅ + BOTÓN STREET VIEW EN POPUP (también para predios/polígonos)
 // ✅ + BOTÓN IR A PAGAR IMPUESTO
+// ✅ + COLOR ÚNICO PARA TODOS LOS PREDIOS
 // =====================================================
 
 mapboxgl.accessToken =
@@ -149,7 +149,6 @@ function buildPopupHTML(props, lngLat = null, extraHTML = '') {
       ${svBtn}
     </div>
 
-    ${extraHTML}
     <br><a style="font-size:9px;">&#9400; EffectiveActions</a>
   `;
 }
@@ -182,13 +181,7 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
           type: 'fill',
           minzoom: 12,
           paint: {
-            // ✅ Sin NOMBRE = naranja, Con NOMBRE = baseColor
-            'fill-color': [
-              'case',
-              ['==', ['coalesce', ['get', 'NOMBRE'], ''], ''],
-              '#ffb703',
-              baseColor
-            ],
+            'fill-color': baseColor,
             'fill-opacity': 0.75,
             'fill-outline-color': '#ffffff'
           }
@@ -436,21 +429,11 @@ geocoder.on('result', (e) => {
   const bounds = turf.bbox(fc);
   map.fitBounds(bounds, { padding: 40 });
 
-  const codigos = toHighlight
-    .map((f) => (f.properties?.codigo ?? '').toString().trim())
-    .filter(Boolean);
-
-  const listaCodigos = codigos.length
-    ? `<br><strong>Predios vinculados (${codigos.length}):</strong><br>${codigos
-        .slice(0, 10)
-        .join('<br>')}${codigos.length > 10 ? '<br>…' : ''}`
-    : '';
-
   const b = turf.bbox(fc);
   const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
 
   popup
     .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
-    .setHTML(buildPopupHTML(properties, center, listaCodigos))
+    .setHTML(buildPopupHTML(properties, center))
     .addTo(map);
 });
