@@ -8,6 +8,8 @@
 // ✅ + BOTÓN STREET VIEW EN POPUP (también para predios/polígonos)
 // ✅ + BOTÓN IR A PAGAR IMPUESTO
 // ✅ + COLOR ÚNICO PARA TODOS LOS PREDIOS
+// ✅ + OPACIDAD 0.6
+// ✅ + ELIMINAR DUPLICADOS POR CODIGO PARA EVITAR SOBREPOSICIÓN
 // =====================================================
 
 mapboxgl.accessToken =
@@ -47,6 +49,34 @@ function formatCOP(value, fallback = 'N/A') {
   if (value === null || value === undefined || value === '') return fallback;
   const n = Number(value);
   return isNaN(n) ? fallback : '$ ' + n.toLocaleString('es-CO');
+}
+
+// ✅ Elimina duplicados por código para evitar sobreposición visual
+function deduplicateGeoJSONByCodigo(fc) {
+  if (!fc || !Array.isArray(fc.features)) return fc;
+
+  const seen = new Set();
+  const uniqueFeatures = [];
+
+  for (const feature of fc.features) {
+    const codigo = norm(feature?.properties?.codigo);
+
+    // Si no tiene código, lo dejamos pasar
+    if (!codigo) {
+      uniqueFeatures.push(feature);
+      continue;
+    }
+
+    if (!seen.has(codigo)) {
+      seen.add(codigo);
+      uniqueFeatures.push(feature);
+    }
+  }
+
+  return {
+    ...fc,
+    features: uniqueFeatures
+  };
 }
 
 // ✅ Punto representativo del feature (para polígonos/puntos) + fallback
@@ -159,7 +189,10 @@ function buildPopupHTML(props, lngLat = null, extraHTML = '') {
 function addLayer(geojsonFile, sourceId, layerId, baseColor) {
   fetch(`../src/data/${geojsonFile}`)
     .then((response) => response.json())
-    .then((data) => {
+    .then((rawData) => {
+      // ✅ Limpiar duplicados por código antes de pintar
+      const data = deduplicateGeoJSONByCodigo(rawData);
+
       // Guardar dataset completo
       if (sourceId === 'predios_ssk') PREDIOS_DATA = data;
 
@@ -182,7 +215,7 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
           minzoom: 12,
           paint: {
             'fill-color': baseColor,
-            'fill-opacity': 0.75,
+            'fill-opacity': 0.6,
             'fill-outline-color': '#ffffff'
           }
         });
@@ -236,6 +269,7 @@ function ensureHighlightLayers() {
     });
   }
 
+  // ✅ Sin relleno para que no altere el color base
   if (!map.getLayer('predios_highlight_fill')) {
     map.addLayer({
       id: 'predios_highlight_fill',
@@ -243,7 +277,7 @@ function ensureHighlightLayers() {
       source: 'predios_highlight',
       paint: {
         'fill-color': '#ffff00',
-        'fill-opacity': 0.30
+        'fill-opacity': 0
       }
     });
   }
