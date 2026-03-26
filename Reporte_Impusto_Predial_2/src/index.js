@@ -8,6 +8,8 @@
 // ✅ + ELIMINAR DUPLICADOS POR CODIGO
 // ✅ + CLASIFICACIÓN POR CATEGORÍAS
 // ✅ + BOTONES EN LEYENDA PARA PRENDER / APAGAR
+// ✅ + PREDIOS PÚBLICOS EN AZUL CLARO
+// ✅ + PREDIOS PÚBLICOS SE RESALTAN UNO POR UNO
 // =====================================================
 
 mapboxgl.accessToken =
@@ -35,7 +37,7 @@ let PREDIOS_DATA = null;
 const CATEGORY_CONFIG = {
   publicos: {
     label: 'Predios públicos',
-    color: '#7b2cbf',
+    color: '#4fc3f7',
     layerId: 'predios_publicos_layer'
   },
   mora: {
@@ -163,7 +165,6 @@ function buildPopupHTML(props, lngLat = null) {
   props = props || {};
 
   const categoria = getCategoriaPredio(props);
-  const categoriaLabel = getCategoriaLabel(categoria);
 
   const tieneUltimoPago = hasValue(props['valor ultimo pago']);
   const tieneValorMora = hasValue(props['total valor mora']);
@@ -325,16 +326,8 @@ function bindCategoryLayerEvents() {
     const layerId = cfg.layerId;
 
     try { map.off('click', layerId, handlePredioClick); } catch (e) {}
-    try {
-      map.off('mouseenter', layerId, () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-    } catch (e) {}
-    try {
-      map.off('mouseleave', layerId, () => {
-        map.getCanvas().style.cursor = '';
-      });
-    } catch (e) {}
+    try { map.off('mouseenter', layerId); } catch (e) {}
+    try { map.off('mouseleave', layerId); } catch (e) {}
 
     map.on('click', layerId, handlePredioClick);
 
@@ -400,6 +393,18 @@ function highlightGroupFromFeature(feature) {
 
   if (!features.length) {
     setHighlight([feature]);
+    return;
+  }
+
+  const categoria = getCategoriaPredio(props);
+
+  // ✅ Si es predio público, resaltar SOLO ese predio
+  if (categoria === 'publicos') {
+    const group = [feature];
+    setHighlight(group);
+
+    const bounds = turf.bbox({ type: 'FeatureCollection', features: group });
+    map.fitBounds(bounds, { padding: 40 });
     return;
   }
 
@@ -553,7 +558,16 @@ geocoder.on('result', (e) => {
 
   let toHighlight = [];
 
-  if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
+  // ✅ Si el resultado es predio público, solo resaltar uno
+  if (getCategoriaPredio(properties) === 'publicos') {
+    toHighlight = [
+      {
+        type: 'Feature',
+        geometry: result.geometry,
+        properties: properties
+      }
+    ];
+  } else if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
     const mv = norm(matchValue);
     toHighlight = features.filter((f) => {
       const p = f.properties || {};
