@@ -2,14 +2,12 @@
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
 // ✅ Búsqueda local por: codigo, NOMBRE, NUMERO_DOCUMENTO
 // ✅ Resalta 1 o varios predios (mismo codigo o documento)
-// ✅ Usa PREDIOS_DATA para búsqueda completa (sin querySourceFeatures)
-// ✅ Evita errores "source/layer already exists"
-// ✅ POPUP SOLO POR CLICK (no hover)
-// ✅ + BOTÓN STREET VIEW EN POPUP (también para predios/polígonos)
+// ✅ POPUP SOLO POR CLICK
+// ✅ + BOTÓN STREET VIEW
 // ✅ + BOTÓN IR A PAGAR IMPUESTO
-// ✅ + COLOR ÚNICO PARA TODOS LOS PREDIOS
-// ✅ + OPACIDAD 0.6
-// ✅ + ELIMINAR DUPLICADOS POR CODIGO PARA EVITAR SOBREPOSICIÓN
+// ✅ + ELIMINAR DUPLICADOS POR CODIGO
+// ✅ + CLASIFICACIÓN POR CATEGORÍAS
+// ✅ + BOTONES EN LEYENDA PARA PRENDER / APAGAR
 // =====================================================
 
 mapboxgl.accessToken =
@@ -31,8 +29,31 @@ let popup = new mapboxgl.Popup({
   className: 'custom-popup'
 });
 
-// ✅ Dataset completo para búsquedas
 let PREDIOS_DATA = null;
+
+// Capas por categoría
+const CATEGORY_CONFIG = {
+  publicos: {
+    label: 'Predios públicos',
+    color: '#7b2cbf',
+    layerId: 'predios_publicos_layer'
+  },
+  mora: {
+    label: 'Predios con mora',
+    color: '#e63946',
+    layerId: 'predios_mora_layer'
+  },
+  aldia: {
+    label: 'Predios al día',
+    color: '#2ec4b6',
+    layerId: 'predios_aldia_layer'
+  },
+  sinpago: {
+    label: 'Posibles predios sin pagar',
+    color: '#ffb703',
+    layerId: 'predios_sinpago_layer'
+  }
+};
 
 // =====================================================
 // Helpers
@@ -40,8 +61,10 @@ let PREDIOS_DATA = null;
 function norm(v) {
   return (v ?? '')
     .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(/\s+/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
@@ -49,6 +72,10 @@ function formatCOP(value, fallback = 'N/A') {
   if (value === null || value === undefined || value === '') return fallback;
   const n = Number(value);
   return isNaN(n) ? fallback : '$ ' + n.toLocaleString('es-CO');
+}
+
+function hasValue(v) {
+  return v !== null && v !== undefined && v !== '';
 }
 
 // ✅ Elimina duplicados por código para evitar sobreposición visual
@@ -61,7 +88,6 @@ function deduplicateGeoJSONByCodigo(fc) {
   for (const feature of fc.features) {
     const codigo = norm(feature?.properties?.codigo);
 
-    // Si no tiene código, lo dejamos pasar
     if (!codigo) {
       uniqueFeatures.push(feature);
       continue;
@@ -79,9 +105,30 @@ function deduplicateGeoJSONByCodigo(fc) {
   };
 }
 
-// ✅ Punto representativo del feature (para polígonos/puntos) + fallback
+// ✅ Clasificación única por prioridad:
+// 1) Públicos
+// 2) Mora
+// 3) Al día
+// 4) Posibles sin pagar
+function getCategoriaPredio(props = {}) {
+  const nombre = norm(props.NOMBRE);
+  const esPublico = nombre === 'municipio de sesquile';
+
+  const tieneUltimoPago = hasValue(props['valor ultimo pago']);
+  const tieneValorMora = hasValue(props['total valor mora']);
+
+  if (esPublico) return 'publicos';
+  if (tieneValorMora) return 'mora';
+  if (tieneUltimoPago) return 'aldia';
+  return 'sinpago';
+}
+
+function getCategoriaLabel(cat) {
+  return CATEGORY_CONFIG[cat]?.label || 'Sin categoría';
+}
+
+// ✅ Punto representativo del feature
 function getFeatureLngLat(feature, fallbackLngLat = null) {
-  // 1) si viene del click (e.lngLat)
   if (
     fallbackLngLat &&
     typeof fallbackLngLat.lng === 'number' &&
@@ -90,7 +137,6 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
     return [fallbackLngLat.lng, fallbackLngLat.lat];
   }
 
-  // 2) si es punto
   const c = feature?.geometry?.coordinates;
   if (
     Array.isArray(c) &&
@@ -101,13 +147,11 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
     return [Number(c[0]), Number(c[1])];
   }
 
-  // 3) si es polígono
   try {
     const pt = turf.pointOnFeature(feature).geometry.coordinates;
     return [Number(pt[0]), Number(pt[1])];
   } catch (e) {}
 
-  // 4) fallback
   return [-73.79724, 5.04463];
 }
 
@@ -115,18 +159,14 @@ function streetViewUrl([lng, lat]) {
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 }
 
-function buildPopupHTML(props, lngLat = null, extraHTML = '') {
+function buildPopupHTML(props, lngLat = null) {
   props = props || {};
 
-  const tieneUltimoPago =
-    props['valor ultimo pago'] !== null &&
-    props['valor ultimo pago'] !== undefined &&
-    props['valor ultimo pago'] !== '';
+  const categoria = getCategoriaPredio(props);
+  const categoriaLabel = getCategoriaLabel(categoria);
 
-  const tieneValorMora =
-    props['total valor mora'] !== null &&
-    props['total valor mora'] !== undefined &&
-    props['total valor mora'] !== '';
+  const tieneUltimoPago = hasValue(props['valor ultimo pago']);
+  const tieneValorMora = hasValue(props['total valor mora']);
 
   const ultimoPagoTxt = tieneUltimoPago
     ? formatCOP(props['valor ultimo pago'], 'N/A')
@@ -138,8 +178,18 @@ function buildPopupHTML(props, lngLat = null, extraHTML = '') {
 
   let infoPagoHTML = '';
 
+  if (categoria === 'publicos') {
+    infoPagoHTML += `<strong>Categoría:</strong> Predio público<br>`;
+  } else if (categoria === 'mora') {
+    infoPagoHTML += `<strong>Categoría:</strong> Predio con mora<br>`;
+  } else if (categoria === 'aldia') {
+    infoPagoHTML += `<strong>Categoría:</strong> Predio al día<br>`;
+  } else {
+    infoPagoHTML += `<strong>Categoría:</strong> Posible predio sin pagar<br>`;
+  }
+
   if (!tieneUltimoPago && !tieneValorMora) {
-    infoPagoHTML = `<strong>Información de pago:</strong> No se tiene información<br>`;
+    infoPagoHTML += `<strong>Información de pago:</strong> No se tiene información<br>`;
   } else {
     if (tieneUltimoPago) {
       infoPagoHTML += `<strong>Último pago realizado:</strong> ${ultimoPagoTxt}<br>`;
@@ -184,82 +234,122 @@ function buildPopupHTML(props, lngLat = null, extraHTML = '') {
 }
 
 // =====================================================
-// Función para agregar capa GeoJSON
+// Procesar dataset y agregar categoría
 // =====================================================
-function addLayer(geojsonFile, sourceId, layerId, baseColor) {
+function enrichPrediosData(rawFC) {
+  const dedup = deduplicateGeoJSONByCodigo(rawFC);
+
+  const features = (dedup.features || []).map((feature) => {
+    const props = { ...(feature.properties || {}) };
+    props.__categoria = getCategoriaPredio(props);
+
+    return {
+      ...feature,
+      properties: props
+    };
+  });
+
+  return {
+    ...dedup,
+    features
+  };
+}
+
+// =====================================================
+// Crear source y capas por categoría
+// =====================================================
+function addPrediosLayer(geojsonFile, sourceId) {
   fetch(`../src/data/${geojsonFile}`)
     .then((response) => response.json())
     .then((rawData) => {
-      // ✅ Limpiar duplicados por código antes de pintar
-      const data = deduplicateGeoJSONByCodigo(rawData);
+      const data = enrichPrediosData(rawData);
+      PREDIOS_DATA = data;
 
-      // Guardar dataset completo
-      if (sourceId === 'predios_ssk') PREDIOS_DATA = data;
-
-      // ✅ Source seguro
       if (map.getSource(sourceId)) {
         map.getSource(sourceId).setData(data);
       } else {
         map.addSource(sourceId, {
           type: 'geojson',
-          data: data
+          data
         });
       }
 
-      // ✅ Layer seguro
-      if (!map.getLayer(layerId)) {
-        map.addLayer({
-          id: layerId,
-          source: sourceId,
-          type: 'fill',
-          minzoom: 12,
-          paint: {
-            'fill-color': baseColor,
-            'fill-opacity': 0.6,
-            'fill-outline-color': '#ffffff'
-          }
-        });
-      }
-
-      // =====================================================
-      // ✅ POPUP SOLO POR CLICK
-      // =====================================================
-      try { map.off('click', layerId); } catch (e) {}
-      try { map.off('mouseenter', layerId); } catch (e) {}
-      try { map.off('mouseleave', layerId); } catch (e) {}
-
-      map.on('click', layerId, (e) => {
-        const feature = e.features && e.features[0];
-        if (!feature) return;
-
-        const props = feature.properties || {};
-        const lngLatClick = e.lngLat;
-
-        // Resaltar grupo
-        highlightGroupFromFeature(feature);
-
-        // coords para Street View
-        const svLngLat = getFeatureLngLat(feature, lngLatClick);
-
-        popup
-          .setLngLat(lngLatClick)
-          .setHTML(buildPopupHTML(props, svLngLat))
-          .addTo(map);
-      });
-
-      map.on('mouseenter', layerId, () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-
-      map.on('mouseleave', layerId, () => {
-        map.getCanvas().style.cursor = '';
-      });
+      addCategoryLayers(sourceId);
+      bindCategoryLayerEvents();
+      bindLegendToggles();
     })
     .catch((err) => console.error('Error cargando GeoJSON:', err));
 }
 
+function addCategoryLayers(sourceId) {
+  Object.entries(CATEGORY_CONFIG).forEach(([catKey, cfg]) => {
+    if (!map.getLayer(cfg.layerId)) {
+      map.addLayer({
+        id: cfg.layerId,
+        source: sourceId,
+        type: 'fill',
+        minzoom: 12,
+        filter: ['==', ['get', '__categoria'], catKey],
+        paint: {
+          'fill-color': cfg.color,
+          'fill-opacity': 0.6,
+          'fill-outline-color': '#ffffff'
+        }
+      });
+    }
+  });
+}
+
 // =====================================================
-// Fuente + capas de resaltado
+// Eventos sobre capas
+// =====================================================
+function handlePredioClick(e) {
+  const feature = e.features && e.features[0];
+  if (!feature) return;
+
+  const props = feature.properties || {};
+  const lngLatClick = e.lngLat;
+
+  highlightGroupFromFeature(feature);
+
+  const svLngLat = getFeatureLngLat(feature, lngLatClick);
+
+  popup
+    .setLngLat(lngLatClick)
+    .setHTML(buildPopupHTML(props, svLngLat))
+    .addTo(map);
+}
+
+function bindCategoryLayerEvents() {
+  Object.values(CATEGORY_CONFIG).forEach((cfg) => {
+    const layerId = cfg.layerId;
+
+    try { map.off('click', layerId, handlePredioClick); } catch (e) {}
+    try {
+      map.off('mouseenter', layerId, () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+    } catch (e) {}
+    try {
+      map.off('mouseleave', layerId, () => {
+        map.getCanvas().style.cursor = '';
+      });
+    } catch (e) {}
+
+    map.on('click', layerId, handlePredioClick);
+
+    map.on('mouseenter', layerId, () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', layerId, () => {
+      map.getCanvas().style.cursor = '';
+    });
+  });
+}
+
+// =====================================================
+// Resaltado
 // =====================================================
 function ensureHighlightLayers() {
   if (!map.getSource('predios_highlight')) {
@@ -269,7 +359,6 @@ function ensureHighlightLayers() {
     });
   }
 
-  // ✅ Sin relleno para que no altere el color base
   if (!map.getLayer('predios_highlight_fill')) {
     map.addLayer({
       id: 'predios_highlight_fill',
@@ -334,14 +423,40 @@ function highlightGroupFromFeature(feature) {
 }
 
 // =====================================================
+// Leyenda interactiva
+// =====================================================
+function bindLegendToggles() {
+  const buttons = document.querySelectorAll('.legend-toggle');
+
+  buttons.forEach((btn) => {
+    if (btn.dataset.bound === 'true') return;
+    btn.dataset.bound = 'true';
+
+    btn.addEventListener('click', () => {
+      const category = btn.dataset.category;
+      const cfg = CATEGORY_CONFIG[category];
+      if (!cfg) return;
+
+      const layerId = cfg.layerId;
+      const currentVisibility = map.getLayoutProperty(layerId, 'visibility');
+      const willHide = currentVisibility !== 'none';
+
+      map.setLayoutProperty(layerId, 'visibility', willHide ? 'none' : 'visible');
+
+      btn.classList.toggle('inactive', willHide);
+      btn.classList.toggle('active', !willHide);
+      btn.textContent = willHide ? 'OFF' : 'ON';
+    });
+  });
+}
+
+// =====================================================
 // Cargar capa predial + resaltado
 // =====================================================
 map.on('style.load', () => {
-  addLayer(
+  addPrediosLayer(
     'PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson',
-    'predios_ssk',
-    'predios_ssk_layer',
-    '#2ec4b6'
+    'predios_ssk'
   );
 
   ensureHighlightLayers();
