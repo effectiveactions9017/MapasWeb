@@ -25,27 +25,17 @@
   <!-- Turf.js -->
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js"></script>
 
-  <!-- Fuentes y estilos adicionales -->
+  <!-- Fuentes -->
   <link
     href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap"
     rel="stylesheet"
   />
-  <link
-    href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css"
-    rel="stylesheet"
-  />
-  <script
-    async
-    defer
-    src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"
-  ></script>
 
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
 </head>
 
 <body>
-  <!-- CONTENEDOR DEL MAPA -->
   <div id="map"></div>
 
   <!-- LEYENDA -->
@@ -55,29 +45,62 @@
       Sesquilé
     </div>
 
+    <div class="legend-subtitle">
+      Categorías de predios
+    </div>
+
     <ul class="legend-list">
-      <li>
-        <span class="legend-color predios-municipales"></span>
-        Predios municipales
+      <li class="legend-item">
+        <div class="legend-left">
+          <span class="legend-color publicos"></span>
+          <span class="legend-label">Predios públicos</span>
+        </div>
+        <button class="legend-toggle active" data-category="publicos" title="Mostrar / ocultar">
+          ON
+        </button>
       </li>
-      <li>
-        <span class="legend-color predios-sin-info"></span>
-        Predios sin información R1
+
+      <li class="legend-item">
+        <div class="legend-left">
+          <span class="legend-color mora"></span>
+          <span class="legend-label">Predios con mora</span>
+        </div>
+        <button class="legend-toggle active" data-category="mora" title="Mostrar / ocultar">
+          ON
+        </button>
       </li>
-      <li>
-        <span class="legend-color predio-seleccionado"></span>
-        Predio seleccionado
+
+      <li class="legend-item">
+        <div class="legend-left">
+          <span class="legend-color aldia"></span>
+          <span class="legend-label">Predios al día</span>
+        </div>
+        <button class="legend-toggle active" data-category="aldia" title="Mostrar / ocultar">
+          ON
+        </button>
+      </li>
+
+      <li class="legend-item">
+        <div class="legend-left">
+          <span class="legend-color sinpago"></span>
+          <span class="legend-label">Posibles predios sin pagar</span>
+        </div>
+        <button class="legend-toggle active" data-category="sinpago" title="Mostrar / ocultar">
+          ON
+        </button>
       </li>
     </ul>
 
-    <a style="font-size: 9px; color: #00bcd4;">&#9400; EffectiveActions</a>
+    <div class="legend-footer">
+      &#9400; EffectiveActions
+    </div>
   </div>
 
   <!-- CAJA DE INFORMACIÓN -->
   <div class="info-box">
     <h3>Información del predio</h3>
     <div class="info-content">
-      Busca un predio para ver detalles
+      Busca un predio para ver detalles.
     </div>
   </div>
 
