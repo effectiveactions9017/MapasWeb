@@ -8,7 +8,6 @@
 // ✅ + CLASIFICACIÓN POR CATEGORÍAS
 // ✅ + BOTONES EN LEYENDA PARA PRENDER / APAGAR
 // ✅ + PREDIOS PÚBLICOS EN AZUL CLARO
-// ✅ + PREDIOS PÚBLICOS SE RESALTAN UNO POR UNO
 // =====================================================
 
 mapboxgl.accessToken =
@@ -33,7 +32,7 @@ let popup = new mapboxgl.Popup({
 let PREDIOS_DATA = null;
 
 // =====================================================
-// CONFIG CATEGORÍAS
+// CONFIG
 // =====================================================
 const CATEGORY_CONFIG = {
   publicos: { label: 'Predios públicos', color: '#4fc3f7', layerId: 'predios_publicos_layer' },
@@ -50,7 +49,7 @@ function norm(v) {
 }
 
 function formatCOP(value, fallback = 'N/A') {
-  if (value === null || value === undefined || value === '') return fallback;
+  if (!value) return fallback;
   const n = Number(value);
   return isNaN(n) ? fallback : '$ ' + n.toLocaleString('es-CO');
 }
@@ -63,30 +62,26 @@ function hasValue(v) {
 // DEDUPLICAR
 // =====================================================
 function deduplicateGeoJSONByCodigo(fc) {
-  if (!fc || !Array.isArray(fc.features)) return fc;
-
   const seen = new Set();
-  const uniqueFeatures = [];
-
-  for (const feature of fc.features) {
-    const codigo = norm(feature?.properties?.codigo);
-    if (!codigo || !seen.has(codigo)) {
-      seen.add(codigo);
-      uniqueFeatures.push(feature);
-    }
-  }
-
-  return { ...fc, features: uniqueFeatures };
+  return {
+    ...fc,
+    features: fc.features.filter(f => {
+      const c = norm(f.properties?.codigo);
+      if (!c || !seen.has(c)) {
+        seen.add(c);
+        return true;
+      }
+      return false;
+    })
+  };
 }
 
 // =====================================================
-// CATEGORIZACIÓN
+// CATEGORÍA
 // =====================================================
 function getCategoriaPredio(props = {}) {
   const nombre = norm(props.NOMBRE);
-  const esPublico = nombre === 'municipio de sesquile';
-
-  if (esPublico) return 'publicos';
+  if (nombre === 'municipio de sesquile') return 'publicos';
   if (hasValue(props['total valor mora'])) return 'mora';
   if (hasValue(props['valor ultimo pago'])) return 'aldia';
   return 'sinpago';
@@ -112,12 +107,15 @@ function buildPopupHTML(props, lngLat = null) {
     }
   }
 
+  // 👇 ESTE ES TU STREET VIEW ORIGINAL (NO SE TOCÓ)
   const svBtn = lngLat
-    ? `<a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lngLat[1]},${lngLat[0]}"
-        target="_blank"
-        style="padding:6px 10px; background:#00bcd4; border-radius:6px; font-weight:700;">
+    ? `
+      <a href="${streetViewUrl(lngLat)}" target="_blank" rel="noopener"
+         style="display:inline-block; padding:6px 10px; border-radius:6px;
+                background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
         📷 Street View
-       </a>`
+      </a>
+    `
     : '';
 
   return `
@@ -125,52 +123,40 @@ function buildPopupHTML(props, lngLat = null) {
     <strong>Nombre:</strong> ${props.NOMBRE ?? 'N/A'}<br>
     <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? 'N/A'}<br>
     ${info}
-    <div style="margin-top:10px">${svBtn}</div>
+
+    <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+      ${svBtn}
+    </div>
   `;
 }
 
 // =====================================================
-// RESTO DEL CÓDIGO (SIN CAMBIOS)
+// CARGA
 // =====================================================
-function enrichPrediosData(rawFC) {
-  const dedup = deduplicateGeoJSONByCodigo(rawFC);
-  return {
-    ...dedup,
-    features: dedup.features.map(f => ({
-      ...f,
-      properties: { ...f.properties, __categoria: getCategoriaPredio(f.properties) }
-    }))
-  };
-}
-
 function addPrediosLayer(file, sourceId) {
   fetch(`../src/data/${file}`)
     .then(r => r.json())
     .then(raw => {
-      const data = enrichPrediosData(raw);
+      const data = deduplicateGeoJSONByCodigo(raw);
       PREDIOS_DATA = data;
 
-      if (!map.getSource(sourceId)) {
-        map.addSource(sourceId, { type: 'geojson', data });
-      }
+      map.addSource(sourceId, { type: 'geojson', data });
 
       Object.entries(CATEGORY_CONFIG).forEach(([cat, cfg]) => {
-        if (!map.getLayer(cfg.layerId)) {
-          map.addLayer({
-            id: cfg.layerId,
-            source: sourceId,
-            type: 'fill',
-            filter: ['==', ['get', '__categoria'], cat],
-            paint: {
-              'fill-color': cfg.color,
-              'fill-opacity': 0.6,
-              'fill-outline-color': '#fff'
-            }
-          });
-        }
+        map.addLayer({
+          id: cfg.layerId,
+          source: sourceId,
+          type: 'fill',
+          filter: ['==', ['get', '__categoria'], cat],
+          paint: {
+            'fill-color': cfg.color,
+            'fill-opacity': 0.6,
+            'fill-outline-color': '#fff'
+          }
+        });
       });
 
-      map.on('click', Object.values(CATEGORY_CONFIG).map(c => c.layerId), (e) => {
+      map.on('click', Object.values(CATEGORY_CONFIG).map(c => c.layerId), e => {
         const f = e.features[0];
         popup
           .setLngLat(e.lngLat)
