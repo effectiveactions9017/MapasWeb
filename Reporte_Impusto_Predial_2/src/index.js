@@ -11,6 +11,10 @@
 // ✅ + PREDIOS PÚBLICOS SE RESALTAN UNO POR UNO
 // ✅ + NUEVA CATEGORÍA: ABONO PARCIAL
 // ✅ + POPUP CON SALDO PENDIENTE
+// ✅ + CAMPOS REALES:
+//        - valor.ultimo.pago
+//        - total.valor.mora
+//        - pago marzo
 // =====================================================
 
 mapboxgl.accessToken =
@@ -134,11 +138,11 @@ function getCategoriaPredio(props = {}) {
   const esPublico = nombre === 'municipio de sesquile';
 
   const tienePagoMarzo = hasValue(props['pago marzo']);
-  const tienePagoFebrero = hasValue(props['valor ultimo pago']);
-  const tieneValorMora = hasValue(props['total valor mora']);
+  const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
+  const tieneValorMora = hasValue(props['total.valor.mora']);
 
   const pagoMarzo = toNumberSafe(props['pago marzo']);
-  const valorMora = toNumberSafe(props['total valor mora']);
+  const valorMora = toNumberSafe(props['total.valor.mora']);
 
   if (esPublico) return 'publicos';
 
@@ -196,12 +200,12 @@ function buildPopupHTML(props, lngLat = null) {
   const categoria = getCategoriaPredio(props);
 
   const tienePagoMarzo = hasValue(props['pago marzo']);
-  const tienePagoFebrero = hasValue(props['valor ultimo pago']);
-  const tieneValorMora = hasValue(props['total valor mora']);
+  const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
+  const tieneValorMora = hasValue(props['total.valor.mora']);
 
   const pagoMarzo = toNumberSafe(props['pago marzo']);
-  const pagoFebrero = toNumberSafe(props['valor ultimo pago']);
-  const valorMora = toNumberSafe(props['total valor mora']);
+  const pagoFebrero = toNumberSafe(props['valor.ultimo.pago']);
+  const valorMora = toNumberSafe(props['total.valor.mora']);
   const saldoPendiente = Math.max(valorMora - pagoMarzo, 0);
 
   const pagoMarzoTxt = tienePagoMarzo
@@ -209,11 +213,11 @@ function buildPopupHTML(props, lngLat = null) {
     : '';
 
   const pagoFebreroTxt = tienePagoFebrero
-    ? formatCOP(props['valor ultimo pago'], 'N/A')
+    ? formatCOP(props['valor.ultimo.pago'], 'N/A')
     : '';
 
   const valorMoraTxt = tieneValorMora
-    ? formatCOP(props['total valor mora'], '$ 0')
+    ? formatCOP(props['total.valor.mora'], '$ 0')
     : '';
 
   const saldoPendienteTxt =
