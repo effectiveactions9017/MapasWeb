@@ -9,7 +9,12 @@
 // ✅ + BOTONES EN LEYENDA PARA PRENDER / APAGAR
 // ✅ + PREDIOS PÚBLICOS EN AZUL CLARO
 // ✅ + PREDIOS PÚBLICOS SE RESALTAN UNO POR UNO
-// ✅ + PAGO MARZO COMO PRIORIDAD DE "AL DÍA"
+// ✅ + NUEVA CATEGORÍA: ABONO PARCIAL
+// ✅ + POPUP CON SALDO PENDIENTE
+// ✅ + CAMPOS REALES:
+//        - valor.ultimo.pago
+//        - total.valor.mora
+//        - pago marzo
 // =====================================================
 
 mapboxgl.accessToken =
@@ -39,6 +44,11 @@ const CATEGORY_CONFIG = {
     label: 'Predios públicos',
     color: '#4fc3f7',
     layerId: 'predios_publicos_layer'
+  },
+  abono: {
+    label: 'Predios con abono parcial',
+    color: '#f77f00',
+    layerId: 'predios_abono_layer'
   },
   mora: {
     label: 'Predios con mora',
@@ -80,6 +90,13 @@ function hasValue(v) {
   return v !== null && v !== undefined && v !== '';
 }
 
+function toNumberSafe(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  const cleaned = String(v).replace(/[^\d.-]/g, '');
+  const n = Number(cleaned);
+  return isNaN(n) ? 0 : n;
+}
+
 // ✅ Elimina duplicados por código para evitar sobreposición visual
 function deduplicateGeoJSONByCodigo(fc) {
   if (!fc || !Array.isArray(fc.features)) return fc;
@@ -109,22 +126,35 @@ function deduplicateGeoJSONByCodigo(fc) {
 
 // ✅ Clasificación única por prioridad:
 // 1) Públicos
-// 2) Pago marzo = al día
-// 3) Mora
-// 4) Pago febrero = al día
-// 5) Posibles sin pagar
+// 2) Si tiene pago marzo y mora:
+//      - pago marzo >= mora => al día
+//      - pago marzo < mora  => abono parcial
+// 3) Si solo tiene pago marzo => al día
+// 4) Si solo tiene mora => mora
+// 5) Si tiene pago febrero => al día
+// 6) Si no tiene nada => sin pagar
 function getCategoriaPredio(props = {}) {
   const nombre = norm(props.NOMBRE);
   const esPublico = nombre === 'municipio de sesquile';
 
   const tienePagoMarzo = hasValue(props['pago marzo']);
-  const tienePagoFebrero = hasValue(props['valor ultimo pago']);
-  const tieneValorMora = hasValue(props['total valor mora']);
+  const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
+  const tieneValorMora = hasValue(props['total.valor.mora']);
+
+  const pagoMarzo = toNumberSafe(props['pago marzo']);
+  const valorMora = toNumberSafe(props['total.valor.mora']);
 
   if (esPublico) return 'publicos';
+
+  if (tienePagoMarzo && tieneValorMora) {
+    if (pagoMarzo >= valorMora) return 'aldia';
+    return 'abono';
+  }
+
   if (tienePagoMarzo) return 'aldia';
   if (tieneValorMora) return 'mora';
   if (tienePagoFebrero) return 'aldia';
+
   return 'sinpago';
 }
 
@@ -170,25 +200,37 @@ function buildPopupHTML(props, lngLat = null) {
   const categoria = getCategoriaPredio(props);
 
   const tienePagoMarzo = hasValue(props['pago marzo']);
-  const tienePagoFebrero = hasValue(props['valor ultimo pago']);
-  const tieneValorMora = hasValue(props['total valor mora']);
+  const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
+  const tieneValorMora = hasValue(props['total.valor.mora']);
+
+  const pagoMarzo = toNumberSafe(props['pago marzo']);
+  const pagoFebrero = toNumberSafe(props['valor.ultimo.pago']);
+  const valorMora = toNumberSafe(props['total.valor.mora']);
+  const saldoPendiente = Math.max(valorMora - pagoMarzo, 0);
 
   const pagoMarzoTxt = tienePagoMarzo
     ? formatCOP(props['pago marzo'], 'N/A')
     : '';
 
   const pagoFebreroTxt = tienePagoFebrero
-    ? formatCOP(props['valor ultimo pago'], 'N/A')
+    ? formatCOP(props['valor.ultimo.pago'], 'N/A')
     : '';
 
   const valorMoraTxt = tieneValorMora
-    ? formatCOP(props['total valor mora'], '$ 0')
+    ? formatCOP(props['total.valor.mora'], '$ 0')
     : '';
+
+  const saldoPendienteTxt =
+    tienePagoMarzo && tieneValorMora
+      ? formatCOP(saldoPendiente, '$ 0')
+      : '';
 
   let infoPagoHTML = '';
 
   if (categoria === 'publicos') {
     infoPagoHTML += `<strong>Categoría:</strong> Predio público<br>`;
+  } else if (categoria === 'abono') {
+    infoPagoHTML += `<strong>Categoría:</strong> Predio con abono parcial<br>`;
   } else if (categoria === 'mora') {
     infoPagoHTML += `<strong>Categoría:</strong> Predio con mora<br>`;
   } else if (categoria === 'aldia') {
@@ -197,18 +239,20 @@ function buildPopupHTML(props, lngLat = null) {
     infoPagoHTML += `<strong>Categoría:</strong> Posible predio sin pagar<br>`;
   }
 
-  if (!tienePagoMarzo && !tienePagoFebrero && !tieneValorMora) {
-    infoPagoHTML += `<strong>Información de pago:</strong> No se tiene información<br>`;
-  } else {
+  if (categoria === 'abono') {
+    infoPagoHTML += `<strong>Valor en mora:</strong> ${valorMoraTxt}<br>`;
+    infoPagoHTML += `<strong>Abono marzo:</strong> ${pagoMarzoTxt}<br>`;
+    infoPagoHTML += `<strong>Saldo pendiente:</strong> ${saldoPendienteTxt}<br>`;
+  } else if (categoria === 'mora') {
+    infoPagoHTML += `<strong>Valor en mora:</strong> ${valorMoraTxt}<br>`;
+  } else if (categoria === 'aldia') {
     if (tienePagoMarzo) {
       infoPagoHTML += `<strong>Pago marzo:</strong> ${pagoMarzoTxt}<br>`;
     } else if (tienePagoFebrero) {
       infoPagoHTML += `<strong>Pago febrero:</strong> ${pagoFebreroTxt}<br>`;
     }
-
-    if (tieneValorMora && categoria === 'mora') {
-      infoPagoHTML += `<strong>Valor en mora:</strong> ${valorMoraTxt}<br>`;
-    }
+  } else if (categoria === 'sinpago') {
+    infoPagoHTML += `<strong>Información de pago:</strong> No se tiene información<br>`;
   }
 
   const svBtn = lngLat
@@ -596,9 +640,10 @@ geocoder.on('result', (e) => {
     properties: properties
   };
 
-  const popupLngLat = getFeatureLngLat(featureForPopup, result.center
-    ? { lng: result.center[0], lat: result.center[1] }
-    : null);
+  const popupLngLat = getFeatureLngLat(
+    featureForPopup,
+    result.center ? { lng: result.center[0], lat: result.center[1] } : null
+  );
 
   popup
     .setLngLat(popupLngLat)
