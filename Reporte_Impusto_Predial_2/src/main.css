@@ -76,6 +76,7 @@ html, body {
 .legend-label {
   font-size: 14px;
   font-weight: 600;
+  color: #ffffff;
 }
 
 /* Botón ON/OFF */
@@ -111,51 +112,67 @@ html, body {
 
 /* Crédito */
 .legend-credit {
+  display: inline-block;
   font-size: 11px;
   color: #00bcd4;
+  text-decoration: none;
 }
 
 /* =========================
    CAJA DE INFORMACIÓN
    ========================= */
+/* Se deja oculta porque ya no la quieres mostrar */
 .info-box {
-  position: absolute;
-  left: 18px;
-  bottom: 18px;
-  z-index: 9999;
-  width: 280px;
-  padding: 16px;
-  border-radius: 16px;
-  background: rgba(255,255,255,0.95);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.18);
-  color: #1f2937;
+  display: none !important;
 }
 
-/* Título info */
-.info-box h3 {
-  margin: 0 0 8px 0;
-  font-size: 16px;
-  font-weight: 700;
-}
-
-/* Contenido */
+.info-box h3,
 .info-content {
-  font-size: 14px;
-  line-height: 1.4;
+  display: none !important;
 }
 
 /* =========================
-   POPUP MAPBOX (MEJORA VISUAL)
+   POPUP MAPBOX (OSCURA)
    ========================= */
+.mapboxgl-popup {
+  max-width: 330px !important;
+}
+
 .mapboxgl-popup-content {
   font-family: 'Libre Franklin', sans-serif;
-  border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  background: rgba(16, 24, 32, 0.96);
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 16px 16px 14px 16px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.08);
+  line-height: 1.45;
+  font-size: 14px;
+
+  /* evita que textos largos como el código se salgan */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.mapboxgl-popup-content strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.mapboxgl-popup-close-button {
+  color: #ffffff;
+  font-size: 18px;
+  padding: 6px 8px;
+}
+
+.mapboxgl-popup-close-button:hover {
+  background: transparent;
+  color: #00bcd4;
 }
 
 .mapboxgl-popup-tip {
-  border-top-color: #ffffff;
+  border-top-color: rgba(16, 24, 32, 0.96) !important;
+  border-bottom-color: rgba(16, 24, 32, 0.96) !important;
 }
 
 /* =========================
@@ -165,6 +182,7 @@ html, body {
   min-width: 260px;
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
 }
 
 /* =========================
