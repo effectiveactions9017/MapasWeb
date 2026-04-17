@@ -2,12 +2,12 @@
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
 // ✅ Búsqueda local por: codigo, NOMBRE, NUMERO_DOCUMENTO
 // ✅ Resalta 1 o varios predios (mismo codigo o documento)
+// ✅ Usa PREDIOS_DATA para búsqueda completa
+// ✅ Evita errores "source/layer already exists"
 // ✅ POPUP SOLO POR CLICK
-// ✅ + BOTÓN STREET VIEW
-// ✅ + ELIMINAR DUPLICADOS POR CODIGO
+// ✅ + BOTÓN STREET VIEW EN POPUP
 // ✅ + CLASIFICACIÓN POR CATEGORÍAS
 // ✅ + BOTONES EN LEYENDA PARA PRENDER / APAGAR
-// ✅ + PREDIOS PÚBLICOS EN AZUL CLARO
 // ✅ + PREDIOS PÚBLICOS SE RESALTAN UNO POR UNO
 // ✅ + CAMPOS REALES:
 //        - valor.ultimo.pago
@@ -19,7 +19,7 @@ mapboxgl.accessToken =
   'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
 
 const map = new mapboxgl.Map({
-  style: 'mapbox://styles/mapbox/satellite-v9',
+  style: 'mapbox://styles/mapbox/dark-v11',
   center: [-73.79724, 5.04463],
   zoom: 15,
   pitch: 0,
@@ -36,7 +36,9 @@ let popup = new mapboxgl.Popup({
 
 let PREDIOS_DATA = null;
 
-// Capas por categoría
+// =====================================================
+// Categorías
+// =====================================================
 const CATEGORY_CONFIG = {
   publicos: {
     label: 'Predios públicos',
@@ -54,7 +56,7 @@ const CATEGORY_CONFIG = {
     layerId: 'predios_aldia_layer'
   },
   sinpago: {
-    label: 'Posibles predios sin pagar',
+    label: 'Posibles sin pagar',
     color: '#d9c80b',
     layerId: 'predios_sinpago_layer'
   }
@@ -69,8 +71,12 @@ function norm(v) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(/\s+/g, ' ')
+    .replace(/\s+/g, '')
     .trim();
+}
+
+function hasValue(v) {
+  return v !== null && v !== undefined && v !== '';
 }
 
 function formatCOP(value, fallback = 'N/A') {
@@ -79,71 +85,6 @@ function formatCOP(value, fallback = 'N/A') {
   return isNaN(n) ? fallback : '$ ' + n.toLocaleString('es-CO');
 }
 
-function hasValue(v) {
-  return v !== null && v !== undefined && v !== '';
-}
-
-function toNumberSafe(v) {
-  if (v === null || v === undefined || v === '') return 0;
-  const cleaned = String(v).replace(/[^\d.-]/g, '');
-  const n = Number(cleaned);
-  return isNaN(n) ? 0 : n;
-}
-
-// ✅ Elimina duplicados por código para evitar sobreposición visual
-function deduplicateGeoJSONByCodigo(fc) {
-  if (!fc || !Array.isArray(fc.features)) return fc;
-
-  const seen = new Set();
-  const uniqueFeatures = [];
-
-  for (const feature of fc.features) {
-    const codigo = norm(feature?.properties?.codigo);
-
-    if (!codigo) {
-      uniqueFeatures.push(feature);
-      continue;
-    }
-
-    if (!seen.has(codigo)) {
-      seen.add(codigo);
-      uniqueFeatures.push(feature);
-    }
-  }
-
-  return {
-    ...fc,
-    features: uniqueFeatures
-  };
-}
-
-// ✅ Clasificación única por prioridad:
-// 1) Públicos
-// 2) Si tiene pago marzo => al día
-// 3) Si tiene mora => mora
-// 4) Si tiene pago febrero => al día
-// 5) Si no tiene nada => sin pagar
-function getCategoriaPredio(props = {}) {
-  const nombre = norm(props.NOMBRE);
-  const esPublico = nombre === 'municipio de sesquile';
-
-  const tienePagoMarzo = hasValue(props['pago marzo']);
-  const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
-  const tieneValorMora = hasValue(props['total.valor.mora']);
-
-  if (esPublico) return 'publicos';
-  if (tienePagoMarzo) return 'aldia';
-  if (tieneValorMora) return 'mora';
-  if (tienePagoFebrero) return 'aldia';
-
-  return 'sinpago';
-}
-
-function getCategoriaLabel(cat) {
-  return CATEGORY_CONFIG[cat]?.label || 'Sin categoría';
-}
-
-// ✅ Punto representativo del feature
 function getFeatureLngLat(feature, fallbackLngLat = null) {
   if (
     fallbackLngLat &&
@@ -154,6 +95,7 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
   }
 
   const c = feature?.geometry?.coordinates;
+
   if (
     Array.isArray(c) &&
     c.length >= 2 &&
@@ -175,10 +117,36 @@ function streetViewUrl([lng, lat]) {
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 }
 
-function buildPopupHTML(props, lngLat = null) {
+// =====================================================
+// Clasificación
+// =====================================================
+function getCategoriaPredio(props = {}) {
+  const nombre = norm(props.NOMBRE);
+  const esPublico = nombre === 'municipio de sesquile';
+
+  const tienePagoMarzo = hasValue(props['pago marzo']);
+  const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
+  const tieneValorMora = hasValue(props['total.valor.mora']);
+
+  if (esPublico) return 'publicos';
+  if (tienePagoMarzo) return 'aldia';
+  if (tieneValorMora) return 'mora';
+  if (tienePagoFebrero) return 'aldia';
+
+  return 'sinpago';
+}
+
+// =====================================================
+// Popup
+// =====================================================
+function buildPopupHTML(props, lngLat = null, extraHTML = '') {
   props = props || {};
 
   const categoria = getCategoriaPredio(props);
+
+  const codigoTxt = props.codigo ?? 'N/A';
+  const nombreTxt = props.NOMBRE ?? 'N/A';
+  const docTxt = props.NUMERO_DOCUMENTO ?? 'N/A';
 
   const tienePagoMarzo = hasValue(props['pago marzo']);
   const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
@@ -222,30 +190,59 @@ function buildPopupHTML(props, lngLat = null) {
 
   const svBtn = lngLat
     ? `
-      <a href="${streetViewUrl(lngLat)}" target="_blank" rel="noopener"
-         style="display:inline-block; padding:6px 10px; border-radius:6px;
-                background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
-        📷 Street View
-      </a>
+      <div style="margin-top:10px;">
+        <a href="${streetViewUrl(lngLat)}" target="_blank" rel="noopener"
+           style="display:inline-block; padding:7px 12px; border-radius:8px;
+                  background:#00bcd4; color:#000; font-weight:700; font-size:12px;
+                  text-decoration:none;">
+          📷 Street View
+        </a>
+      </div>
     `
     : '';
 
   return `
-    <strong>Código:</strong> <span style="word-break:break-word; overflow-wrap:anywhere;">${props.codigo ?? 'N/A'}</span><br>
-    <strong>Nombre:</strong> ${props.NOMBRE ?? 'N/A'}<br>
-    <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? 'N/A'}<br>
+    <strong>Código:</strong> <span style="word-break:break-word; overflow-wrap:anywhere;">${codigoTxt}</span><br>
+    <strong>Nombre:</strong> ${nombreTxt}<br>
+    <strong>Documento:</strong> ${docTxt}<br>
     ${infoPagoHTML}
-
-    <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-      ${svBtn}
-    </div>
-
+    ${extraHTML}
+    ${svBtn}
     <br><a style="font-size:9px;">&#9400; EffectiveActions</a>
   `;
 }
 
 // =====================================================
-// Procesar dataset y agregar categoría
+// Deduplicar por código
+// =====================================================
+function deduplicateGeoJSONByCodigo(fc) {
+  if (!fc || !Array.isArray(fc.features)) return fc;
+
+  const seen = new Set();
+  const uniqueFeatures = [];
+
+  for (const feature of fc.features) {
+    const codigo = norm(feature?.properties?.codigo);
+
+    if (!codigo) {
+      uniqueFeatures.push(feature);
+      continue;
+    }
+
+    if (!seen.has(codigo)) {
+      seen.add(codigo);
+      uniqueFeatures.push(feature);
+    }
+  }
+
+  return {
+    ...fc,
+    features: uniqueFeatures
+  };
+}
+
+// =====================================================
+// Procesar dataset
 // =====================================================
 function enrichPrediosData(rawFC) {
   const dedup = deduplicateGeoJSONByCodigo(rawFC);
@@ -303,7 +300,7 @@ function addCategoryLayers(sourceId) {
         filter: ['==', ['get', '__categoria'], catKey],
         paint: {
           'fill-color': cfg.color,
-          'fill-opacity': 0.6,
+          'fill-opacity': 0.75,
           'fill-outline-color': '#ffffff'
         }
       });
@@ -312,7 +309,7 @@ function addCategoryLayers(sourceId) {
 }
 
 // =====================================================
-// Eventos sobre capas
+// Click sobre capas
 // =====================================================
 function handlePredioClick(e) {
   const feature = e.features && e.features[0];
@@ -369,7 +366,7 @@ function ensureHighlightLayers() {
       source: 'predios_highlight',
       paint: {
         'fill-color': '#ffff00',
-        'fill-opacity': 0
+        'fill-opacity': 0.30
       }
     });
   }
@@ -423,7 +420,6 @@ function highlightGroupFromFeature(feature) {
 
   const categoria = getCategoriaPredio(props);
 
-  // ✅ Si es predio público, resaltar SOLO ese predio
   if (categoria === 'publicos') {
     const group = [feature];
     setHighlight(group);
@@ -479,7 +475,7 @@ function bindLegendToggles() {
 }
 
 // =====================================================
-// Geocoder local
+// Geocoder local: sugerencias por código, nombre y documento
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
@@ -538,7 +534,7 @@ const geocoder = new MapboxGeocoder({
         place_name: `Código: ${codTxt || 'N/A'} | Nombre: ${nomTxt || 'N/A'} | Doc: ${
           docTxt || 'N/A'
         }`,
-        text: codTxt || nomTxt || docTxt || 'Resultado',
+        text: nomTxt || codTxt || docTxt || 'Resultado',
         center: centro,
         place_type: ['place']
       });
@@ -551,7 +547,7 @@ const geocoder = new MapboxGeocoder({
 });
 
 // =====================================================
-// Al seleccionar resultado
+// Selección desde el buscador
 // =====================================================
 geocoder.on('result', (e) => {
   const result = e.result;
@@ -566,13 +562,12 @@ geocoder.on('result', (e) => {
 
   let toHighlight = [];
 
-  // ✅ Si el resultado es predio público, solo resaltar uno
   if (getCategoriaPredio(properties) === 'publicos') {
     toHighlight = [
       {
         type: 'Feature',
         geometry: result.geometry,
-        properties: properties
+        properties
       }
     ];
   } else if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
@@ -589,7 +584,7 @@ geocoder.on('result', (e) => {
       {
         type: 'Feature',
         geometry: result.geometry,
-        properties: properties
+        properties
       }
     ];
   }
@@ -599,25 +594,27 @@ geocoder.on('result', (e) => {
   const fc = { type: 'FeatureCollection', features: toHighlight };
   zoomToFeatureCollection(fc);
 
-  const featureForPopup = toHighlight[0] || {
-    type: 'Feature',
-    geometry: result.geometry,
-    properties: properties
-  };
+  const codigos = toHighlight
+    .map((f) => (f.properties?.codigo ?? '').toString().trim())
+    .filter(Boolean);
 
-  const popupLngLat = getFeatureLngLat(
-    featureForPopup,
-    result.center ? { lng: result.center[0], lat: result.center[1] } : null
-  );
+  const listaCodigos = codigos.length > 1
+    ? `<br><strong>Predios vinculados (${codigos.length}):</strong><br>${codigos
+        .slice(0, 10)
+        .join('<br>')}${codigos.length > 10 ? '<br>…' : ''}`
+    : '';
+
+  const b = turf.bbox(fc);
+  const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
 
   popup
-    .setLngLat(popupLngLat)
-    .setHTML(buildPopupHTML(featureForPopup.properties || properties, popupLngLat))
+    .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
+    .setHTML(buildPopupHTML(properties, center, listaCodigos))
     .addTo(map);
 });
 
 // =====================================================
-// Cargar capa predial + resaltado
+// Carga inicial
 // =====================================================
 map.on('style.load', () => {
   addPrediosLayer(
