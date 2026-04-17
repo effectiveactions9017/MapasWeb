@@ -9,8 +9,6 @@
 // ✅ + BOTONES EN LEYENDA PARA PRENDER / APAGAR
 // ✅ + PREDIOS PÚBLICOS EN AZUL CLARO
 // ✅ + PREDIOS PÚBLICOS SE RESALTAN UNO POR UNO
-// ✅ + NUEVA CATEGORÍA: ABONO PARCIAL
-// ✅ + POPUP CON SALDO PENDIENTE
 // ✅ + CAMPOS REALES:
 //        - valor.ultimo.pago
 //        - total.valor.mora
@@ -45,11 +43,6 @@ const CATEGORY_CONFIG = {
     color: '#4fc3f7',
     layerId: 'predios_publicos_layer'
   },
-  abono: {
-    label: 'Predios con abono parcial',
-    color: '#f77f00',
-    layerId: 'predios_abono_layer'
-  },
   mora: {
     label: 'Predios con mora',
     color: '#e63946',
@@ -62,7 +55,7 @@ const CATEGORY_CONFIG = {
   },
   sinpago: {
     label: 'Posibles predios sin pagar',
-    color: '#ffb703',
+    color: '#d9c80b',
     layerId: 'predios_sinpago_layer'
   }
 };
@@ -126,13 +119,10 @@ function deduplicateGeoJSONByCodigo(fc) {
 
 // ✅ Clasificación única por prioridad:
 // 1) Públicos
-// 2) Si tiene pago marzo y mora:
-//      - pago marzo >= mora => al día
-//      - pago marzo < mora  => abono parcial
-// 3) Si solo tiene pago marzo => al día
-// 4) Si solo tiene mora => mora
-// 5) Si tiene pago febrero => al día
-// 6) Si no tiene nada => sin pagar
+// 2) Si tiene pago marzo => al día
+// 3) Si tiene mora => mora
+// 4) Si tiene pago febrero => al día
+// 5) Si no tiene nada => sin pagar
 function getCategoriaPredio(props = {}) {
   const nombre = norm(props.NOMBRE);
   const esPublico = nombre === 'municipio de sesquile';
@@ -141,16 +131,7 @@ function getCategoriaPredio(props = {}) {
   const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
   const tieneValorMora = hasValue(props['total.valor.mora']);
 
-  const pagoMarzo = toNumberSafe(props['pago marzo']);
-  const valorMora = toNumberSafe(props['total.valor.mora']);
-
   if (esPublico) return 'publicos';
-
-  if (tienePagoMarzo && tieneValorMora) {
-    if (pagoMarzo >= valorMora) return 'aldia';
-    return 'abono';
-  }
-
   if (tienePagoMarzo) return 'aldia';
   if (tieneValorMora) return 'mora';
   if (tienePagoFebrero) return 'aldia';
@@ -203,11 +184,6 @@ function buildPopupHTML(props, lngLat = null) {
   const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
   const tieneValorMora = hasValue(props['total.valor.mora']);
 
-  const pagoMarzo = toNumberSafe(props['pago marzo']);
-  const pagoFebrero = toNumberSafe(props['valor.ultimo.pago']);
-  const valorMora = toNumberSafe(props['total.valor.mora']);
-  const saldoPendiente = Math.max(valorMora - pagoMarzo, 0);
-
   const pagoMarzoTxt = tienePagoMarzo
     ? formatCOP(props['pago marzo'], 'N/A')
     : '';
@@ -220,17 +196,10 @@ function buildPopupHTML(props, lngLat = null) {
     ? formatCOP(props['total.valor.mora'], '$ 0')
     : '';
 
-  const saldoPendienteTxt =
-    tienePagoMarzo && tieneValorMora
-      ? formatCOP(saldoPendiente, '$ 0')
-      : '';
-
   let infoPagoHTML = '';
 
   if (categoria === 'publicos') {
     infoPagoHTML += `<strong>Categoría:</strong> Predio público<br>`;
-  } else if (categoria === 'abono') {
-    infoPagoHTML += `<strong>Categoría:</strong> Predio con abono parcial<br>`;
   } else if (categoria === 'mora') {
     infoPagoHTML += `<strong>Categoría:</strong> Predio con mora<br>`;
   } else if (categoria === 'aldia') {
@@ -239,18 +208,14 @@ function buildPopupHTML(props, lngLat = null) {
     infoPagoHTML += `<strong>Categoría:</strong> Posible predio sin pagar<br>`;
   }
 
-  if (categoria === 'abono') {
-    infoPagoHTML += `<strong>Valor en mora:</strong> ${valorMoraTxt}<br>`;
-    infoPagoHTML += `<strong>Abono marzo:</strong> ${pagoMarzoTxt}<br>`;
-    infoPagoHTML += `<strong>Saldo pendiente:</strong> ${saldoPendienteTxt}<br>`;
-  } else if (categoria === 'mora') {
-    infoPagoHTML += `<strong>Valor en mora:</strong> ${valorMoraTxt}<br>`;
-  } else if (categoria === 'aldia') {
+  if (categoria === 'aldia') {
     if (tienePagoMarzo) {
       infoPagoHTML += `<strong>Pago marzo:</strong> ${pagoMarzoTxt}<br>`;
     } else if (tienePagoFebrero) {
       infoPagoHTML += `<strong>Pago febrero:</strong> ${pagoFebreroTxt}<br>`;
     }
+  } else if (categoria === 'mora') {
+    infoPagoHTML += `<strong>Valor en mora:</strong> ${valorMoraTxt}<br>`;
   } else if (categoria === 'sinpago') {
     infoPagoHTML += `<strong>Información de pago:</strong> No se tiene información<br>`;
   }
