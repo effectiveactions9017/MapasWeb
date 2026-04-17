@@ -6,28 +6,35 @@
   <ul class="legend-list">
 
     <li class="legend-item">
-      <span class="legend-color" style="background:#4fc3f7;"></span>
-      <span class="legend-label">Predios públicos</span>
+      <div class="legend-item-left">
+        <span class="legend-color" style="background:#4fc3f7;"></span>
+        <span class="legend-label">Predios públicos</span>
+      </div>
+      <button class="legend-toggle active" data-category="publicos">ON</button>
     </li>
 
     <li class="legend-item">
-      <span class="legend-color" style="background:#2ec4b6;"></span>
-      <span class="legend-label">Predios al día</span>
+      <div class="legend-item-left">
+        <span class="legend-color" style="background:#2ec4b6;"></span>
+        <span class="legend-label">Predios al día</span>
+      </div>
+      <button class="legend-toggle active" data-category="aldia">ON</button>
     </li>
 
     <li class="legend-item">
-      <span class="legend-color" style="background:#f59e0b;"></span>
-      <span class="legend-label">Abono parcial</span>
+      <div class="legend-item-left">
+        <span class="legend-color" style="background:#e63946;"></span>
+        <span class="legend-label">Predios con mora</span>
+      </div>
+      <button class="legend-toggle active" data-category="mora">ON</button>
     </li>
 
     <li class="legend-item">
-      <span class="legend-color" style="background:#e63946;"></span>
-      <span class="legend-label">Predios con mora</span>
-    </li>
-
-    <li class="legend-item">
-      <span class="legend-color" style="background:#d9c80b;"></span>
-      <span class="legend-label">Posibles sin pagar</span>
+      <div class="legend-item-left">
+        <span class="legend-color" style="background:#d9c80b;"></span>
+        <span class="legend-label">Posibles sin pagar</span>
+      </div>
+      <button class="legend-toggle active" data-category="sinpago">ON</button>
     </li>
 
   </ul>
