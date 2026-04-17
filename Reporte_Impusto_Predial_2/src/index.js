@@ -231,7 +231,7 @@ function buildPopupHTML(props, lngLat = null) {
     : '';
 
   return `
-    <strong>Código:</strong> ${props.codigo ?? 'N/A'}<br>
+    <strong>Código:</strong> <span style="word-break:break-word; overflow-wrap:anywhere;">${props.codigo ?? 'N/A'}</span><br>
     <strong>Nombre:</strong> ${props.NOMBRE ?? 'N/A'}<br>
     <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? 'N/A'}<br>
     ${infoPagoHTML}
