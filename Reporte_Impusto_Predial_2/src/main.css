@@ -1,257 +1,40 @@
-body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Libre Franklin', sans-serif;
-}
+<div class="legend-container">
+  <div class="legend-title">
+    Predial<br>Sesquilé
+  </div>
 
-#map {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 100%;
-}
+  <ul class="legend-list">
 
-/* =========================
-   LEYENDA
-   ========================= */
-.legend-container {
-    position: absolute;
-    bottom: 25px;
-    right: 8px;
-    z-index: 10;
-    background-color: rgba(0, 0, 0, 0.78);
-    padding: 15px;
-    border-radius: 10px;
-    width: 255px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
-    color: white;
-    backdrop-filter: blur(4px);
-}
+    <li class="legend-item">
+      <span class="legend-color" style="background:#4fc3f7;"></span>
+      <span class="legend-label">Predios públicos</span>
+    </li>
 
-.legend-title {
-    font-size: 1rem;
-    font-weight: 700;
-    margin-bottom: 4px;
-    text-align: left;
-    color: white;
-    line-height: 1.2;
-}
+    <li class="legend-item">
+      <span class="legend-color" style="background:#2ec4b6;"></span>
+      <span class="legend-label">Predios al día</span>
+    </li>
 
-.legend-subtitle {
-    font-size: 0.78rem;
-    color: #cfd8dc;
-    margin-bottom: 12px;
-}
+    <li class="legend-item">
+      <span class="legend-color" style="background:#f59e0b;"></span>
+      <span class="legend-label">Abono parcial</span>
+    </li>
 
-.legend-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
+    <li class="legend-item">
+      <span class="legend-color" style="background:#e63946;"></span>
+      <span class="legend-label">Predios con mora</span>
+    </li>
 
-.legend-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
-}
+    <li class="legend-item">
+      <span class="legend-color" style="background:#d9c80b;"></span>
+      <span class="legend-label">Posibles sin pagar</span>
+    </li>
 
-.legend-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-}
+  </ul>
 
-.legend-label {
-    font-size: 0.88rem;
-    color: white;
-    line-height: 1.2;
-}
+  <div class="legend-divider"></div>
 
-.legend-color {
-    display: inline-block !important;
-    width: 18px !important;
-    height: 18px !important;
-    min-width: 18px !important;
-    min-height: 18px !important;
-    border-radius: 4px;
-    border: 1px solid #ffffff;
-    flex: 0 0 18px;
-}
-
-/* =========================
-   COLORES DE LA LEYENDA
-   ========================= */
-.legend-color.publicos {
-    background-color: #4fc3f7;
-}
-
-.legend-color.mora {
-    background-color: #e63946;
-}
-
-.legend-color.aldia {
-    background-color: #2ec4b6;
-}
-
-.legend-color.sinpago {
-    background-color: #ffb703;
-}
-
-/* =========================
-   BOTONES DE LEYENDA
-   ========================= */
-.legend-toggle {
-    border: none;
-    border-radius: 999px;
-    padding: 4px 10px;
-    min-width: 46px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: #2ec4b6;
-    color: #000;
-}
-
-.legend-toggle:hover {
-    transform: scale(1.04);
-}
-
-.legend-toggle.inactive {
-    background: #455a64;
-    color: #fff;
-    opacity: 0.9;
-}
-
-/* =========================
-   FOOTER LEYENDA
-   ========================= */
-.legend-footer {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255,255,255,0.14);
-    font-size: 10px;
-    color: #00bcd4;
-}
-
-/* =========================
-   CLASES ANTIGUAS (SE CONSERVAN)
-   ========================= */
-.c_viejas {
-    background-color: #AAB7B8;
-}
-
-.c_nuevas {
-    background-color: #A569BD;
-}
-
-.c_aumento {
-    background-color: #F7DC6F;
-}
-
-.dem_p {
-    background-color: #F5B041;
-}
-
-.dem_t {
-    background-color: #E74C3C;
-}
-
-/* =========================
-   CAJA DE INFORMACIÓN
-   ========================= */
-.info-box {
-    left: 10px;
-    top: 310px;
-    background-color: rgba(0, 0, 0, 0.72);
-    color: white;
-    padding: 10px;
-    font-family: Arial, sans-serif;
-    font-size: 10px;
-    border-radius: 8px;
-    position: absolute;
-    z-index: 10;
-    width: 220px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-    display: none;
-}
-
-.info-box h3 {
-    margin: 0 0 10px 0;
-    font-weight: bold;
-    font-size: 14px;
-}
-
-/* =========================
-   POPUP PERSONALIZADO
-   ========================= */
-.custom-popup .mapboxgl-popup-content {
-    font-size: 0.8rem;
-    padding: 10px 15px;
-    background-color: rgba(0, 0, 0, 0.86);
-    color: #fff;
-    border-radius: 8px;
-    max-width: 290px;
-    line-height: 1.45;
-}
-
-.mapboxgl-popup-content a {
-    color: #00bcd4;
-    text-decoration: none;
-}
-
-.mapboxgl-popup-content a:hover {
-    text-decoration: underline;
-}
-
-/* Flechas del popup */
-.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
-    border-bottom-color: rgba(0, 0, 0, 0.86);
-}
-
-.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
-    border-top-color: rgba(0, 0, 0, 0.86);
-}
-
-.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
-    border-right-color: rgba(0, 0, 0, 0.86);
-}
-
-.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
-    border-left-color: rgba(0, 0, 0, 0.86);
-}
-
-/* =========================
-   GEOCODER
-   ========================= */
-.mapboxgl-ctrl-geocoder {
-    width: 320px !important;
-    max-width: 90vw;
-}
-
-/* =========================
-   RESPONSIVE
-   ========================= */
-@media (max-width: 768px) {
-    .legend-container {
-        width: 235px;
-        right: 6px;
-        bottom: 12px;
-    }
-
-    .mapboxgl-ctrl-geocoder {
-        width: 260px !important;
-    }
-
-    .info-box {
-        width: 200px;
-        top: 280px;
-    }
-}
+  <div class="legend-credit">
+    &#9400; EffectiveActions
+  </div>
+</div>
