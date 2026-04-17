@@ -522,6 +522,25 @@ const geocoder = new MapboxGeocoder({
   marker: false,
   localGeocoderOnly: true,
   placeholder: 'Buscar por código, nombre o documento',
+  minLength: 1,
+  limit: 10,
+  reverseGeocode: false,
+
+  render: function (item) {
+    const p = item.properties || {};
+    const codigo = p.codigo ?? 'N/A';
+    const nombre = p.NOMBRE ?? 'N/A';
+    const documento = p.NUMERO_DOCUMENTO ?? 'N/A';
+
+    return `
+      <div style="padding:6px 8px; line-height:1.25;">
+        <div style="font-weight:700; color:#111;">${nombre}</div>
+        <div style="font-size:12px; color:#444;">Código: ${codigo}</div>
+        <div style="font-size:12px; color:#444;">Documento: ${documento}</div>
+      </div>
+    `;
+  },
+
   localGeocoder: function (query) {
     const matchingFeatures = [];
     const q = (query || '').toString().toLowerCase().trim();
@@ -573,18 +592,41 @@ const geocoder = new MapboxGeocoder({
         place_name: `Código: ${codTxt || 'N/A'} | Nombre: ${nomTxt || 'N/A'} | Doc: ${
           docTxt || 'N/A'
         }`,
-        text: codTxt || nomTxt || docTxt || 'Resultado',
+        text: nomTxt || codTxt || docTxt || 'Resultado',
         center: centro,
         place_type: ['place']
       });
-
-      if (matchingFeatures.length >= 10) break;
     }
 
-    return matchingFeatures;
+    // ordenar para que salgan primero las coincidencias más cercanas
+    matchingFeatures.sort((a, b) => {
+      const aProps = a.properties || {};
+      const bProps = b.properties || {};
+
+      const aNombre = (aProps.NOMBRE ?? '').toString().toLowerCase();
+      const bNombre = (bProps.NOMBRE ?? '').toString().toLowerCase();
+      const aCodigo = (aProps.codigo ?? '').toString().toLowerCase();
+      const bCodigo = (bProps.codigo ?? '').toString().toLowerCase();
+      const aDoc = (aProps.NUMERO_DOCUMENTO ?? '').toString().toLowerCase();
+      const bDoc = (bProps.NUMERO_DOCUMENTO ?? '').toString().toLowerCase();
+
+      const score = (txt) => {
+        if (!txt) return 99;
+        if (txt === q) return 0;
+        if (txt.startsWith(q)) return 1;
+        if (txt.includes(q)) return 2;
+        return 99;
+      };
+
+      const scoreA = Math.min(score(aNombre), score(aCodigo), score(aDoc));
+      const scoreB = Math.min(score(bNombre), score(bCodigo), score(bDoc));
+
+      return scoreA - scoreB;
+    });
+
+    return matchingFeatures.slice(0, 10);
   }
 });
-
 // =====================================================
 // Al seleccionar resultado
 // =====================================================
