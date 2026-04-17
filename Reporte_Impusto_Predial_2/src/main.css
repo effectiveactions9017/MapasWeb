@@ -1,47 +1,180 @@
-<div class="legend-container">
-  <div class="legend-title">
-    Predial<br>Sesquilé
-  </div>
+/* =========================
+   BASE
+   ========================= */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'Libre Franklin', sans-serif;
+}
 
-  <ul class="legend-list">
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
 
-    <li class="legend-item">
-      <div class="legend-item-left">
-        <span class="legend-color" style="background:#4fc3f7;"></span>
-        <span class="legend-label">Predios públicos</span>
-      </div>
-      <button class="legend-toggle active" data-category="publicos">ON</button>
-    </li>
+/* =========================
+   LEYENDA (ESTILO PREMIUM)
+   ========================= */
+.legend-container {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9999;
+  width: 290px;
+  padding: 18px 18px 14px 18px;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.80);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.40);
+  color: #ffffff;
+}
 
-    <li class="legend-item">
-      <div class="legend-item-left">
-        <span class="legend-color" style="background:#2ec4b6;"></span>
-        <span class="legend-label">Predios al día</span>
-      </div>
-      <button class="legend-toggle active" data-category="aldia">ON</button>
-    </li>
+/* Título */
+.legend-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
 
-    <li class="legend-item">
-      <div class="legend-item-left">
-        <span class="legend-color" style="background:#e63946;"></span>
-        <span class="legend-label">Predios con mora</span>
-      </div>
-      <button class="legend-toggle active" data-category="mora">ON</button>
-    </li>
+/* Lista */
+.legend-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-    <li class="legend-item">
-      <div class="legend-item-left">
-        <span class="legend-color" style="background:#d9c80b;"></span>
-        <span class="legend-label">Posibles sin pagar</span>
-      </div>
-      <button class="legend-toggle active" data-category="sinpago">ON</button>
-    </li>
+/* Item */
+.legend-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
 
-  </ul>
+/* Parte izquierda */
+.legend-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-  <div class="legend-divider"></div>
+/* Cuadrito color */
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.5);
+}
 
-  <div class="legend-credit">
-    &#9400; EffectiveActions
-  </div>
-</div>
+/* Texto */
+.legend-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Botón ON/OFF */
+.legend-toggle {
+  min-width: 55px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: none;
+  background: #2ec4b6;
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.legend-toggle:hover {
+  transform: scale(1.05);
+}
+
+/* Estado apagado */
+.legend-toggle.inactive {
+  background: #5f6368;
+  color: #ffffff;
+}
+
+/* Divider */
+.legend-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.2);
+  margin: 10px 0;
+}
+
+/* Crédito */
+.legend-credit {
+  font-size: 11px;
+  color: #00bcd4;
+}
+
+/* =========================
+   CAJA DE INFORMACIÓN
+   ========================= */
+.info-box {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  z-index: 9999;
+  width: 280px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+  color: #1f2937;
+}
+
+/* Título info */
+.info-box h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Contenido */
+.info-content {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* =========================
+   POPUP MAPBOX (MEJORA VISUAL)
+   ========================= */
+.mapboxgl-popup-content {
+  font-family: 'Libre Franklin', sans-serif;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: #ffffff;
+}
+
+/* =========================
+   GEOCODER (BUSCADOR)
+   ========================= */
+.mapboxgl-ctrl-geocoder {
+  min-width: 260px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* =========================
+   SCROLL BONITO (OPCIONAL)
+   ========================= */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.3);
+  border-radius: 10px;
+}
