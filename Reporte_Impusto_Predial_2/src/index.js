@@ -9,6 +9,8 @@
 // ✅ + BOTONES EN LEYENDA PARA PRENDER / APAGAR
 // ✅ + PREDIOS PÚBLICOS EN AZUL CLARO
 // ✅ + PREDIOS PÚBLICOS SE RESALTAN UNO POR UNO
+// ✅ + NUEVA CATEGORÍA: ABONO PARCIAL
+// ✅ + POPUP CON SALDO PENDIENTE
 // =====================================================
 
 mapboxgl.accessToken =
@@ -38,6 +40,11 @@ const CATEGORY_CONFIG = {
     label: 'Predios públicos',
     color: '#4fc3f7',
     layerId: 'predios_publicos_layer'
+  },
+  abono: {
+    label: 'Predios con abono parcial',
+    color: '#f77f00',
+    layerId: 'predios_abono_layer'
   },
   mora: {
     label: 'Predios con mora',
@@ -79,6 +86,13 @@ function hasValue(v) {
   return v !== null && v !== undefined && v !== '';
 }
 
+function toNumberSafe(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  const cleaned = String(v).replace(/[^\d.-]/g, '');
+  const n = Number(cleaned);
+  return isNaN(n) ? 0 : n;
+}
+
 // ✅ Elimina duplicados por código para evitar sobreposición visual
 function deduplicateGeoJSONByCodigo(fc) {
   if (!fc || !Array.isArray(fc.features)) return fc;
@@ -108,19 +122,35 @@ function deduplicateGeoJSONByCodigo(fc) {
 
 // ✅ Clasificación única por prioridad:
 // 1) Públicos
-// 2) Mora
-// 3) Al día
-// 4) Posibles sin pagar
+// 2) Si tiene pago marzo y mora:
+//      - pago marzo >= mora => al día
+//      - pago marzo < mora  => abono parcial
+// 3) Si solo tiene pago marzo => al día
+// 4) Si solo tiene mora => mora
+// 5) Si tiene pago febrero => al día
+// 6) Si no tiene nada => sin pagar
 function getCategoriaPredio(props = {}) {
   const nombre = norm(props.NOMBRE);
   const esPublico = nombre === 'municipio de sesquile';
 
-  const tieneUltimoPago = hasValue(props['valor ultimo pago']);
+  const tienePagoMarzo = hasValue(props['pago marzo']);
+  const tienePagoFebrero = hasValue(props['valor ultimo pago']);
   const tieneValorMora = hasValue(props['total valor mora']);
 
+  const pagoMarzo = toNumberSafe(props['pago marzo']);
+  const valorMora = toNumberSafe(props['total valor mora']);
+
   if (esPublico) return 'publicos';
+
+  if (tienePagoMarzo && tieneValorMora) {
+    if (pagoMarzo >= valorMora) return 'aldia';
+    return 'abono';
+  }
+
+  if (tienePagoMarzo) return 'aldia';
   if (tieneValorMora) return 'mora';
-  if (tieneUltimoPago) return 'aldia';
+  if (tienePagoFebrero) return 'aldia';
+
   return 'sinpago';
 }
 
@@ -165,10 +195,20 @@ function buildPopupHTML(props, lngLat = null) {
 
   const categoria = getCategoriaPredio(props);
 
-  const tieneUltimoPago = hasValue(props['valor ultimo pago']);
+  const tienePagoMarzo = hasValue(props['pago marzo']);
+  const tienePagoFebrero = hasValue(props['valor ultimo pago']);
   const tieneValorMora = hasValue(props['total valor mora']);
 
-  const ultimoPagoTxt = tieneUltimoPago
+  const pagoMarzo = toNumberSafe(props['pago marzo']);
+  const pagoFebrero = toNumberSafe(props['valor ultimo pago']);
+  const valorMora = toNumberSafe(props['total valor mora']);
+  const saldoPendiente = Math.max(valorMora - pagoMarzo, 0);
+
+  const pagoMarzoTxt = tienePagoMarzo
+    ? formatCOP(props['pago marzo'], 'N/A')
+    : '';
+
+  const pagoFebreroTxt = tienePagoFebrero
     ? formatCOP(props['valor ultimo pago'], 'N/A')
     : '';
 
@@ -176,10 +216,17 @@ function buildPopupHTML(props, lngLat = null) {
     ? formatCOP(props['total valor mora'], '$ 0')
     : '';
 
+  const saldoPendienteTxt =
+    tienePagoMarzo && tieneValorMora
+      ? formatCOP(saldoPendiente, '$ 0')
+      : '';
+
   let infoPagoHTML = '';
 
   if (categoria === 'publicos') {
     infoPagoHTML += `<strong>Categoría:</strong> Predio público<br>`;
+  } else if (categoria === 'abono') {
+    infoPagoHTML += `<strong>Categoría:</strong> Predio con abono parcial<br>`;
   } else if (categoria === 'mora') {
     infoPagoHTML += `<strong>Categoría:</strong> Predio con mora<br>`;
   } else if (categoria === 'aldia') {
@@ -188,15 +235,20 @@ function buildPopupHTML(props, lngLat = null) {
     infoPagoHTML += `<strong>Categoría:</strong> Posible predio sin pagar<br>`;
   }
 
-  if (!tieneUltimoPago && !tieneValorMora) {
+  if (categoria === 'abono') {
+    infoPagoHTML += `<strong>Valor en mora:</strong> ${valorMoraTxt}<br>`;
+    infoPagoHTML += `<strong>Abono marzo:</strong> ${pagoMarzoTxt}<br>`;
+    infoPagoHTML += `<strong>Saldo pendiente:</strong> ${saldoPendienteTxt}<br>`;
+  } else if (categoria === 'mora') {
+    infoPagoHTML += `<strong>Valor en mora:</strong> ${valorMoraTxt}<br>`;
+  } else if (categoria === 'aldia') {
+    if (tienePagoMarzo) {
+      infoPagoHTML += `<strong>Pago marzo:</strong> ${pagoMarzoTxt}<br>`;
+    } else if (tienePagoFebrero) {
+      infoPagoHTML += `<strong>Pago febrero:</strong> ${pagoFebreroTxt}<br>`;
+    }
+  } else if (categoria === 'sinpago') {
     infoPagoHTML += `<strong>Información de pago:</strong> No se tiene información<br>`;
-  } else {
-    if (tieneUltimoPago) {
-      infoPagoHTML += `<strong>Último pago realizado:</strong> ${ultimoPagoTxt}<br>`;
-    }
-    if (tieneValorMora) {
-      infoPagoHTML += `<strong>Valor en mora:</strong> ${valorMoraTxt}<br>`;
-    }
   }
 
   const svBtn = lngLat
@@ -375,6 +427,21 @@ function setHighlight(featuresArr) {
   if (hlSource) hlSource.setData(fc);
 }
 
+function zoomToFeatureCollection(fc) {
+  try {
+    const bounds = turf.bbox(fc);
+    if (
+      Array.isArray(bounds) &&
+      bounds.length === 4 &&
+      bounds.every((n) => typeof n === 'number' && !isNaN(n))
+    ) {
+      map.fitBounds(bounds, { padding: 40 });
+    }
+  } catch (e) {
+    console.warn('No se pudo calcular el zoom al grupo resaltado.', e);
+  }
+}
+
 function highlightGroupFromFeature(feature) {
   const props = feature.properties || {};
   const features =
@@ -391,9 +458,7 @@ function highlightGroupFromFeature(feature) {
   if (categoria === 'publicos') {
     const group = [feature];
     setHighlight(group);
-
-    const bounds = turf.bbox({ type: 'FeatureCollection', features: group });
-    map.fitBounds(bounds, { padding: 40 });
+    zoomToFeatureCollection({ type: 'FeatureCollection', features: group });
     return;
   }
 
@@ -411,9 +476,7 @@ function highlightGroupFromFeature(feature) {
   if (!group.length) group = [feature];
 
   setHighlight(group);
-
-  const bounds = turf.bbox({ type: 'FeatureCollection', features: group });
-  map.fitBounds(bounds, { padding: 40 });
+  zoomToFeatureCollection({ type: 'FeatureCollection', features: group });
 }
 
 // =====================================================
@@ -432,6 +495,8 @@ function bindLegendToggles() {
       if (!cfg) return;
 
       const layerId = cfg.layerId;
+      if (!map.getLayer(layerId)) return;
+
       const currentVisibility = map.getLayoutProperty(layerId, 'visibility');
       const willHide = currentVisibility !== 'none';
 
@@ -443,19 +508,6 @@ function bindLegendToggles() {
     });
   });
 }
-
-// =====================================================
-// Cargar capa predial + resaltado
-// =====================================================
-map.on('style.load', () => {
-  addPrediosLayer(
-    'PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson',
-    'predios_ssk'
-  );
-
-  ensureHighlightLayers();
-  map.addControl(new mapboxgl.NavigationControl());
-});
 
 // =====================================================
 // Geocoder local
@@ -529,8 +581,6 @@ const geocoder = new MapboxGeocoder({
   }
 });
 
-map.addControl(geocoder, 'top-left');
-
 // =====================================================
 // Al seleccionar resultado
 // =====================================================
@@ -578,14 +628,39 @@ geocoder.on('result', (e) => {
   setHighlight(toHighlight);
 
   const fc = { type: 'FeatureCollection', features: toHighlight };
-  const bounds = turf.bbox(fc);
-  map.fitBounds(bounds, { padding: 40 });
+  zoomToFeatureCollection(fc);
 
-  const b = turf.bbox(fc);
-  const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
+  const featureForPopup = toHighlight[0] || {
+    type: 'Feature',
+    geometry: result.geometry,
+    properties: properties
+  };
+
+  const popupLngLat = getFeatureLngLat(
+    featureForPopup,
+    result.center ? { lng: result.center[0], lat: result.center[1] } : null
+  );
 
   popup
-    .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
-    .setHTML(buildPopupHTML(properties, center))
+    .setLngLat(popupLngLat)
+    .setHTML(buildPopupHTML(featureForPopup.properties || properties, popupLngLat))
     .addTo(map);
+});
+
+// =====================================================
+// Cargar capa predial + resaltado
+// =====================================================
+map.on('style.load', () => {
+  addPrediosLayer(
+    'PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson',
+    'predios_ssk'
+  );
+
+  ensureHighlightLayers();
+
+  if (!map._controlsAddedOnce) {
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.addControl(geocoder, 'top-left');
+    map._controlsAddedOnce = true;
+  }
 });
