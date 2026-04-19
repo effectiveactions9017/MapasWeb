@@ -7,31 +7,21 @@
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
   <!-- Mapbox CSS -->
-  <link
-    href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css"
-    rel="stylesheet"
-  />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet"/>
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
   <!-- Geocoder -->
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
-  <link
-    rel="stylesheet"
-    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
-  />
+  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet"/>
 
-  <!-- Turf.js -->
+  <!-- Turf -->
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js"></script>
 
-  <!-- Fuentes y estilos adicionales -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap"
-    rel="stylesheet"
-  >
-  <link
-    href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css"
-    rel="stylesheet"
-  >
+  <!-- Fuentes -->
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Mapbox Assembly -->
+  <link href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css" rel="stylesheet">
   <script async defer src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"></script>
 
   <!-- CSS personalizado -->
@@ -40,38 +30,50 @@
 
 <body>
 
-  <!-- CONTENEDOR DEL MAPA -->
+  <!-- MAPA -->
   <div id="map"></div>
 
+  <!-- ========================= -->
   <!-- LEYENDA -->
-<div class="legend-container">
-  <div class="legend-title">
-    Predial<br>Sesquilé
+  <!-- ========================= -->
+  <div class="legend-container">
+    <div class="legend-title">
+      Predial<br>Sesquilé
+    </div>
+
+    <ul class="legend-list">
+
+      <!-- 🏛️ MUNICIPIO -->
+      <li>
+        <span class="legend-color" style="background:#3b82f6;"></span>
+        Predios municipales
+      </li>
+
+      <!-- 🟢 NORMAL -->
+      <li>
+        <span class="legend-color" style="background:#2ec4b6;"></span>
+        Predios normales
+      </li>
+
+      <!-- 🟠 SIN NOMBRE -->
+      <li>
+        <span class="legend-color" style="background:#ffb703;"></span>
+        Sin información
+      </li>
+
+      <!-- 🟡 SELECCIONADO -->
+      <li>
+        <span class="legend-color predio-seleccionado"></span>
+        Predio seleccionado
+      </li>
+
+    </ul>
+
+    <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
   </div>
 
-  <ul class="legend-list">
-    <li>
-      <span class="legend-color predios-municipales"></span>
-      Predios municipales
-    </li>
-
-    <li>
-      <span class="legend-color predios-sin-info"></span>
-      Predios sin información R1
-    </li>
-
-    <li>
-      <span class="legend-color predio-seleccionado"></span>
-      Predio seleccionado
-    </li>
-  </ul>
-
-  <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
-</div>
-
-
   <!-- ========================= -->
-  <!-- CAJA DE INFORMACIÓN -->
+  <!-- INFO BOX -->
   <!-- ========================= -->
   <div class="info-box">
     <h3>Información del predio</h3>
@@ -80,7 +82,7 @@
     </div>
   </div>
 
-  <!-- SCRIPT PRINCIPAL -->
+  <!-- SCRIPT -->
   <script src="../src/index.js"></script>
 
 </body>
