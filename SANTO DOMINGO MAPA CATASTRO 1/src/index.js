@@ -6,7 +6,25 @@ mapboxgl.accessToken =
   'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
 
 const map = new mapboxgl.Map({
-  style: 'mapbox://styles/mapbox/satellite-v9',
+  style: {
+  version: 8,
+  sources: {
+    'google-satellite': {
+      type: 'raster',
+      tiles: [
+        'https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}'
+      ],
+      tileSize: 256
+    }
+  },
+  layers: [
+    {
+      id: 'google-satellite-layer',
+      type: 'raster',
+      source: 'google-satellite'
+    }
+  ]
+},
   center: [-75.163994, 6.472377],
   zoom: 15,
   container: 'map'
