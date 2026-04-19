@@ -3,11 +3,11 @@
 // ✅ Búsqueda local por: TERRENO_CO, nombre_completo, documento
 // ✅ Resalta 1 o varios predios (mismo código o documento)
 // ✅ Predios SIN NOMBRE en naranja
-// ✅ Usa PREDIOS_DATA para búsqueda completa (sin querySourceFeatures)
+// ✅ Usa dataset completo para búsquedas
+// ✅ Usa dataset deduplicado solo para pintar
 // ✅ Evita errores "source/layer already exists"
 // ✅ POPUP SOLO POR CLICK (no hover)
 // ✅ + BOTÓN STREET VIEW EN POPUP (también para predios/polígonos)
-// ✅ + ELIMINAR DUPLICADOS POR TERRENO_CO PARA EVITAR SOBREPOSICIÓN
 // =====================================================
 
 mapboxgl.accessToken =
@@ -31,6 +31,9 @@ let popup = new mapboxgl.Popup({
 
 // ✅ Dataset completo para búsquedas
 let PREDIOS_DATA = null;
+
+// ✅ Dataset deduplicado solo para dibujar
+let PREDIOS_DATA_RENDER = null;
 
 // =====================================================
 // Helpers
@@ -67,13 +70,11 @@ function deduplicateGeoJSONByTerreno(fc) {
   for (const feature of fc.features) {
     const codigo = norm(feature?.properties?.TERRENO_CO);
 
-    // Si no tiene código, lo dejamos pasar
     if (!codigo) {
       uniqueFeatures.push(feature);
       continue;
     }
 
-    // Solo deja el primero de cada código
     if (!seen.has(codigo)) {
       seen.add(codigo);
       uniqueFeatures.push(feature);
@@ -88,7 +89,6 @@ function deduplicateGeoJSONByTerreno(fc) {
 
 // ✅ Punto representativo del feature (para polígonos/puntos) + fallback
 function getFeatureLngLat(feature, fallbackLngLat = null) {
-  // 1) si viene del click (e.lngLat)
   if (
     fallbackLngLat &&
     typeof fallbackLngLat.lng === 'number' &&
@@ -97,19 +97,16 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
     return [fallbackLngLat.lng, fallbackLngLat.lat];
   }
 
-  // 2) si es punto
   const c = feature?.geometry?.coordinates;
   if (Array.isArray(c) && c.length >= 2 && c[0] != null && c[1] != null) {
     return [Number(c[0]), Number(c[1])];
   }
 
-  // 3) si es polígono: punto dentro del polígono
   try {
     const pt = turf.pointOnFeature(feature).geometry.coordinates;
     return [Number(pt[0]), Number(pt[1])];
   } catch (e) {}
 
-  // 4) fallback
   return [-75.163994, 6.472377];
 }
 
@@ -154,19 +151,25 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
   fetch(`../src/data/${geojsonFile}`)
     .then((response) => response.json())
     .then((rawData) => {
-      // ✅ Limpiar duplicados por TERRENO_CO antes de pintar
-      const data = deduplicateGeoJSONByTerreno(rawData);
+      // ✅ Guardar dataset completo para búsqueda
+      if (sourceId === 'predios_sd') {
+        PREDIOS_DATA = rawData;
+      }
 
-      // Guardar dataset completo ya depurado
-      if (sourceId === 'predios_sd') PREDIOS_DATA = data;
+      // ✅ Crear dataset deduplicado solo para render
+      const renderData = deduplicateGeoJSONByTerreno(rawData);
+
+      if (sourceId === 'predios_sd') {
+        PREDIOS_DATA_RENDER = renderData;
+      }
 
       // ✅ Source seguro
       if (map.getSource(sourceId)) {
-        map.getSource(sourceId).setData(data);
+        map.getSource(sourceId).setData(renderData);
       } else {
         map.addSource(sourceId, {
           type: 'geojson',
-          data: data
+          data: renderData
         });
       }
 
@@ -178,7 +181,6 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
           type: 'fill',
           minzoom: 12,
           paint: {
-            // ✅ Sin nombre_completo = naranja, Con nombre_completo = baseColor
             'fill-color': [
               'case',
               ['==', ['coalesce', ['get', 'nombre_completo'], ''], ''],
@@ -191,9 +193,6 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
         });
       }
 
-      // =====================================================
-      // ✅ POPUP SOLO POR CLICK
-      // =====================================================
       try { map.off('click', layerId); } catch (e) {}
       try { map.off('mouseenter', layerId); } catch (e) {}
       try { map.off('mouseleave', layerId); } catch (e) {}
