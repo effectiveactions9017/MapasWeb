@@ -7,7 +7,7 @@
 // ✅ Evita errores "source/layer already exists"
 // ✅ POPUP SOLO POR CLICK (no hover)
 // ✅ + BOTÓN STREET VIEW EN POPUP (también para predios/polígonos)
-//    (Google ajusta al panorama/vía más cercana)
+// ✅ + ELIMINAR DUPLICADOS POR TERRENO_CO PARA EVITAR SOBREPOSICIÓN
 // =====================================================
 
 mapboxgl.accessToken =
@@ -57,6 +57,35 @@ function norm(v) {
     .trim();
 }
 
+// ✅ Elimina duplicados por TERRENO_CO para evitar sobreposición visual
+function deduplicateGeoJSONByTerreno(fc) {
+  if (!fc || !Array.isArray(fc.features)) return fc;
+
+  const seen = new Set();
+  const uniqueFeatures = [];
+
+  for (const feature of fc.features) {
+    const codigo = norm(feature?.properties?.TERRENO_CO);
+
+    // Si no tiene código, lo dejamos pasar
+    if (!codigo) {
+      uniqueFeatures.push(feature);
+      continue;
+    }
+
+    // Solo deja el primero de cada código
+    if (!seen.has(codigo)) {
+      seen.add(codigo);
+      uniqueFeatures.push(feature);
+    }
+  }
+
+  return {
+    ...fc,
+    features: uniqueFeatures
+  };
+}
+
 // ✅ Punto representativo del feature (para polígonos/puntos) + fallback
 function getFeatureLngLat(feature, fallbackLngLat = null) {
   // 1) si viene del click (e.lngLat)
@@ -74,7 +103,7 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
     return [Number(c[0]), Number(c[1])];
   }
 
-  // 3) si es polígono: punto dentro del polígono (mejor que centroide)
+  // 3) si es polígono: punto dentro del polígono
   try {
     const pt = turf.pointOnFeature(feature).geometry.coordinates;
     return [Number(pt[0]), Number(pt[1])];
@@ -124,8 +153,11 @@ function buildPopupHTML(props, lngLat = null, extraHTML = '') {
 function addLayer(geojsonFile, sourceId, layerId, baseColor) {
   fetch(`../src/data/${geojsonFile}`)
     .then((response) => response.json())
-    .then((data) => {
-      // Guardar dataset completo
+    .then((rawData) => {
+      // ✅ Limpiar duplicados por TERRENO_CO antes de pintar
+      const data = deduplicateGeoJSONByTerreno(rawData);
+
+      // Guardar dataset completo ya depurado
       if (sourceId === 'predios_sd') PREDIOS_DATA = data;
 
       // ✅ Source seguro
@@ -160,7 +192,7 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
       }
 
       // =====================================================
-      // ✅ POPUP SOLO POR CLICK (se quita hover)
+      // ✅ POPUP SOLO POR CLICK
       // =====================================================
       try { map.off('click', layerId); } catch (e) {}
       try { map.off('mouseenter', layerId); } catch (e) {}
@@ -173,10 +205,8 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
         const props = feature.properties || {};
         const lngLatClick = e.lngLat;
 
-        // (Opcional) si quieres que al click también resalte el grupo:
         highlightGroupFromFeature(feature);
 
-        // ✅ coords para Street View (click o punto representativo)
         const svLngLat = getFeatureLngLat(feature, lngLatClick);
 
         popup
@@ -185,7 +215,6 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
           .addTo(map);
       });
 
-      // Cursor pointer
       map.on('mouseenter', layerId, () => {
         map.getCanvas().style.cursor = 'pointer';
       });
@@ -243,7 +272,6 @@ function setHighlight(featuresArr) {
 }
 
 function highlightGroupFromFeature(feature) {
-  // resalta por TERRENO_CO o documento si existen
   const props = feature.properties || {};
   const features =
     PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
@@ -268,7 +296,6 @@ function highlightGroupFromFeature(feature) {
 
   setHighlight(group);
 
-  // Zoom al conjunto
   const bounds = turf.bbox({ type: 'FeatureCollection', features: group });
   map.fitBounds(bounds, { padding: 40 });
 }
@@ -289,8 +316,7 @@ map.on('style.load', () => {
 });
 
 // =====================================================
-// Geocoder local: busca por TERRENO_CO, nombre_completo, documento
-// (usando PREDIOS_DATA completo)
+// Geocoder local
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
@@ -364,15 +390,14 @@ const geocoder = new MapboxGeocoder({
 map.addControl(geocoder, 'top-left');
 
 // =====================================================
-// Al seleccionar resultado: zoom + resaltar 1 o varios predios vinculados
-// + popup SOLO cuando selecciona (no hover)
+// Al seleccionar resultado
 // =====================================================
 geocoder.on('result', (e) => {
   const result = e.result;
   if (!result || !result.geometry) return;
 
   const properties = result.properties || {};
-  const matchField = properties.__matchField; // 'TERRENO_CO' | 'documento' | 'nombre_completo'
+  const matchField = properties.__matchField;
   const matchValue = (properties.__matchValue ?? '').toString().trim();
 
   const features =
@@ -380,7 +405,6 @@ geocoder.on('result', (e) => {
 
   let toHighlight = [];
 
-  // ✅ Agrupar y resaltar todos los que compartan el mismo código o documento
   if ((matchField === 'documento' || matchField === 'TERRENO_CO') && matchValue) {
     const mv = norm(matchValue);
     toHighlight = features.filter((f) => {
@@ -390,7 +414,6 @@ geocoder.on('result', (e) => {
     });
   }
 
-  // Fallback: si no encontró grupo, resalta el seleccionado
   if (!toHighlight.length) {
     toHighlight = [
       {
@@ -403,12 +426,10 @@ geocoder.on('result', (e) => {
 
   setHighlight(toHighlight);
 
-  // Zoom al conjunto
   const fc = { type: 'FeatureCollection', features: toHighlight };
   const bounds = turf.bbox(fc);
   map.fitBounds(bounds, { padding: 40 });
 
-  // Lista de códigos
   const codigos = toHighlight
     .map((f) => (f.properties?.TERRENO_CO ?? '').toString().trim())
     .filter(Boolean);
@@ -419,11 +440,9 @@ geocoder.on('result', (e) => {
         .join('<br>')}${codigos.length > 10 ? '<br>…' : ''}`
     : '';
 
-  // ✅ coords para Street View desde el centro del bbox del grupo
   const b = turf.bbox(fc);
   const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
 
-  // Popup SOLO por selección (geocoder)
   popup
     .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
     .setHTML(buildPopupHTML(properties, center, listaCodigos))
