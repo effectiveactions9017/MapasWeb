@@ -20,7 +20,7 @@ const map = new mapboxgl.Map({
       'google-satellite': {
         type: 'raster',
         tiles: [
-          'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
+          'https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}'
         ],
         tileSize: 256
       }
@@ -219,6 +219,25 @@ function highlightGroupFromFeature(feature) {
   const features =
     PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
 
+  const esPublico =
+    (props.nombre_completo || '').toString().trim().toUpperCase() === 'MUNICIPIO';
+
+  // ✅ Si es predio público, solo resalta ese predio
+  if (esPublico) {
+    const group = [feature];
+    setHighlight(group);
+
+    try {
+      const bounds = turf.bbox({
+        type: 'FeatureCollection',
+        features: group
+      });
+      map.fitBounds(bounds, { padding: 40 });
+    } catch (e) {}
+
+    return group;
+  }
+
   if (!features.length) {
     setHighlight([feature]);
     return [feature];
@@ -230,7 +249,15 @@ function highlightGroupFromFeature(feature) {
   let group = [];
 
   if (doc) {
-    group = features.filter((f) => norm(f.properties?.documento) === doc);
+    group = features.filter((f) => {
+      const p = f.properties || {};
+      const mismoDoc = norm(p.documento) === doc;
+
+      const esPublicoFila =
+        (p.nombre_completo || '').toString().trim().toUpperCase() === 'MUNICIPIO';
+
+      return mismoDoc && !esPublicoFila;
+    });
   } else if (codigo) {
     group = features.filter((f) => norm(f.properties?.TERRENO_CO) === codigo);
   }
@@ -432,13 +459,25 @@ geocoder.on('result', (e) => {
     PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
 
   let toHighlight = [];
+  const esPublico =
+    (properties.nombre_completo || '').toString().trim().toUpperCase() === 'MUNICIPIO';
 
-  if ((matchField === 'documento' || matchField === 'TERRENO_CO') && matchValue) {
+  // ✅ Si el resultado es predio público, solo resaltar ese
+  if (esPublico) {
+    toHighlight = [{
+      type: 'Feature',
+      geometry: result.geometry,
+      properties: properties
+    }];
+  } else if ((matchField === 'documento' || matchField === 'TERRENO_CO') && matchValue) {
     const mv = norm(matchValue);
     toHighlight = features.filter((f) => {
       const p = f.properties || {};
       const v = matchField === 'documento' ? p.documento : p.TERRENO_CO;
-      return norm(v) === mv;
+      const publicoFila =
+        (p.nombre_completo || '').toString().trim().toUpperCase() === 'MUNICIPIO';
+
+      return norm(v) === mv && !publicoFila;
     });
   }
 
@@ -466,7 +505,7 @@ geocoder.on('result', (e) => {
     .map((f) => (f.properties?.TERRENO_CO ?? '').toString().trim())
     .filter(Boolean);
 
-  const listaCodigos = codigos.length
+  const listaCodigos = codigos.length > 1
     ? `<br><strong>Predios vinculados (${codigos.length}):</strong><br>${codigos
         .slice(0, 10)
         .join('<br>')}${codigos.length > 10 ? '<br>…' : ''}`
