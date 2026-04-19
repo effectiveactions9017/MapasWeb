@@ -142,45 +142,6 @@ function addLayer() {
 }
 
 // =====================================================
-// Leyenda
-// =====================================================
-function addLegend() {
-  const legend = document.createElement('div');
-
-  legend.innerHTML = `
-    <div style="
-      position:absolute;
-      bottom:20px;
-      left:10px;
-      background:white;
-      padding:10px;
-      border-radius:8px;
-      font-size:12px;
-      box-shadow:0 0 10px rgba(0,0,0,0.2);
-    ">
-      <strong>Convenciones</strong><br><br>
-
-      <div>
-        <span style="background:#3b82f6;width:12px;height:12px;display:inline-block;"></span>
-        Predio público
-      </div>
-
-      <div>
-        <span style="background:#2ec4b6;width:12px;height:12px;display:inline-block;"></span>
-        Predio normal
-      </div>
-
-      <div>
-        <span style="background:#ffb703;width:12px;height:12px;display:inline-block;"></span>
-        Sin nombre
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(legend);
-}
-
-// =====================================================
 map.on('load', () => {
   addLayer();
   map.addControl(new mapboxgl.NavigationControl());
