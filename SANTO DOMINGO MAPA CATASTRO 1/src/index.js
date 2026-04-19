@@ -1,13 +1,5 @@
 // =====================================================
 // ✅ Visor Predial Santo Domingo - Mapbox GL JS
-// ✅ Búsqueda local por: TERRENO_CO, nombre_completo, documento
-// ✅ Resalta 1 o varios predios (mismo código o documento)
-// ✅ Predios SIN NOMBRE en naranja
-// ✅ Usa dataset completo para búsquedas
-// ✅ Usa dataset deduplicado solo para pintar
-// ✅ Evita errores "source/layer already exists"
-// ✅ POPUP SOLO POR CLICK (no hover)
-// ✅ + BOTÓN STREET VIEW EN POPUP (también para predios/polígonos)
 // =====================================================
 
 mapboxgl.accessToken =
@@ -17,118 +9,62 @@ const map = new mapboxgl.Map({
   style: 'mapbox://styles/mapbox/satellite-v9',
   center: [-75.163994, 6.472377],
   zoom: 15,
-  pitch: 0,
-  bearing: 0,
-  container: 'map',
-  antialias: true
+  container: 'map'
 });
 
 let popup = new mapboxgl.Popup({
   closeButton: true,
-  closeOnClick: true,
-  className: 'custom-popup'
+  closeOnClick: true
 });
 
-// ✅ Dataset completo para búsquedas
 let PREDIOS_DATA = null;
-
-// ✅ Dataset deduplicado solo para dibujar
 let PREDIOS_DATA_RENDER = null;
 
 // =====================================================
 // Helpers
 // =====================================================
 function formatAvaluo(value) {
-  if (value === null || value === undefined || value === '') return 'N/A';
-  const n = Number(value);
-  return isNaN(n) ? String(value) : n.toLocaleString('es-CO');
+  if (!value) return 'N/A';
+  return Number(value).toLocaleString('es-CO');
 }
 
 function formatArea(value) {
-  if (value === null || value === undefined || value === '') return 'N/A';
-  const n = Number(value);
-  return isNaN(n)
-    ? String(value)
-    : Math.round(n).toLocaleString('es-CO');
+  if (!value) return 'N/A';
+  return Math.round(Number(value)).toLocaleString('es-CO');
 }
 
 function norm(v) {
-  return (v ?? '')
-    .toString()
-    .toLowerCase()
-    .replace(/\s+/g, '')
-    .trim();
+  return (v ?? '').toString().toLowerCase().replace(/\s+/g, '').trim();
 }
 
-// ✅ Elimina duplicados por TERRENO_CO para evitar sobreposición visual
+// =====================================================
+// Deduplicar
+// =====================================================
 function deduplicateGeoJSONByTerreno(fc) {
-  if (!fc || !Array.isArray(fc.features)) return fc;
-
   const seen = new Set();
-  const uniqueFeatures = [];
+  const unique = [];
 
-  for (const feature of fc.features) {
-    const codigo = norm(feature?.properties?.TERRENO_CO);
-
-    if (!codigo) {
-      uniqueFeatures.push(feature);
-      continue;
-    }
-
-    if (!seen.has(codigo)) {
-      seen.add(codigo);
-      uniqueFeatures.push(feature);
+  for (const f of fc.features) {
+    const cod = norm(f.properties?.TERRENO_CO);
+    if (!seen.has(cod)) {
+      seen.add(cod);
+      unique.push(f);
     }
   }
 
-  return {
-    ...fc,
-    features: uniqueFeatures
-  };
+  return { ...fc, features: unique };
 }
 
-// ✅ Punto representativo del feature (para polígonos/puntos) + fallback
-function getFeatureLngLat(feature, fallbackLngLat = null) {
-  if (
-    fallbackLngLat &&
-    typeof fallbackLngLat.lng === 'number' &&
-    typeof fallbackLngLat.lat === 'number'
-  ) {
-    return [fallbackLngLat.lng, fallbackLngLat.lat];
-  }
-
-  const c = feature?.geometry?.coordinates;
-  if (Array.isArray(c) && c.length >= 2 && c[0] != null && c[1] != null) {
-    return [Number(c[0]), Number(c[1])];
-  }
-
-  try {
-    const pt = turf.pointOnFeature(feature).geometry.coordinates;
-    return [Number(pt[0]), Number(pt[1])];
-  } catch (e) {}
-
-  return [-75.163994, 6.472377];
-}
-
-function streetViewUrl([lng, lat]) {
-  return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
-}
-
+// =====================================================
+// Popup
+// =====================================================
 function buildPopupHTML(props, lngLat = null, extraHTML = '') {
-  props = props || {};
-  const avaluoTxt = formatAvaluo(props.avaluo);
-  const areaTxt = formatArea((Number(props['terreno.ha']) || 0) * 10000);
 
-  const svBtn = lngLat
-    ? `
-      <div style="margin-top:10px;">
-        <a href="${streetViewUrl(lngLat)}" target="_blank" rel="noopener"
-           style="display:inline-block; padding:6px 10px; border-radius:6px;
-                  background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
-          📷 Street View
-        </a>
-      </div>
-    `
+  const esPublico =
+    (props.nombre_completo || '').toUpperCase() === 'MUNICIPIO';
+
+  const publicoHTML = esPublico
+    ? `<br><strong style="color:#1d4ed8;">🏛️ Predio público</strong><br>`
     : '';
 
   return `
@@ -136,314 +72,116 @@ function buildPopupHTML(props, lngLat = null, extraHTML = '') {
     <strong>Destino:</strong> ${props['destino.economico'] ?? 'N/A'}<br>
     <strong>Nombre:</strong> ${props.nombre_completo ?? 'N/A'}<br>
     <strong>Documento:</strong> ${props.documento ?? 'N/A'}<br>
-    <strong>Avalúo:</strong> ${avaluoTxt}<br>
-    <strong>Área (m²):</strong> ${areaTxt}<br>
+    <strong>Avalúo:</strong> ${formatAvaluo(props.avaluo)}<br>
+    <strong>Área (m²):</strong> ${formatArea((props['terreno.ha'] || 0) * 10000)}<br>
+    ${publicoHTML}
     ${extraHTML}
-    ${svBtn}
-    <br><a style="font-size:9px;">&#9400; EffectiveActions</a>
   `;
 }
 
 // =====================================================
-// Función para agregar capa GeoJSON
+// Cargar capa
 // =====================================================
-function addLayer(geojsonFile, sourceId, layerId, baseColor) {
-  fetch(`../src/data/${geojsonFile}`)
-    .then((response) => response.json())
-    .then((rawData) => {
-      // ✅ Guardar dataset completo para búsqueda
-      if (sourceId === 'predios_sd') {
-        PREDIOS_DATA = rawData;
-      }
+function addLayer() {
 
-      // ✅ Crear dataset deduplicado solo para render
-      const renderData = deduplicateGeoJSONByTerreno(rawData);
+  fetch('../src/data/BASE_PREDIAL_SANTO_DOMINGO_FINAL.geojson')
+    .then(r => r.json())
+    .then(data => {
 
-      if (sourceId === 'predios_sd') {
-        PREDIOS_DATA_RENDER = renderData;
-      }
+      PREDIOS_DATA = data;
+      PREDIOS_DATA_RENDER = deduplicateGeoJSONByTerreno(data);
 
-      // ✅ Source seguro
-      if (map.getSource(sourceId)) {
-        map.getSource(sourceId).setData(renderData);
-      } else {
-        map.addSource(sourceId, {
-          type: 'geojson',
-          data: renderData
-        });
-      }
+      map.addSource('predios', {
+        type: 'geojson',
+        data: PREDIOS_DATA_RENDER
+      });
 
-      // ✅ Layer seguro
-      if (!map.getLayer(layerId)) {
-        map.addLayer({
-          id: layerId,
-          source: sourceId,
-          type: 'fill',
-          minzoom: 12,
-          paint: {
-            'fill-color': [
-              'case',
-              ['==', ['coalesce', ['get', 'nombre_completo'], ''], ''],
-              '#ffb703',
-              baseColor
-            ],
-            'fill-opacity': 0.75,
-            'fill-outline-color': '#ffffff'
-          }
-        });
-      }
+      map.addLayer({
+        id: 'predios-layer',
+        type: 'fill',
+        source: 'predios',
+        paint: {
+          'fill-color': [
+            'case',
 
-      try { map.off('click', layerId); } catch (e) {}
-      try { map.off('mouseenter', layerId); } catch (e) {}
-      try { map.off('mouseleave', layerId); } catch (e) {}
+            // 🔵 Predios públicos (azul)
+            ['==', ['upcase', ['coalesce', ['get', 'nombre_completo'], '']], 'MUNICIPIO'],
+            '#3b82f6',
 
-      map.on('click', layerId, (e) => {
-        const feature = e.features && e.features[0];
-        if (!feature) return;
+            // 🟠 Sin nombre
+            ['==', ['coalesce', ['get', 'nombre_completo'], ''], ''],
+            '#ffb703',
 
-        const props = feature.properties || {};
-        const lngLatClick = e.lngLat;
+            // 🟢 Normal
+            '#2ec4b6'
+          ],
+          'fill-opacity': 0.7,
+          'fill-outline-color': '#ffffff'
+        }
+      });
 
-        highlightGroupFromFeature(feature);
-
-        const svLngLat = getFeatureLngLat(feature, lngLatClick);
+      map.on('click', 'predios-layer', (e) => {
+        const f = e.features[0];
 
         popup
-          .setLngLat(lngLatClick)
-          .setHTML(buildPopupHTML(props, svLngLat))
+          .setLngLat(e.lngLat)
+          .setHTML(buildPopupHTML(f.properties))
           .addTo(map);
       });
 
-      map.on('mouseenter', layerId, () => {
+      map.on('mouseenter', 'predios-layer', () => {
         map.getCanvas().style.cursor = 'pointer';
       });
 
-      map.on('mouseleave', layerId, () => {
+      map.on('mouseleave', 'predios-layer', () => {
         map.getCanvas().style.cursor = '';
       });
-    })
-    .catch((err) => console.error('Error cargando GeoJSON:', err));
-}
 
-// =====================================================
-// Fuente + capas de resaltado
-// =====================================================
-function ensureHighlightLayers() {
-  if (!map.getSource('predios_highlight')) {
-    map.addSource('predios_highlight', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] }
+      addLegend();
     });
-  }
-
-  if (!map.getLayer('predios_highlight_fill')) {
-    map.addLayer({
-      id: 'predios_highlight_fill',
-      type: 'fill',
-      source: 'predios_highlight',
-      paint: {
-        'fill-color': '#ffff00',
-        'fill-opacity': 0.30
-      }
-    });
-  }
-
-  if (!map.getLayer('predios_highlight_line')) {
-    map.addLayer({
-      id: 'predios_highlight_line',
-      type: 'line',
-      source: 'predios_highlight',
-      paint: {
-        'line-color': '#ffff00',
-        'line-width': 4
-      }
-    });
-  }
-}
-
-function setHighlight(featuresArr) {
-  const fc = {
-    type: 'FeatureCollection',
-    features: featuresArr || []
-  };
-  const hlSource = map.getSource('predios_highlight');
-  if (hlSource) hlSource.setData(fc);
-}
-
-function highlightGroupFromFeature(feature) {
-  const props = feature.properties || {};
-  const features =
-    PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
-
-  if (!features.length) {
-    setHighlight([feature]);
-    return;
-  }
-
-  const codigo = norm(props.TERRENO_CO);
-  const doc = norm(props.documento);
-
-  let group = [];
-
-  if (doc) {
-    group = features.filter((f) => norm(f.properties?.documento) === doc);
-  } else if (codigo) {
-    group = features.filter((f) => norm(f.properties?.TERRENO_CO) === codigo);
-  }
-
-  if (!group.length) group = [feature];
-
-  setHighlight(group);
-
-  const bounds = turf.bbox({ type: 'FeatureCollection', features: group });
-  map.fitBounds(bounds, { padding: 40 });
 }
 
 // =====================================================
-// Cargar capa predial + resaltado
+// Leyenda
 // =====================================================
-map.on('style.load', () => {
-  addLayer(
-    'BASE_PREDIAL_SANTO_DOMINGO_FINAL.geojson',
-    'predios_sd',
-    'predios_sd_layer',
-    '#2ec4b6'
-  );
+function addLegend() {
+  const legend = document.createElement('div');
 
-  ensureHighlightLayers();
+  legend.innerHTML = `
+    <div style="
+      position:absolute;
+      bottom:20px;
+      left:10px;
+      background:white;
+      padding:10px;
+      border-radius:8px;
+      font-size:12px;
+      box-shadow:0 0 10px rgba(0,0,0,0.2);
+    ">
+      <strong>Convenciones</strong><br><br>
+
+      <div>
+        <span style="background:#3b82f6;width:12px;height:12px;display:inline-block;"></span>
+        Predio público
+      </div>
+
+      <div>
+        <span style="background:#2ec4b6;width:12px;height:12px;display:inline-block;"></span>
+        Predio normal
+      </div>
+
+      <div>
+        <span style="background:#ffb703;width:12px;height:12px;display:inline-block;"></span>
+        Sin nombre
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(legend);
+}
+
+// =====================================================
+map.on('load', () => {
+  addLayer();
   map.addControl(new mapboxgl.NavigationControl());
-});
-
-// =====================================================
-// Geocoder local
-// =====================================================
-const geocoder = new MapboxGeocoder({
-  accessToken: mapboxgl.accessToken,
-  mapboxgl: mapboxgl,
-  marker: false,
-  localGeocoderOnly: true,
-  placeholder: 'Buscar por código, nombre o documento',
-  localGeocoder: function (query) {
-    const matchingFeatures = [];
-    const q = (query || '').toString().toLowerCase().trim();
-    if (!q) return matchingFeatures;
-
-    const features =
-      PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
-    if (!features.length) return matchingFeatures;
-
-    for (const feature of features) {
-      const props = feature.properties || {};
-      const codigo = (props.TERRENO_CO ?? '').toString().toLowerCase();
-      const nombre = (props.nombre_completo ?? '').toString().toLowerCase();
-      const documento = (props.documento ?? '').toString().toLowerCase();
-
-      const match =
-        (codigo && codigo.includes(q)) ||
-        (nombre && nombre.includes(q)) ||
-        (documento && documento.includes(q));
-
-      if (!match) continue;
-
-      const centro = turf.centroid(feature).geometry.coordinates;
-
-      const codTxt = (props.TERRENO_CO ?? '').toString().trim();
-      const nomTxt = (props.nombre_completo ?? '').toString().trim();
-      const docTxt = (props.documento ?? '').toString().trim();
-
-      let matchField = null;
-      let matchValue = null;
-
-      if (codigo && codigo.includes(q)) {
-        matchField = 'TERRENO_CO';
-        matchValue = codTxt;
-      } else if (documento && documento.includes(q)) {
-        matchField = 'documento';
-        matchValue = docTxt;
-      } else if (nombre && nombre.includes(q)) {
-        matchField = 'nombre_completo';
-        matchValue = nomTxt;
-      }
-
-      const props2 = { ...props, __matchField: matchField, __matchValue: matchValue };
-
-      matchingFeatures.push({
-        type: 'Feature',
-        geometry: feature.geometry,
-        properties: props2,
-        place_name: `Código: ${codTxt || 'N/A'} | Nombre: ${nomTxt || 'N/A'} | Doc: ${
-          docTxt || 'N/A'
-        }`,
-        text: codTxt || nomTxt || docTxt || 'Resultado',
-        center: centro,
-        place_type: ['place']
-      });
-
-      if (matchingFeatures.length >= 10) break;
-    }
-
-    return matchingFeatures;
-  }
-});
-
-map.addControl(geocoder, 'top-left');
-
-// =====================================================
-// Al seleccionar resultado
-// =====================================================
-geocoder.on('result', (e) => {
-  const result = e.result;
-  if (!result || !result.geometry) return;
-
-  const properties = result.properties || {};
-  const matchField = properties.__matchField;
-  const matchValue = (properties.__matchValue ?? '').toString().trim();
-
-  const features =
-    PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
-
-  let toHighlight = [];
-
-  if ((matchField === 'documento' || matchField === 'TERRENO_CO') && matchValue) {
-    const mv = norm(matchValue);
-    toHighlight = features.filter((f) => {
-      const p = f.properties || {};
-      const v = matchField === 'documento' ? p.documento : p.TERRENO_CO;
-      return norm(v) === mv;
-    });
-  }
-
-  if (!toHighlight.length) {
-    toHighlight = [
-      {
-        type: 'Feature',
-        geometry: result.geometry,
-        properties: properties
-      }
-    ];
-  }
-
-  setHighlight(toHighlight);
-
-  const fc = { type: 'FeatureCollection', features: toHighlight };
-  const bounds = turf.bbox(fc);
-  map.fitBounds(bounds, { padding: 40 });
-
-  const codigos = toHighlight
-    .map((f) => (f.properties?.TERRENO_CO ?? '').toString().trim())
-    .filter(Boolean);
-
-  const listaCodigos = codigos.length
-    ? `<br><strong>Predios vinculados (${codigos.length}):</strong><br>${codigos
-        .slice(0, 10)
-        .join('<br>')}${codigos.length > 10 ? '<br>…' : ''}`
-    : '';
-
-  const b = turf.bbox(fc);
-  const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
-
-  popup
-    .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
-    .setHTML(buildPopupHTML(properties, center, listaCodigos))
-    .addTo(map);
 });
