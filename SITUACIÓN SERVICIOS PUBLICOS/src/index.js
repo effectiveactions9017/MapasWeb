@@ -495,15 +495,17 @@ function wireServiciosToggleList() {
     const alumbradoActivo = isAlumbradoActive();
 
     // Servicios
-    if (!actives.length) {
-      setLayerVisibility("L_BASE", true);
-      FILTER_GROUPS.forEach((g) => setLayerVisibility(g.id, false));
-    } else {
-      setLayerVisibility("L_BASE", false);
-      FILTER_GROUPS.forEach((g) => {
-        setLayerVisibility(g.id, actives.includes(g.id));
-      });
-    }
+    if (!actives.length && !alumbradoActivo) {
+  // Solo muestra todos cuando NO hay servicios ni alumbrado activos
+  setLayerVisibility("L_BASE", true);
+  FILTER_GROUPS.forEach((g) => setLayerVisibility(g.id, false));
+} else {
+  // Si hay cualquier filtro o alumbrado activo, apaga "Ver todos"
+  setLayerVisibility("L_BASE", false);
+  FILTER_GROUPS.forEach((g) => {
+    setLayerVisibility(g.id, actives.includes(g.id));
+  });
+}
 
     // Alumbrado independiente
     setLayerVisibility(ALUMBRADO_LAYER_ID, alumbradoActivo);
