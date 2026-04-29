@@ -24,6 +24,37 @@
 
   <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
+
+  <!-- Ajuste para que la leyenda siempre se vea -->
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Libre Franklin', Arial, sans-serif;
+    }
+
+    #map {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    #legend-terri {
+      position: absolute;
+      bottom: 25px;
+      left: 15px;
+      z-index: 9999;
+    }
+
+    .info-box {
+      z-index: 9998;
+    }
+  </style>
 </head>
 
 <body>
