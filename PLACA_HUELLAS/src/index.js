@@ -1,15 +1,15 @@
 // =====================================================
-// ✅ Predial Sesquilé - Mapbox GL JS + Placa Huellas por Vereda
-// ✅ Base predial con botón prender/apagar
-// ✅ Placa huellas con colores por vereda
-// ✅ Popup placa huellas: longitud + vereda
+// ✅ Predial Sesquilé - Mapbox GL JS + Placa Huellas
+// ✅ Predios: SOLO CONTORNO, sin relleno
+// ✅ Placa huellas: encima de predios y coloreada por vereda
+// ✅ Leyenda visible con botones prender/apagar
 // =====================================================
 
 mapboxgl.accessToken =
   'pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w';
 
 const map = new mapboxgl.Map({
-  style: 'mapbox://styles/mapbox/satellite-v9',
+  style: 'mapbox://styles/mapbox/dark-v11',
   center: [-73.79724, 5.04463],
   zoom: 15,
   pitch: 0,
@@ -27,9 +27,6 @@ let popup = new mapboxgl.Popup({
 let PREDIOS_DATA = null;
 let PLACA_DATA = null;
 
-// =====================================================
-// COLORES PARA VEREDAS
-// =====================================================
 const paletteVeredas = [
   '#ff8800', '#00c853', '#2979ff', '#d500f9', '#ff1744',
   '#00bcd4', '#ffd600', '#8bc34a', '#ff6d00', '#7c4dff',
@@ -38,9 +35,6 @@ const paletteVeredas = [
 
 let coloresVereda = {};
 
-// =====================================================
-// HELPERS
-// =====================================================
 function norm(v) {
   return (v ?? '').toString().trim();
 }
@@ -66,9 +60,6 @@ function streetViewUrl([lng, lat]) {
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 }
 
-// =====================================================
-// POPUP
-// =====================================================
 function buildPopupFromFields(feature, lngLatForPopup, popupFields, lngLatForSV) {
   const props = feature.properties || {};
 
@@ -82,12 +73,14 @@ function buildPopupFromFields(feature, lngLatForPopup, popupFields, lngLatForSV)
 
       if (field.key === 'AVALUO 2026' && value !== null && value !== undefined && value !== '') {
         const n = Number(value);
-        value = isNaN(n) ? value : n.toLocaleString('es-CO');
+        value = isNaN(n) ? value : `$ ${n.toLocaleString('es-CO')}`;
       }
 
       if (field.key === 'longitud' && value !== null && value !== undefined && value !== '') {
         const n = Number(value);
-        value = isNaN(n) ? value : `${n.toLocaleString('es-CO', { maximumFractionDigits: 2 })} m`;
+        value = isNaN(n)
+          ? value
+          : `${n.toLocaleString('es-CO', { maximumFractionDigits: 2 })} m`;
       }
 
       return `<strong>${field.label}:</strong> ${value ?? 'N/A'}`;
@@ -114,33 +107,38 @@ function buildPopupFromFields(feature, lngLatForPopup, popupFields, lngLatForSV)
 // LEYENDA
 // =====================================================
 function crearLeyenda() {
-  if (document.getElementById('legend-terri')) return;
+  let legend = document.getElementById('legend-terri');
 
-  const legend = document.createElement('div');
-  legend.id = 'legend-terri';
+  if (!legend) {
+    legend = document.createElement('div');
+    legend.id = 'legend-terri';
+    document.body.appendChild(legend);
+  }
+
   legend.style.position = 'absolute';
   legend.style.bottom = '25px';
   legend.style.left = '15px';
-  legend.style.zIndex = '10';
-  legend.style.background = 'rgba(15, 23, 42, 0.92)';
+  legend.style.zIndex = '9999';
+  legend.style.background = 'rgba(15, 23, 42, 0.94)';
   legend.style.color = '#fff';
   legend.style.padding = '12px';
   legend.style.borderRadius = '12px';
-  legend.style.fontFamily = 'Arial, sans-serif';
+  legend.style.fontFamily = 'Libre Franklin, Arial, sans-serif';
   legend.style.fontSize = '12px';
-  legend.style.maxHeight = '320px';
+  legend.style.maxHeight = '340px';
   legend.style.overflowY = 'auto';
-  legend.style.boxShadow = '0 8px 20px rgba(0,0,0,.35)';
-  legend.style.border = '1px solid rgba(255,255,255,.18)';
+  legend.style.boxShadow = '0 8px 22px rgba(0,0,0,.45)';
+  legend.style.border = '1px solid rgba(255,255,255,.22)';
+  legend.style.minWidth = '210px';
 
   legend.innerHTML = `
-    <div style="font-weight:800; font-size:13px; margin-bottom:8px;">
-      🗺️ Capas
+    <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
+      🗺️ Predial Sesquilé
     </div>
 
     <label style="display:flex; align-items:center; gap:7px; margin-bottom:8px; cursor:pointer;">
       <input type="checkbox" id="toggle-predial" checked>
-      <span style="width:14px; height:14px; background:#2ec4b6; display:inline-block; border-radius:3px;"></span>
+      <span style="width:18px; height:3px; background:#cfcfcf; display:inline-block; border-radius:3px;"></span>
       Base predial
     </label>
 
@@ -155,24 +153,24 @@ function crearLeyenda() {
     </div>
 
     <div id="legend-veredas"></div>
-  `;
 
-  document.body.appendChild(legend);
+    <div style="margin-top:8px;">
+      <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
+    </div>
+  `;
 
   document.getElementById('toggle-predial').addEventListener('change', function () {
     const visibility = this.checked ? 'visible' : 'none';
 
-    if (map.getLayer('predios_ssk_layer')) {
-      map.setLayoutProperty('predios_ssk_layer', 'visibility', visibility);
-    }
-
-    if (map.getLayer('predios_highlight_fill')) {
-      map.setLayoutProperty('predios_highlight_fill', 'visibility', visibility);
-    }
-
-    if (map.getLayer('predios_highlight_line')) {
-      map.setLayoutProperty('predios_highlight_line', 'visibility', visibility);
-    }
+    [
+      'predios_ssk_layer',
+      'predios_highlight_fill',
+      'predios_highlight_line'
+    ].forEach((id) => {
+      if (map.getLayer(id)) {
+        map.setLayoutProperty(id, 'visibility', visibility);
+      }
+    });
   });
 
   document.getElementById('toggle-placa').addEventListener('change', function () {
@@ -209,7 +207,7 @@ function actualizarLeyendaVeredas(veredas) {
 }
 
 // =====================================================
-// CAPA PREDIAL
+// CAPA PREDIAL: SOLO CONTORNO
 // =====================================================
 function addPredialLayer() {
   fetch('../src/data/PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson')
@@ -230,12 +228,12 @@ function addPredialLayer() {
         map.addLayer({
           id: 'predios_ssk_layer',
           source: 'predios_ssk',
-          type: 'fill',
+          type: 'line',
           minzoom: 12,
           paint: {
-            'fill-color': '#2ec4b6',
-            'fill-opacity': 0.70,
-            'fill-outline-color': '#ffffff'
+            'line-color': '#cfcfcf',
+            'line-width': 1.1,
+            'line-opacity': 0.85
           }
         });
       }
@@ -268,12 +266,14 @@ function addPredialLayer() {
           svLngLat
         );
       });
+
+      ordenarCapas();
     })
     .catch((err) => console.error('Error cargando predios:', err));
 }
 
 // =====================================================
-// CAPA PLACA HUELLAS POR VEREDA
+// CAPA PLACA HUELLAS: POR VEREDA
 // =====================================================
 function addPlacaHuellasLayer() {
   fetch('../src/data/Placa_huellas_con_vereda.geojson')
@@ -323,7 +323,7 @@ function addPlacaHuellasLayer() {
               15, 4,
               18, 7
             ],
-            'line-opacity': 0.95
+            'line-opacity': 0.98
           }
         });
       }
@@ -354,12 +354,39 @@ function addPlacaHuellasLayer() {
       });
 
       actualizarLeyendaVeredas(veredas);
+      ordenarCapas();
     })
     .catch((err) => console.error('Error cargando placa huellas:', err));
 }
 
 // =====================================================
-// CARGA DE CAPAS
+// ORDEN DE CAPAS
+// Predios abajo, placa huellas arriba
+// =====================================================
+function ordenarCapas() {
+  try {
+    if (map.getLayer('predios_ssk_layer')) {
+      map.moveLayer('predios_ssk_layer');
+    }
+
+    if (map.getLayer('predios_highlight_fill')) {
+      map.moveLayer('predios_highlight_fill');
+    }
+
+    if (map.getLayer('predios_highlight_line')) {
+      map.moveLayer('predios_highlight_line');
+    }
+
+    if (map.getLayer('placa_huellas_layer')) {
+      map.moveLayer('placa_huellas_layer');
+    }
+  } catch (e) {
+    console.warn('No se pudo ordenar capas todavía:', e);
+  }
+}
+
+// =====================================================
+// CARGA PRINCIPAL
 // =====================================================
 map.on('style.load', () => {
   crearLeyenda();
@@ -381,7 +408,7 @@ map.on('style.load', () => {
       source: 'predios_highlight',
       paint: {
         'fill-color': '#ffff00',
-        'fill-opacity': 0.30
+        'fill-opacity': 0.18
       }
     });
   }
@@ -397,6 +424,8 @@ map.on('style.load', () => {
       }
     });
   }
+
+  ordenarCapas();
 });
 
 // =====================================================
@@ -540,4 +569,6 @@ geocoder.on('result', (e) => {
     popupFields,
     svCenter
   );
+
+  ordenarCapas();
 });
