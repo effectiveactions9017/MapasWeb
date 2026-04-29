@@ -1,5 +1,8 @@
 // =====================================================
-// ✅ Predial Sesquilé - Mapbox GL JS (ACTUALIZADO + PLACA HUELLAS)
+// ✅ Predial Sesquilé - Mapbox GL JS + Placa Huellas por Vereda
+// ✅ Base predial con botón prender/apagar
+// ✅ Placa huellas con colores por vereda
+// ✅ Popup placa huellas: longitud + vereda
 // =====================================================
 
 mapboxgl.accessToken =
@@ -9,7 +12,10 @@ const map = new mapboxgl.Map({
   style: 'mapbox://styles/mapbox/dark-v11',
   center: [-73.79724, 5.04463],
   zoom: 15,
-  container: 'map'
+  pitch: 0,
+  bearing: 0,
+  container: 'map',
+  antialias: true
 });
 
 let popup = new mapboxgl.Popup({
@@ -19,20 +25,41 @@ let popup = new mapboxgl.Popup({
 });
 
 let PREDIOS_DATA = null;
+let PLACA_DATA = null;
 
 // =====================================================
-// 📷 STREET VIEW
+// COLORES PARA VEREDAS
 // =====================================================
+const paletteVeredas = [
+  '#ff8800', '#00c853', '#2979ff', '#d500f9', '#ff1744',
+  '#00bcd4', '#ffd600', '#8bc34a', '#ff6d00', '#7c4dff',
+  '#00e5ff', '#c6ff00', '#ff4081', '#40c4ff', '#aeea00'
+];
+
+let coloresVereda = {};
+
+// =====================================================
+// HELPERS
+// =====================================================
+function norm(v) {
+  return (v ?? '').toString().trim();
+}
+
 function getFeatureLngLat(feature, fallbackLngLat = null) {
-  if (fallbackLngLat) return [fallbackLngLat.lng, fallbackLngLat.lat];
-
-  const c = feature?.geometry?.coordinates;
-
-  if (Array.isArray(c) && typeof c[0] === 'number') {
-    return c;
+  if (
+    fallbackLngLat &&
+    typeof fallbackLngLat.lng === 'number' &&
+    typeof fallbackLngLat.lat === 'number'
+  ) {
+    return [fallbackLngLat.lng, fallbackLngLat.lat];
   }
 
-  return turf.pointOnFeature(feature).geometry.coordinates;
+  try {
+    const pt = turf.pointOnFeature(feature).geometry.coordinates;
+    return [Number(pt[0]), Number(pt[1])];
+  } catch (e) {
+    return [-73.79724, 5.04463];
+  }
 }
 
 function streetViewUrl([lng, lat]) {
@@ -40,147 +67,340 @@ function streetViewUrl([lng, lat]) {
 }
 
 // =====================================================
-// 🧩 POPUP
+// POPUP
 // =====================================================
-function buildPopupFromFields(feature, lngLat, popupFields, svLngLat) {
+function buildPopupFromFields(feature, lngLatForPopup, popupFields, lngLatForSV) {
   const props = feature.properties || {};
 
-  const content = popupFields.map(f => {
-    let val = props[f.key];
+  const popupContent = popupFields
+    .map((field) => {
+      let value = props?.[field.key];
 
-    if (f.key === 'Shape_Area' && val) {
-      val = Math.round(Number(val));
-    }
+      if (field.key === 'Shape_Area' && value !== null && value !== undefined) {
+        value = Math.round(Number(value));
+      }
 
-    if (f.key === 'AVALUO 2026' && val) {
-      val = Number(val).toLocaleString('es-CO');
-    }
+      if (field.key === 'AVALUO 2026' && value !== null && value !== undefined && value !== '') {
+        const n = Number(value);
+        value = isNaN(n) ? value : n.toLocaleString('es-CO');
+      }
 
-    return `<strong>${f.label}:</strong> ${val ?? 'N/A'}`;
-  }).join('<br>');
+      if (field.key === 'longitud' && value !== null && value !== undefined && value !== '') {
+        const n = Number(value);
+        value = isNaN(n) ? value : `${n.toLocaleString('es-CO', { maximumFractionDigits: 2 })} m`;
+      }
+
+      return `<strong>${field.label}:</strong> ${value ?? 'N/A'}`;
+    })
+    .join('<br>');
+
+  const svBtn = `
+    <div style="margin-top:10px;">
+      <a href="${streetViewUrl(lngLatForSV)}" target="_blank" rel="noopener"
+         style="display:inline-block; padding:6px 10px; border-radius:6px;
+                background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+        📷 Street View
+      </a>
+    </div>
+  `;
 
   popup
-    .setLngLat(lngLat)
-    .setHTML(`
-      ${content}
-      <div style="margin-top:10px;">
-        <a href="${streetViewUrl(svLngLat)}" target="_blank"
-        style="background:#00bcd4;padding:6px 10px;border-radius:6px;font-weight:bold;">
-        📷 Street View</a>
-      </div>
-    `)
+    .setLngLat(lngLatForPopup)
+    .setHTML(`${popupContent}${svBtn}<br><a style="font-size:9px;">&#9400 EffectiveActions</a>`)
     .addTo(map);
 }
 
 // =====================================================
-// 🧠 FUNCIÓN UNIVERSAL PARA CAPAS
+// LEYENDA
 // =====================================================
-function addLayer(file, sourceId, layerId, color, popupFields) {
-  fetch(`../src/data/${file}`)
-    .then(r => r.json())
-    .then(data => {
+function crearLeyenda() {
+  if (document.getElementById('legend-terri')) return;
 
-      if (sourceId === 'predios_ssk') PREDIOS_DATA = data;
+  const legend = document.createElement('div');
+  legend.id = 'legend-terri';
+  legend.style.position = 'absolute';
+  legend.style.bottom = '25px';
+  legend.style.left = '15px';
+  legend.style.zIndex = '10';
+  legend.style.background = 'rgba(15, 23, 42, 0.92)';
+  legend.style.color = '#fff';
+  legend.style.padding = '12px';
+  legend.style.borderRadius = '12px';
+  legend.style.fontFamily = 'Arial, sans-serif';
+  legend.style.fontSize = '12px';
+  legend.style.maxHeight = '320px';
+  legend.style.overflowY = 'auto';
+  legend.style.boxShadow = '0 8px 20px rgba(0,0,0,.35)';
+  legend.style.border = '1px solid rgba(255,255,255,.18)';
 
-      if (!map.getSource(sourceId)) {
-        map.addSource(sourceId, { type: 'geojson', data });
-      } else {
-        map.getSource(sourceId).setData(data);
-      }
+  legend.innerHTML = `
+    <div style="font-weight:800; font-size:13px; margin-bottom:8px;">
+      🗺️ Capas
+    </div>
 
-      const isLine = data.features[0].geometry.type.includes('Line');
+    <label style="display:flex; align-items:center; gap:7px; margin-bottom:8px; cursor:pointer;">
+      <input type="checkbox" id="toggle-predial" checked>
+      <span style="width:14px; height:14px; background:#2ec4b6; display:inline-block; border-radius:3px;"></span>
+      Base predial
+    </label>
 
-      if (!map.getLayer(layerId)) {
-        map.addLayer({
-          id: layerId,
-          source: sourceId,
-          type: isLine ? 'line' : 'fill',
-          paint: isLine
-            ? {
-                'line-color': color,
-                'line-width': [
-                  'interpolate',
-                  ['linear'],
-                  ['zoom'],
-                  12, 2,
-                  18, 6
-                ]
-              }
-            : {
-                'fill-color': color,
-                'fill-opacity': 0.7,
-                'fill-outline-color': '#fff'
-              }
-        });
-      }
+    <label style="display:flex; align-items:center; gap:7px; margin-bottom:10px; cursor:pointer;">
+      <input type="checkbox" id="toggle-placa" checked>
+      <span style="width:18px; height:4px; background:#ff8800; display:inline-block; border-radius:3px;"></span>
+      Placa huellas
+    </label>
 
-      map.on('mouseenter', layerId, () => map.getCanvas().style.cursor = 'pointer');
-      map.on('mouseleave', layerId, () => map.getCanvas().style.cursor = '');
+    <div style="font-weight:800; margin:8px 0 6px;">
+      Veredas placa huellas
+    </div>
 
-      map.on('click', layerId, (e) => {
-        const f = e.features[0];
-        const sv = getFeatureLngLat(f, e.lngLat);
+    <div id="legend-veredas"></div>
+  `;
 
-        buildPopupFromFields(
-          f,
-          e.lngLat,
-          popupFields,
-          sv
-        );
-      });
+  document.body.appendChild(legend);
 
-    });
+  document.getElementById('toggle-predial').addEventListener('change', function () {
+    const visibility = this.checked ? 'visible' : 'none';
+
+    if (map.getLayer('predios_ssk_layer')) {
+      map.setLayoutProperty('predios_ssk_layer', 'visibility', visibility);
+    }
+
+    if (map.getLayer('predios_highlight_fill')) {
+      map.setLayoutProperty('predios_highlight_fill', 'visibility', visibility);
+    }
+
+    if (map.getLayer('predios_highlight_line')) {
+      map.setLayoutProperty('predios_highlight_line', 'visibility', visibility);
+    }
+  });
+
+  document.getElementById('toggle-placa').addEventListener('change', function () {
+    const visibility = this.checked ? 'visible' : 'none';
+
+    if (map.getLayer('placa_huellas_layer')) {
+      map.setLayoutProperty('placa_huellas_layer', 'visibility', visibility);
+    }
+  });
+}
+
+function actualizarLeyendaVeredas(veredas) {
+  const cont = document.getElementById('legend-veredas');
+  if (!cont) return;
+
+  cont.innerHTML = '';
+
+  veredas.forEach((v) => {
+    const color = coloresVereda[v];
+
+    const item = document.createElement('div');
+    item.style.display = 'flex';
+    item.style.alignItems = 'center';
+    item.style.gap = '7px';
+    item.style.marginBottom = '5px';
+
+    item.innerHTML = `
+      <span style="width:18px; height:4px; background:${color}; display:inline-block; border-radius:3px;"></span>
+      <span>${v || 'Sin vereda'}</span>
+    `;
+
+    cont.appendChild(item);
+  });
 }
 
 // =====================================================
-// 🔥 CARGA DE CAPAS
+// CAPA PREDIAL
+// =====================================================
+function addPredialLayer() {
+  fetch('../src/data/PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson')
+    .then((response) => response.json())
+    .then((data) => {
+      PREDIOS_DATA = data;
+
+      if (map.getSource('predios_ssk')) {
+        map.getSource('predios_ssk').setData(data);
+      } else {
+        map.addSource('predios_ssk', {
+          type: 'geojson',
+          data: data
+        });
+      }
+
+      if (!map.getLayer('predios_ssk_layer')) {
+        map.addLayer({
+          id: 'predios_ssk_layer',
+          source: 'predios_ssk',
+          type: 'fill',
+          minzoom: 12,
+          paint: {
+            'fill-color': '#2ec4b6',
+            'fill-opacity': 0.70,
+            'fill-outline-color': '#ffffff'
+          }
+        });
+      }
+
+      map.on('mouseenter', 'predios_ssk_layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', 'predios_ssk_layer', () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      map.on('click', 'predios_ssk_layer', (e) => {
+        const feature = e.features && e.features[0];
+        if (!feature) return;
+
+        const svLngLat = getFeatureLngLat(feature, e.lngLat);
+
+        buildPopupFromFields(
+          feature,
+          e.lngLat,
+          [
+            { label: 'Código', key: 'codigo' },
+            { label: 'Destino', key: 'DESTINO' },
+            { label: 'Nombre', key: 'NOMBRE' },
+            { label: 'Documento', key: 'NUMERO_DOCUMENTO' },
+            { label: 'Avalúo 2026', key: 'AVALUO 2026' },
+            { label: 'Área (㎡)', key: 'Shape_Area' }
+          ],
+          svLngLat
+        );
+      });
+    })
+    .catch((err) => console.error('Error cargando predios:', err));
+}
+
+// =====================================================
+// CAPA PLACA HUELLAS POR VEREDA
+// =====================================================
+function addPlacaHuellasLayer() {
+  fetch('../src/data/Placa_huellas_con_vereda.geojson')
+    .then((response) => response.json())
+    .then((data) => {
+      PLACA_DATA = data;
+
+      const veredas = [...new Set(
+        data.features.map(f => norm(f.properties?.vereda) || 'Sin vereda')
+      )].sort();
+
+      coloresVereda = {};
+      veredas.forEach((v, i) => {
+        coloresVereda[v] = paletteVeredas[i % paletteVeredas.length];
+      });
+
+      const colorExpression = ['match', ['coalesce', ['get', 'vereda'], 'Sin vereda']];
+
+      veredas.forEach((v) => {
+        colorExpression.push(v, coloresVereda[v]);
+      });
+
+      colorExpression.push('#ff8800');
+
+      if (map.getSource('placa_huellas')) {
+        map.getSource('placa_huellas').setData(data);
+      } else {
+        map.addSource('placa_huellas', {
+          type: 'geojson',
+          data: data
+        });
+      }
+
+      if (!map.getLayer('placa_huellas_layer')) {
+        map.addLayer({
+          id: 'placa_huellas_layer',
+          source: 'placa_huellas',
+          type: 'line',
+          minzoom: 10,
+          paint: {
+            'line-color': colorExpression,
+            'line-width': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              10, 2,
+              15, 4,
+              18, 7
+            ],
+            'line-opacity': 0.95
+          }
+        });
+      }
+
+      map.on('mouseenter', 'placa_huellas_layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', 'placa_huellas_layer', () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      map.on('click', 'placa_huellas_layer', (e) => {
+        const feature = e.features && e.features[0];
+        if (!feature) return;
+
+        const svLngLat = getFeatureLngLat(feature, e.lngLat);
+
+        buildPopupFromFields(
+          feature,
+          e.lngLat,
+          [
+            { label: 'Longitud', key: 'longitud' },
+            { label: 'Vereda', key: 'vereda' }
+          ],
+          svLngLat
+        );
+      });
+
+      actualizarLeyendaVeredas(veredas);
+    })
+    .catch((err) => console.error('Error cargando placa huellas:', err));
+}
+
+// =====================================================
+// CARGA DE CAPAS
 // =====================================================
 map.on('style.load', () => {
+  crearLeyenda();
 
-  // 🟢 PREDIOS
-  addLayer(
-    'PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson',
-    'predios_ssk',
-    'predios_ssk_layer',
-    '#2ec4b6',
-    [
-      { label: 'Código', key: 'codigo' },
-      { label: 'Destino', key: 'DESTINO' },
-      { label: 'Nombre', key: 'NOMBRE' },
-      { label: 'Documento', key: 'NUMERO_DOCUMENTO' },
-      { label: 'Avalúo 2026', key: 'AVALUO 2026' },
-      { label: 'Área (㎡)', key: 'Shape_Area' }
-    ]
-  );
+  addPredialLayer();
+  addPlacaHuellasLayer();
 
-  // 🟠 PLACA HUELLAS (NUEVA)
-  addLayer(
-    'Placa_huellas_con_vereda.geojson',
-    'placa_huellas',
-    'placa_huellas_layer',
-    '#ff8800',
-    [
-      { label: 'Longitud', key: 'longitud' },
-      { label: 'Vereda', key: 'vereda' }
-    ]
-  );
+  if (!map.getSource('predios_highlight')) {
+    map.addSource('predios_highlight', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+  }
 
-  // highlight
-  map.addSource('predios_highlight', {
-    type: 'geojson',
-    data: { type: 'FeatureCollection', features: [] }
-  });
+  if (!map.getLayer('predios_highlight_fill')) {
+    map.addLayer({
+      id: 'predios_highlight_fill',
+      type: 'fill',
+      source: 'predios_highlight',
+      paint: {
+        'fill-color': '#ffff00',
+        'fill-opacity': 0.30
+      }
+    });
+  }
 
-  map.addLayer({
-    id: 'predios_highlight_line',
-    type: 'line',
-    source: 'predios_highlight',
-    paint: { 'line-color': '#ffff00', 'line-width': 4 }
-  });
+  if (!map.getLayer('predios_highlight_line')) {
+    map.addLayer({
+      id: 'predios_highlight_line',
+      type: 'line',
+      source: 'predios_highlight',
+      paint: {
+        'line-color': '#ffff00',
+        'line-width': 4
+      }
+    });
+  }
 });
 
 // =====================================================
-// 🔎 BUSCADOR
+// BUSCADOR LOCAL PREDIAL
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
@@ -188,54 +408,136 @@ const geocoder = new MapboxGeocoder({
   marker: false,
   localGeocoderOnly: true,
   placeholder: 'Buscar por código, nombre o documento',
-
   localGeocoder: function (query) {
-    const q = query.toLowerCase();
-    const results = [];
+    const matchingFeatures = [];
+    const q = (query || '').toString().toLowerCase().trim();
 
-    (PREDIOS_DATA?.features || []).forEach(f => {
-      const p = f.properties;
+    if (!q) return matchingFeatures;
 
-      if (
-        p.codigo?.toLowerCase().includes(q) ||
-        p.NOMBRE?.toLowerCase().includes(q) ||
-        p.NUMERO_DOCUMENTO?.toLowerCase().includes(q)
-      ) {
-        results.push({
-          ...f,
-          place_name: `${p.codigo} | ${p.NOMBRE}`,
-          center: turf.centroid(f).geometry.coordinates
+    const features = PREDIOS_DATA?.features || [];
+    if (!features.length) return matchingFeatures;
+
+    features.forEach((feature) => {
+      const props = feature.properties || {};
+
+      const codigo = (props.codigo ?? '').toString().toLowerCase();
+      const nombre = (props.NOMBRE ?? '').toString().toLowerCase();
+      const documento = (props.NUMERO_DOCUMENTO ?? '').toString().toLowerCase();
+
+      const match =
+        (codigo && codigo.includes(q)) ||
+        (nombre && nombre.includes(q)) ||
+        (documento && documento.includes(q));
+
+      if (match) {
+        const centro = turf.centroid(feature).geometry.coordinates;
+
+        const codTxt = (props.codigo ?? '').toString().trim();
+        const nomTxt = (props.NOMBRE ?? '').toString().trim();
+        const docTxt = (props.NUMERO_DOCUMENTO ?? '').toString().trim();
+
+        let matchField = null;
+        let matchValue = null;
+
+        if (codigo && codigo.includes(q)) {
+          matchField = 'codigo';
+          matchValue = codTxt;
+        } else if (documento && documento.includes(q)) {
+          matchField = 'NUMERO_DOCUMENTO';
+          matchValue = docTxt;
+        } else if (nombre && nombre.includes(q)) {
+          matchField = 'NOMBRE';
+          matchValue = nomTxt;
+        }
+
+        const props2 = {
+          ...props,
+          __matchField: matchField,
+          __matchValue: matchValue
+        };
+
+        matchingFeatures.push({
+          type: 'Feature',
+          geometry: feature.geometry,
+          properties: props2,
+          place_name: `Código: ${codTxt || 'N/A'} | Nombre: ${nomTxt || 'N/A'} | Doc: ${docTxt || 'N/A'}`,
+          text: codTxt || nomTxt || docTxt || 'Resultado',
+          center: centro,
+          place_type: ['place']
         });
       }
     });
 
-    return results.slice(0, 10);
+    return matchingFeatures.slice(0, 10);
   }
 });
 
-map.addControl(geocoder);
+map.addControl(geocoder, 'top-left');
 map.addControl(new mapboxgl.NavigationControl());
 
 // =====================================================
-// 🎯 RESULTADO BUSCADOR
+// RESULTADO BUSCADOR
 // =====================================================
 geocoder.on('result', (e) => {
-  const f = e.result;
+  const result = e.result;
+  if (!result || !result.geometry) return;
 
-  map.fitBounds(turf.bbox(f), { padding: 40 });
+  const properties = result.properties || {};
+  const matchField = properties.__matchField;
+  const matchValue = (properties.__matchValue ?? '').toString().trim();
 
-  map.getSource('predios_highlight').setData({
+  const normLocal = (v) =>
+    (v ?? '').toString().toLowerCase().replace(/\s+/g, '').trim();
+
+  const features = PREDIOS_DATA?.features || [];
+
+  let toHighlight = [];
+
+  if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
+    const mv = normLocal(matchValue);
+
+    toHighlight = features.filter((f) => {
+      const p = f.properties || {};
+      const v = matchField === 'NUMERO_DOCUMENTO' ? p.NUMERO_DOCUMENTO : p.codigo;
+      return normLocal(v) === mv;
+    });
+  }
+
+  if (!toHighlight.length) toHighlight = [result];
+
+  const fc = {
     type: 'FeatureCollection',
-    features: [f]
-  });
+    features: toHighlight
+  };
+
+  const hlSource = map.getSource('predios_highlight');
+  if (hlSource) hlSource.setData(fc);
+
+  const bounds = turf.bbox(fc);
+  map.fitBounds(bounds, { padding: 40 });
+
+  const popupFields = [
+    { label: 'Código', key: 'codigo' },
+    { label: 'Destino', key: 'DESTINO' },
+    { label: 'Nombre', key: 'NOMBRE' },
+    { label: 'Documento', key: 'NUMERO_DOCUMENTO' },
+    { label: 'Avalúo 2026', key: 'AVALUO 2026' },
+    { label: 'Área (㎡)', key: 'Shape_Area' }
+  ];
+
+  const b = turf.bbox(fc);
+  const svCenter = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
+
+  const center = result.center || turf.centroid(result).geometry.coordinates;
+
+  const featureLike = {
+    properties: properties
+  };
 
   buildPopupFromFields(
-    f,
-    f.center,
-    [
-      { label: 'Código', key: 'codigo' },
-      { label: 'Nombre', key: 'NOMBRE' }
-    ],
-    f.center
+    featureLike,
+    center,
+    popupFields,
+    svCenter
   );
 });
