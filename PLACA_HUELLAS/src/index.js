@@ -2,7 +2,8 @@
 // ✅ Predial Sesquilé - Mapbox GL JS + Placa Huellas
 // ✅ Predios: SOLO CONTORNO, sin relleno
 // ✅ Placa huellas: encima de predios y coloreada por vereda
-// ✅ Leyenda visible con botones prender/apagar
+// ✅ Leyenda sin scroll
+// ✅ Cada vereda se prende/apaga independiente
 // =====================================================
 
 mapboxgl.accessToken =
@@ -26,11 +27,13 @@ let popup = new mapboxgl.Popup({
 
 let PREDIOS_DATA = null;
 let PLACA_DATA = null;
+let TODAS_VEREDAS = [];
 
 const paletteVeredas = [
   '#ff8800', '#00c853', '#2979ff', '#d500f9', '#ff1744',
   '#00bcd4', '#ffd600', '#8bc34a', '#ff6d00', '#7c4dff',
-  '#00e5ff', '#c6ff00', '#ff4081', '#40c4ff', '#aeea00'
+  '#00e5ff', '#c6ff00', '#ff4081', '#40c4ff', '#aeea00',
+  '#f06292', '#4db6ac', '#ba68c8', '#ffb74d', '#90caf9'
 ];
 
 let coloresVereda = {};
@@ -125,31 +128,25 @@ function crearLeyenda() {
   legend.style.borderRadius = '12px';
   legend.style.fontFamily = 'Libre Franklin, Arial, sans-serif';
   legend.style.fontSize = '12px';
-  legend.style.maxHeight = '340px';
-  legend.style.overflowY = 'auto';
+  legend.style.maxHeight = 'none';
+  legend.style.overflowY = 'visible';
   legend.style.boxShadow = '0 8px 22px rgba(0,0,0,.45)';
   legend.style.border = '1px solid rgba(255,255,255,.22)';
-  legend.style.minWidth = '210px';
+  legend.style.minWidth = '230px';
 
   legend.innerHTML = `
     <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
       🗺️ Predial Sesquilé
     </div>
 
-    <label style="display:flex; align-items:center; gap:7px; margin-bottom:8px; cursor:pointer;">
+    <label style="display:flex; align-items:center; gap:7px; margin-bottom:10px; cursor:pointer;">
       <input type="checkbox" id="toggle-predial" checked>
       <span style="width:18px; height:3px; background:#cfcfcf; display:inline-block; border-radius:3px;"></span>
       Base predial
     </label>
 
-    <label style="display:flex; align-items:center; gap:7px; margin-bottom:10px; cursor:pointer;">
-      <input type="checkbox" id="toggle-placa" checked>
-      <span style="width:18px; height:4px; background:#ff8800; display:inline-block; border-radius:3px;"></span>
-      Placa huellas
-    </label>
-
     <div style="font-weight:800; margin:8px 0 6px;">
-      Veredas placa huellas
+      Placa huellas por vereda
     </div>
 
     <div id="legend-veredas"></div>
@@ -172,14 +169,6 @@ function crearLeyenda() {
       }
     });
   });
-
-  document.getElementById('toggle-placa').addEventListener('change', function () {
-    const visibility = this.checked ? 'visible' : 'none';
-
-    if (map.getLayer('placa_huellas_layer')) {
-      map.setLayoutProperty('placa_huellas_layer', 'visibility', visibility);
-    }
-  });
 }
 
 function actualizarLeyendaVeredas(veredas) {
@@ -188,22 +177,48 @@ function actualizarLeyendaVeredas(veredas) {
 
   cont.innerHTML = '';
 
-  veredas.forEach((v) => {
+  veredas.forEach((v, index) => {
     const color = coloresVereda[v];
+    const id = `vereda_${index}`;
 
-    const item = document.createElement('div');
+    const item = document.createElement('label');
     item.style.display = 'flex';
     item.style.alignItems = 'center';
     item.style.gap = '7px';
-    item.style.marginBottom = '5px';
+    item.style.marginBottom = '6px';
+    item.style.cursor = 'pointer';
 
     item.innerHTML = `
+      <input type="checkbox" id="${id}" data-vereda="${v}" checked>
       <span style="width:18px; height:4px; background:${color}; display:inline-block; border-radius:3px;"></span>
       <span>${v || 'Sin vereda'}</span>
     `;
 
     cont.appendChild(item);
+
+    document.getElementById(id).addEventListener('change', aplicarFiltroVeredas);
   });
+}
+
+function aplicarFiltroVeredas() {
+  const checks = document.querySelectorAll('#legend-veredas input[type="checkbox"]');
+
+  const veredasVisibles = Array.from(checks)
+    .filter(chk => chk.checked)
+    .map(chk => chk.dataset.vereda);
+
+  if (!map.getLayer('placa_huellas_layer')) return;
+
+  if (veredasVisibles.length === 0) {
+    map.setFilter('placa_huellas_layer', ['==', ['get', 'vereda'], '__NINGUNA__']);
+    return;
+  }
+
+  map.setFilter('placa_huellas_layer', [
+    'in',
+    ['coalesce', ['get', 'vereda'], 'Sin vereda'],
+    ['literal', veredasVisibles]
+  ]);
 }
 
 // =====================================================
@@ -273,7 +288,7 @@ function addPredialLayer() {
 }
 
 // =====================================================
-// CAPA PLACA HUELLAS: POR VEREDA
+// CAPA PLACA HUELLAS: COLOR POR VEREDA
 // =====================================================
 function addPlacaHuellasLayer() {
   fetch('../src/data/Placa_huellas_con_vereda.geojson')
@@ -284,6 +299,8 @@ function addPlacaHuellasLayer() {
       const veredas = [...new Set(
         data.features.map(f => norm(f.properties?.vereda) || 'Sin vereda')
       )].sort();
+
+      TODAS_VEREDAS = veredas;
 
       coloresVereda = {};
       veredas.forEach((v, i) => {
@@ -361,7 +378,6 @@ function addPlacaHuellasLayer() {
 
 // =====================================================
 // ORDEN DE CAPAS
-// Predios abajo, placa huellas arriba
 // =====================================================
 function ordenarCapas() {
   try {
