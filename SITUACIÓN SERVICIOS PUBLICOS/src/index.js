@@ -12,7 +12,7 @@ mapboxgl.accessToken =
 // =====================================================
 const map = new mapboxgl.Map({
   container: "map",
-  style: "mapbox://styles/mapbox/dark-v11",
+  style: "mapbox://styles/mapbox/satellite-v9",
   center: [-73.79724, 5.04463],
   zoom: 15,
   antialias: true,
