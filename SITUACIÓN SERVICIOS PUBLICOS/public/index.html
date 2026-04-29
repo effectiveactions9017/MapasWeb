@@ -13,40 +13,32 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"/>
 
-  <!-- Turf.js -->
+  <!-- Turf -->
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
-  <!-- Fuentes -->
+  <!-- Fuente -->
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap" rel="stylesheet">
 
-  <!-- CSS personalizado -->
   <link rel="stylesheet" href="../src/main.css" />
 
-  <!-- ✅ Panel premium + ✅ LISTA CON SWITCHES + ✅ CHIP DE COLOR por fila -->
   <style>
     body { margin:0; padding:0; font-family:'Libre Franklin', sans-serif; }
     #map { position:absolute; top:0; bottom:0; width:100%; }
 
-    /* Panel (NO se sale de pantalla) */
     .sp-panel{
       position:absolute;
       top:15px;
       right:10px;
       z-index:30;
-
       width:320px;
       max-width: calc(100vw - 20px);
       max-height: calc(100vh - 30px);
       display:flex;
       flex-direction:column;
-
-      padding:12px 12px 14px 12px;
+      padding:12px;
       border-radius:14px;
-
       background:rgba(0,0,0,0.72);
       backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-
       border:1px solid rgba(255,255,255,0.12);
       box-shadow:0 18px 40px rgba(0,0,0,0.35);
       color:#fff;
@@ -55,344 +47,169 @@
 
     .sp-header{
       display:flex;
-      align-items:center;
       justify-content:space-between;
-      gap:10px;
       margin-bottom:10px;
-      flex: 0 0 auto;
     }
 
     .sp-title{
       font-weight:800;
       font-size:16px;
-      letter-spacing:.2px;
-      line-height:1.1;
     }
 
     .sp-close{
-      border:0;
-      background:rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.1);
+      border:none;
       color:#fff;
       width:34px;
       height:34px;
       border-radius:10px;
-      font-size:20px;
-      line-height:34px;
       cursor:pointer;
-      transition: transform .12s ease, background .12s ease;
-    }
-    .sp-close:hover{
-      background:rgba(255,255,255,0.18);
-      transform: translateY(-1px);
     }
 
-    .sp-help{
-      margin-top:10px;
-      font-size:12px;
-      opacity:.85;
-      line-height:1.25;
-      flex: 0 0 auto;
-    }
-
-    /* Botón para re-abrir */
-    .sp-open{
-      position:absolute;
-      top:15px;
-      right:10px;
-      z-index:31;
-
-      display:none;
-      border:0;
-      padding:10px 12px;
-      border-radius:12px;
-      background:rgba(0,0,0,0.72);
-      color:#fff;
-      font-weight:800;
-      cursor:pointer;
-
-      border:1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow:0 18px 40px rgba(0,0,0,0.35);
-      max-width: calc(100vw - 20px);
-    }
-    .sp-open:hover{ background:rgba(0,0,0,0.82); }
-
-    /* ==========================================================
-       ✅ LISTA CON SWITCHES (scroll solo en la lista)
-       ========================================================== */
     #spToggleList{
-      flex: 1 1 auto;
-      min-height: 0;
       overflow:auto;
-      padding-right:6px;
       border-radius:12px;
-      overflow-x:hidden;
       border:1px solid rgba(255,255,255,0.10);
-      background: rgba(10,10,10,0.35);
     }
-
-    /* Scrollbar */
-    #spToggleList::-webkit-scrollbar{ width:10px; }
-    #spToggleList::-webkit-scrollbar-track{ background:rgba(255,255,255,0.06); border-radius:10px; }
-    #spToggleList::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.18); border-radius:10px; }
-    #spToggleList::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,0.26); }
 
     .sp-row{
-      /* ✅ fallback (el JS lo reemplaza por fila con el color exacto del mapa) */
-      --sp-accent: #00bcd4;
-
+      --sp-accent:#00bcd4;
       display:flex;
-      align-items:center;
       justify-content:space-between;
-      gap:10px;
-
-      padding: 12px 12px;
+      padding:12px;
       cursor:pointer;
-      user-select:none;
-
-      background: rgba(0,0,0,0.15);
-      transition: background .12s ease;
     }
-    .sp-row:hover{ background: rgba(255,255,255,0.06); }
 
-    /* ✅ Lado izquierdo: punto de color + label */
     .sp-left{
       display:flex;
       align-items:center;
       gap:10px;
-      min-width: 0;
     }
+
     .sp-dot{
       width:12px;
       height:12px;
-      border-radius:999px;
-      background: var(--sp-accent);
-      border:1px solid rgba(255,255,255,0.25);
-      box-shadow: 0 0 0 3px rgba(0,0,0,0.25);
-      flex: 0 0 auto;
-    }
-
-    .sp-label{
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: .1px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      border-radius:50%;
+      background:var(--sp-accent);
     }
 
     .sp-switch{
-      width: 52px;
-      height: 26px;
-      border-radius: 999px;
-      position: relative;
-      flex: 0 0 auto;
-
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.10);
-      box-shadow: inset 0 0 0 2px rgba(0,0,0,0.25);
-      transition: background .12s ease, border-color .12s ease;
+      width:52px;
+      height:26px;
+      border-radius:20px;
+      background:#aaa;
+      position:relative;
     }
+
     .sp-knob{
       position:absolute;
-      top: 3px;
-      left: 3px;
-      width: 20px;
-      height: 20px;
-      border-radius: 999px;
-      background: #fff;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.35);
-      transition: transform .12s ease;
+      width:20px;
+      height:20px;
+      background:#fff;
+      top:3px;
+      left:3px;
+      border-radius:50%;
     }
 
-    /* ✅ activo: switch + fila + punto “brilla” con su color */
-    .sp-row.is-active{
-      background: color-mix(in srgb, var(--sp-accent) 16%, rgba(0,0,0,0.15));
-    }
-    .sp-row.is-active .sp-switch{
-      background: color-mix(in srgb, var(--sp-accent) 82%, rgba(255,255,255,0.10));
-      border-color: color-mix(in srgb, var(--sp-accent) 60%, rgba(255,255,255,0.10));
-    }
     .sp-row.is-active .sp-knob{
-      transform: translateX(26px);
-      background: #0b0b0b;
-    }
-    .sp-row.is-active .sp-dot{
-      box-shadow:
-        0 0 0 3px rgba(0,0,0,0.25),
-        0 0 18px color-mix(in srgb, var(--sp-accent) 70%, transparent);
+      transform:translateX(26px);
     }
 
     .sp-sep{
       height:1px;
-      background: rgba(255,255,255,0.10);
-      margin: 0;
+      background:rgba(255,255,255,0.1);
     }
 
-    /* Mobile */
-    @media (max-width: 520px){
-      .sp-panel{ width: 260px; }
-    }
-
-    /* ✅ Extra: pantallas bajitas */
-    @media (max-height: 540px){
-      .sp-panel{ top:10px; max-height: calc(100vh - 20px); }
+    .sp-open{
+      position:absolute;
+      top:15px;
+      right:10px;
+      display:none;
+      z-index:31;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- MAPA -->
-  <div id="map"></div>
+<div id="map"></div>
 
-  <!-- ✅ PANEL FILTRO (LISTA CON SWITCHES + COLORES) -->
-  <div id="spControl" class="sp-panel">
-    <div class="sp-header">
-      <div class="sp-title">Servicios públicos — filtro</div>
-      <button id="spClose" class="sp-close" title="Cerrar">×</button>
-    </div>
+<div id="spControl" class="sp-panel">
 
-    <!-- ✅ Lista fija (no dropdown) -->
-    <div id="spToggleList">
-
-      <!-- ALL (sin color fijo aquí: el JS lo pone igual al color del L_BASE) -->
-      <div class="sp-row is-active" data-layer="L_ALL">
-        <div class="sp-left">
-          <span class="sp-dot"></span>
-          <span class="sp-label">Ver todos</span>
-        </div>
-        <span class="sp-switch"><span class="sp-knob"></span></span>
-      </div>
-
-      <div class="sp-sep"></div>
-
-      <!-- GAS -->
-      <div class="sp-row" data-layer="L_GAS_SI">
-        <div class="sp-left">
-          <span class="sp-dot"></span>
-          <span class="sp-label">Gas: Sí</span>
-        </div>
-        <span class="sp-switch"><span class="sp-knob"></span></span>
-      </div>
-
-      <div class="sp-row" data-layer="L_GAS_NO">
-        <div class="sp-left">
-          <span class="sp-dot"></span>
-          <span class="sp-label">Gas: No</span>
-        </div>
-        <span class="sp-switch"><span class="sp-knob"></span></span>
-      </div>
-
-      <div class="sp-sep"></div>
-
-      <!-- ACUEDUCTO -->
-      <div class="sp-row" data-layer="L_ACUEDUCTO_SI">
-        <div class="sp-left">
-          <span class="sp-dot"></span>
-          <span class="sp-label">Acueducto: Sí</span>
-        </div>
-        <span class="sp-switch"><span class="sp-knob"></span></span>
-      </div>
-
-      <div class="sp-row" data-layer="L_ACUEDUCTO_NO">
-        <div class="sp-left">
-          <span class="sp-dot"></span>
-          <span class="sp-label">Acueducto: No</span>
-        </div>
-        <span class="sp-switch"><span class="sp-knob"></span></span>
-      </div>
-
-      <div class="sp-sep"></div>
-
-      <!-- ALC -->
-      <div class="sp-row" data-layer="L_ALC_SI">
-        <div class="sp-left">
-          <span class="sp-dot"></span>
-          <span class="sp-label">Alcantarillado: Sí</span>
-        </div>
-        <span class="sp-switch"><span class="sp-knob"></span></span>
-      </div>
-
-      <div class="sp-row" data-layer="L_ALC_NO">
-        <div class="sp-left">
-          <span class="sp-dot"></span>
-          <span class="sp-label">Alcantarillado: No</span>
-        </div>
-        <span class="sp-switch"><span class="sp-knob"></span></span>
-      </div>
-
-      <div class="sp-sep"></div>
-
-      <!-- INTERNET -->
-      <div class="sp-row" data-layer="L_INTERNET_SI">
-        <div class="sp-left">
-          <span class="sp-dot"></span>
-          <span class="sp-label">Internet: Sí</span>
-        </div>
-        <span class="sp-switch"><span class="sp-knob"></span></span>
-      </div>
-
-      <div class="sp-row" data-layer="L_INTERNET_NO">
-        <div class="sp-left">
-          <span class="sp-dot"></span>
-          <span class="sp-label">Internet: No</span>
-        </div>
-        <span class="sp-switch"><span class="sp-knob"></span></span>
-      </div>
-
-      <div class="sp-sep"></div>
-
-      <!-- BASURAS -->
-      <div class="sp-row" data-layer="L_BASURAS_SI">
-        <div class="sp-left">
-          <span class="sp-dot"></span>
-          <span class="sp-label">Basuras: Sí</span>
-        </div>
-        <span class="sp-switch"><span class="sp-knob"></span></span>
-      </div>
-
-      <div class="sp-row" data-layer="L_BASURAS_NO">
-        <div class="sp-left">
-          <span class="sp-dot"></span>
-          <span class="sp-label">Basuras: No</span>
-        </div>
-        <span class="sp-switch"><span class="sp-knob"></span></span>
-      </div>
-    </div>
-
-    <div class="sp-help">
-      Activa uno o varios filtros. El punto de color indica qué color corresponde en el mapa.
-    </div>
+  <div class="sp-header">
+    <div class="sp-title">Filtros</div>
+    <button id="spClose" class="sp-close">×</button>
   </div>
 
-  <!-- Botón pequeño para re-abrir -->
-  <button id="spOpen" class="sp-open">Filtros</button>
+  <div id="spToggleList">
 
-  <!-- SCRIPT PRINCIPAL -->
-  <script src="../src/index.js"></script>
+    <div class="sp-row is-active" data-layer="L_ALL">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Ver todos</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
 
-  <!-- ✅ Abrir / cerrar panel (se mantiene) -->
-  <script>
-    (function(){
-      const panel = document.getElementById('spControl');
-      const btnClose = document.getElementById('spClose');
-      const btnOpen  = document.getElementById('spOpen');
+    <div class="sp-sep"></div>
 
-      if (btnClose && panel && btnOpen){
-        btnClose.addEventListener('click', () => {
-          panel.style.display = 'none';
-          btnOpen.style.display = 'block';
-        });
+    <div class="sp-row" data-layer="L_GAS_SI"><div class="sp-left"><span class="sp-dot"></span><span>Gas: Sí</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
+    <div class="sp-row" data-layer="L_GAS_NO"><div class="sp-left"><span class="sp-dot"></span><span>Gas: No</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
 
-        btnOpen.addEventListener('click', () => {
-          panel.style.display = 'block';
-          btnOpen.style.display = 'none';
-        });
-      }
-    })();
-  </script>
+    <div class="sp-sep"></div>
+
+    <div class="sp-row" data-layer="L_ACUEDUCTO_SI"><div class="sp-left"><span class="sp-dot"></span><span>Acueducto: Sí</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
+    <div class="sp-row" data-layer="L_ACUEDUCTO_NO"><div class="sp-left"><span class="sp-dot"></span><span>Acueducto: No</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
+
+    <div class="sp-sep"></div>
+
+    <div class="sp-row" data-layer="L_ALC_SI"><div class="sp-left"><span class="sp-dot"></span><span>Alcantarillado: Sí</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
+    <div class="sp-row" data-layer="L_ALC_NO"><div class="sp-left"><span class="sp-dot"></span><span>Alcantarillado: No</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
+
+    <div class="sp-sep"></div>
+
+    <div class="sp-row" data-layer="L_INTERNET_SI"><div class="sp-left"><span class="sp-dot"></span><span>Internet: Sí</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
+    <div class="sp-row" data-layer="L_INTERNET_NO"><div class="sp-left"><span class="sp-dot"></span><span>Internet: No</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
+
+    <div class="sp-sep"></div>
+
+    <div class="sp-row" data-layer="L_BASURAS_SI"><div class="sp-left"><span class="sp-dot"></span><span>Basuras: Sí</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
+    <div class="sp-row" data-layer="L_BASURAS_NO"><div class="sp-left"><span class="sp-dot"></span><span>Basuras: No</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
+
+    <!-- 🔵 NUEVA CAPA -->
+    <div class="sp-sep"></div>
+
+    <div class="sp-row" data-layer="L_ALUMBRADO">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Alumbrado público</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
+
+  </div>
+
+</div>
+
+<button id="spOpen" class="sp-open">Filtros</button>
+
+<script src="../src/index.js"></script>
+
+<script>
+const panel = document.getElementById('spControl');
+const btnClose = document.getElementById('spClose');
+const btnOpen = document.getElementById('spOpen');
+
+btnClose.onclick = () => {
+  panel.style.display = 'none';
+  btnOpen.style.display = 'block';
+};
+
+btnOpen.onclick = () => {
+  panel.style.display = 'block';
+  btnOpen.style.display = 'none';
+};
+</script>
 
 </body>
 </html>
