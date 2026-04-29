@@ -464,38 +464,25 @@ function wireServiciosToggleList() {
 
   syncPanelAccentsFromJS();
 
-  const present = getServiciosFieldsPresent();
-  const canDetect = Object.keys(present).length > 0;
-
-  if (canDetect) {
-    FILTER_GROUPS.forEach((g) => {
-      const spKey = Object.keys(SP_FIELDS).find((k) => SP_FIELDS[k] === g.field);
-      const exists = spKey ? !!present[spKey] : true;
-
-      if (!exists) {
-        const row = list.querySelector(`.sp-row[data-layer="${g.id}"]`);
-        if (row) row.style.display = "none";
-      }
-    });
-  }
-
   const rowAll = list.querySelector(`.sp-row[data-layer="L_ALL"]`);
   const rowAlumbrado = list.querySelector(`.sp-row[data-layer="${ALUMBRADO_LAYER_ID}"]`);
 
   const groupRows = Array.from(list.querySelectorAll(`.sp-row[data-layer]`))
-    .filter((r) => {
-      return (
-        r.dataset.layer &&
-        r.dataset.layer !== "L_ALL" &&
-        r.dataset.layer !== ALUMBRADO_LAYER_ID
-      );
-    });
+    .filter((r) =>
+      r.dataset.layer &&
+      r.dataset.layer !== "L_ALL" &&
+      r.dataset.layer !== ALUMBRADO_LAYER_ID
+    );
 
   function getActiveGroups() {
     return groupRows
       .filter((r) => r.classList.contains("is-active"))
       .map((r) => r.dataset.layer)
       .filter(Boolean);
+  }
+
+  function isAlumbradoActive() {
+    return rowAlumbrado && rowAlumbrado.classList.contains("is-active");
   }
 
   function setLayerVisibility(id, visible) {
@@ -505,35 +492,42 @@ function wireServiciosToggleList() {
 
   function syncMapLayersFromUI() {
     const actives = getActiveGroups();
+    const alumbradoActivo = isAlumbradoActive();
 
+    // Servicios
     if (!actives.length) {
       setLayerVisibility("L_BASE", true);
       FILTER_GROUPS.forEach((g) => setLayerVisibility(g.id, false));
-
-      if (rowAll) rowAll.classList.add("is-active");
-      return;
+    } else {
+      setLayerVisibility("L_BASE", false);
+      FILTER_GROUPS.forEach((g) => {
+        setLayerVisibility(g.id, actives.includes(g.id));
+      });
     }
 
-    setLayerVisibility("L_BASE", false);
+    // Alumbrado independiente
+    setLayerVisibility(ALUMBRADO_LAYER_ID, alumbradoActivo);
 
-    FILTER_GROUPS.forEach((g) => {
-      setLayerVisibility(g.id, actives.includes(g.id));
-    });
-
-    if (rowAll) rowAll.classList.remove("is-active");
+    // Ver todos solo queda activo si NO hay servicios ni alumbrado activo
+    if (rowAll) {
+      if (!actives.length && !alumbradoActivo) rowAll.classList.add("is-active");
+      else rowAll.classList.remove("is-active");
+    }
   }
 
   if (rowAll && !rowAll.dataset.wired) {
     rowAll.dataset.wired = "1";
 
     rowAll.addEventListener("click", () => {
-      rowAll.classList.add("is-active");
       groupRows.forEach((r) => r.classList.remove("is-active"));
+
+      if (rowAlumbrado) rowAlumbrado.classList.remove("is-active");
+
+      if (rowAll) rowAll.classList.add("is-active");
+
       syncMapLayersFromUI();
 
-      try {
-        popup.remove();
-      } catch (e) {}
+      try { popup.remove(); } catch (e) {}
 
       const hs = map.getSource("highlight");
       if (hs) {
@@ -551,20 +545,9 @@ function wireServiciosToggleList() {
 
     row.addEventListener("click", () => {
       row.classList.toggle("is-active");
-
-      if (row.classList.contains("is-active") && rowAll) {
-        rowAll.classList.remove("is-active");
-      }
-
-      if (!getActiveGroups().length && rowAll) {
-        rowAll.classList.add("is-active");
-      }
-
       syncMapLayersFromUI();
 
-      try {
-        popup.remove();
-      } catch (e) {}
+      try { popup.remove(); } catch (e) {}
 
       const hs = map.getSource("highlight");
       if (hs) {
@@ -581,13 +564,9 @@ function wireServiciosToggleList() {
 
     rowAlumbrado.addEventListener("click", () => {
       rowAlumbrado.classList.toggle("is-active");
+      syncMapLayersFromUI();
 
-      const visible = rowAlumbrado.classList.contains("is-active");
-      setLayerVisibility(ALUMBRADO_LAYER_ID, visible);
-
-      try {
-        popup.remove();
-      } catch (e) {}
+      try { popup.remove(); } catch (e) {}
 
       const hs = map.getSource("highlight");
       if (hs) {
@@ -599,17 +578,8 @@ function wireServiciosToggleList() {
     });
   }
 
-  if (rowAll) rowAll.classList.add("is-active");
-  groupRows.forEach((r) => r.classList.remove("is-active"));
-
-  if (rowAlumbrado) {
-    rowAlumbrado.classList.remove("is-active");
-    setLayerVisibility(ALUMBRADO_LAYER_ID, false);
-  }
-
   syncMapLayersFromUI();
 }
-
 // =====================================================
 // ✅ PREDIOS BASE
 // =====================================================
