@@ -1,19 +1,7 @@
 // =====================================================
-// ✅ Visor Predial + Servicios Públicos – Sesquilé (ACTUALIZADO)
-// =====================================================
-// 🔵 Predios municipio: polígono (CONTORNO + POPUP al clic)
-// 🟠 Servicios públicos: puntos (POPUP + Street View + BUSCADOR)
-// 🟡 Highlight: punto seleccionado (por buscador y clic)
-// ✅ PRIORIDAD DE CLIC: si hay punto encima, manda el punto (no el predio)
-// ✅ NUEVO: FILTROS MULTI-SELECT CON SWITCHES (pueden quedar varios prendidos)
-//     - Cada switch muestra un "grupo" de puntos con un color distinto
-//     - Si no hay switches activos → muestra TODOS (capa base)
-// ✅ UI: Panel abrir/cerrar (spControl/spOpen/spClose)
-// ✅ OJO: tu HTML ya quedó con .sp-row[data-layer="L_..."] (NO data-value)
-// ✅ FIX: filtros Sí/No robustos para valores tipo "C_No", "Si_", "c_si", etc.
-//     - Vacíos / N/A NO se toman como "No"
-// ✅ FIX2: si las capas ya existían, ahora se ACTUALIZA el filter con map.setFilter()
-// ✅ COLOR-FIX: el panel toma los mismos colores definidos en FILTER_GROUPS (1:1)
+// ✅ Visor Predial + Servicios Públicos + Alumbrado – Sesquilé
+// ✅ Servicios: Servicios_publicos_puntos_nuevo.geojson
+// ✅ Alumbrado: alumbrado_publico_con_vereda.geojson
 // =====================================================
 
 mapboxgl.accessToken =
@@ -45,25 +33,34 @@ const popup = new mapboxgl.Popup({
 // DATASETS
 // =====================================================
 let SERVICIOS_DATA = null;
+let ALUMBRADO_DATA = null;
 
 // =====================================================
 // HELPERS
 // =====================================================
 function safeOff(evt, layer) {
-  try { map.off(evt, layer); } catch (e) {}
+  try {
+    map.off(evt, layer);
+  } catch (e) {}
 }
 
 function norm(v) {
   return (v ?? "")
     .toString()
     .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
 
 function getPointLngLat(feature) {
   const c = feature?.geometry?.coordinates;
-  if (Array.isArray(c) && c.length >= 2) return [Number(c[0]), Number(c[1])];
+
+  if (Array.isArray(c) && c.length >= 2) {
+    return [Number(c[0]), Number(c[1])];
+  }
+
   try {
     const cent = turf.centroid(feature).geometry.coordinates;
     return [Number(cent[0]), Number(cent[1])];
@@ -86,6 +83,11 @@ function formatArea(val) {
   if (val === null || val === undefined || val === "") return "N/A";
   const n = Number(val);
   return isNaN(n) ? String(val) : Math.round(n).toString();
+}
+
+function valTxt(v) {
+  if (v === null || v === undefined || v === "") return "N/A";
+  return v;
 }
 
 // =====================================================
@@ -116,6 +118,7 @@ function wireFilterPanelToggle() {
 // =====================================================
 function popupHTMLPredio(props) {
   props = props || {};
+
   const avaluoTxt = formatAvaluo(props["AVALUO 2026"]);
   const areaTxt = formatArea(props["Shape_Area"]);
 
@@ -132,30 +135,39 @@ function popupHTMLPredio(props) {
 }
 
 // =====================================================
-// ✅ POPUP SERVICIOS (10 campos) + Street View
+// ✅ POPUP SERVICIOS
 // =====================================================
 const CAMPOS_SERVICIOS = [
-  "Número predial",
-  "Nombre del propietario",
-  "Tipo de predio",
-  "Otro - Tipo de predio",
-  "Uso actual del predio",
-  "Tiene servicio de acueducto?",
-  "Tiene servicio de alcantarillado?",
-  "Tiene servicio de recolección de basuras?",
-  "Tiene servicio de Internet?",
-  "Tiene servicio de Gas?",
+  { label: "Número predial", field: "n_mero_pre" },
+  { label: "Nombre del propietario", field: "nombre_del" },
+  { label: "Tipo de predio", field: "tipo_de_pr" },
+  { label: "Otro - Tipo de predio", field: "tipo_de__1" },
+  { label: "Uso actual del predio", field: "uso_actual" },
+  { label: "Tiene servicio de acueducto?", field: "tiene_serv" },
+  { label: "Entidad prestadora acueducto", field: "entidad_pr" },
+  { label: "Tiene servicio de alcantarillado?", field: "tiene_se_1" },
+  { label: "Entidad prestadora alcantarillado", field: "field_38" },
+  { label: "Tiene servicio de recolección de basuras?", field: "tiene_se_2" },
+  { label: "Entidad prestadora basuras", field: "field_39" },
+  { label: "Tiene servicio de Internet?", field: "tiene_se_3" },
+  { label: "Operador de Internet", field: "field_19" },
+  { label: "Tiene servicio de Gas?", field: "tiene_se_4" },
+  { label: "Operador de Gas", field: "field_50" },
+  { label: "La vivienda es", field: "la_viviend" },
+  { label: "Observación", field: "observacio" },
 ];
 
 function popupHTMLServicios(props, lngLat) {
   props = props || {};
-  const rows = CAMPOS_SERVICIOS.map((k) => {
-    let v = props[k];
-    if (v === null || v === undefined || v === "") v = "N/A";
-    return `<strong>${k}:</strong> ${v}`;
+
+  const rows = CAMPOS_SERVICIOS.map((item) => {
+    return `<strong>${item.label}:</strong> ${valTxt(props[item.field])}`;
   }).join("<br>");
 
-  const btn = `
+  return `
+    <div style="font-weight:700; margin-bottom:6px;">Situación de servicios públicos</div>
+    ${rows}
+
     <div style="margin-top:10px;">
       <a href="${streetViewUrl(lngLat)}" target="_blank"
          style="display:inline-block; padding:6px 10px; border-radius:6px;
@@ -163,18 +175,39 @@ function popupHTMLServicios(props, lngLat) {
         📷 Street View
       </a>
     </div>
-  `;
 
-  return `
-    <div style="font-weight:700; margin-bottom:6px;">Situación de servicios públicos</div>
-    ${rows}
-    ${btn}
     <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
   `;
 }
 
 // =====================================================
-// ✅ FILTROS (Mapbox Expressions) — ROBUSTO con match (C_No, Si_, etc.)
+// ✅ POPUP ALUMBRADO
+// =====================================================
+function popupHTMLAlumbrado(props, lngLat) {
+  props = props || {};
+
+  return `
+    <div style="font-weight:700; margin-bottom:6px;">Alumbrado público</div>
+    <strong>Tipo poste:</strong> ${valTxt(props.tipo_poste)}<br>
+    <strong>Código de poste:</strong> ${valTxt(props.codigo_de_poste)}<br>
+    <strong>Código de lámpara:</strong> ${valTxt(props.codigo_de_lampara)}<br>
+    <strong>Observaciones:</strong> ${valTxt(props.observaciones)}<br>
+    <strong>Vereda:</strong> ${valTxt(props.vereda)}<br>
+
+    <div style="margin-top:10px;">
+      <a href="${streetViewUrl(lngLat)}" target="_blank"
+         style="display:inline-block; padding:6px 10px; border-radius:6px;
+                background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+        📷 Street View
+      </a>
+    </div>
+
+    <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
+  `;
+}
+
+// =====================================================
+// ✅ FILTROS SÍ / NO ROBUSTOS
 // =====================================================
 function exprRaw(fieldName) {
   return ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]];
@@ -182,57 +215,135 @@ function exprRaw(fieldName) {
 
 function exprTieneSi(fieldName) {
   const v = exprRaw(fieldName);
-  return ["match", v, ["si", "sí", "si_", "c_si", "c_sí", "c_si_", "c_sí_"], true, false];
+
+  return [
+    "match",
+    v,
+    ["si", "sí", "si_", "sí_", "si.", "sí.", "c_si", "c_sí", "c_si_", "c_sí_"],
+    true,
+    false,
+  ];
 }
 
 function exprTieneNo(fieldName) {
   const v = exprRaw(fieldName);
-  return ["match", v, ["no", "no_", "c_no", "c_no_", "c-no", "c-no_"], true, false];
+
+  return [
+    "match",
+    v,
+    ["no", "no_", "no.", "c_no", "c_no_", "c-no", "c-no_"],
+    true,
+    false,
+  ];
 }
 
+// =====================================================
+// ✅ CAMPOS PARA FILTROS
+// =====================================================
 const SP_FIELDS = {
-  GAS: "Tiene servicio de Gas?",
-  ACUEDUCTO: "Tiene servicio de acueducto?",
-  ALC: "Tiene servicio de alcantarillado?",
-  INTERNET: "Tiene servicio de Internet?",
-  BASURAS: "Tiene servicio de recolección de basuras?",
+  GAS: "tiene_se_4",
+  ACUEDUCTO: "tiene_serv",
+  ALC: "tiene_se_1",
+  INTERNET: "tiene_se_3",
+  BASURAS: "tiene_se_2",
 };
 
 function getServiciosFieldsPresent() {
   const present = {};
   const feats = SERVICIOS_DATA?.features;
+
   if (!Array.isArray(feats) || !feats.length) return present;
 
   const sample = feats.slice(0, Math.min(50, feats.length));
+
   for (const [k, fieldName] of Object.entries(SP_FIELDS)) {
-    present[k] = sample.some((f) => f?.properties && (fieldName in f.properties));
+    present[k] = sample.some((f) => f?.properties && fieldName in f.properties);
   }
+
   return present;
 }
 
 // =====================================================
-// ✅ DEFINICIÓN DE "GRUPOS" (cada grupo = 1 switch + 1 color)
-// (estos colores son la “fuente de verdad”)
+// ✅ GRUPOS DE FILTRO SERVICIOS
 // =====================================================
 const FILTER_GROUPS = [
-  { id: "L_GAS_SI",       label: "Gas: Sí",            field: SP_FIELDS.GAS,       expr: () => exprTieneSi(SP_FIELDS.GAS),       color: "#00bcd4" },
-  { id: "L_GAS_NO",       label: "Gas: No",            field: SP_FIELDS.GAS,       expr: () => exprTieneNo(SP_FIELDS.GAS),       color: "#ff4d6d" },
-
-  { id: "L_ACUEDUCTO_SI", label: "Acueducto: Sí",      field: SP_FIELDS.ACUEDUCTO, expr: () => exprTieneSi(SP_FIELDS.ACUEDUCTO), color: "#7c3aed" },
-  { id: "L_ACUEDUCTO_NO", label: "Acueducto: No",      field: SP_FIELDS.ACUEDUCTO, expr: () => exprTieneNo(SP_FIELDS.ACUEDUCTO), color: "#f59e0b" },
-
-  { id: "L_ALC_SI",       label: "Alcantarillado: Sí", field: SP_FIELDS.ALC,       expr: () => exprTieneSi(SP_FIELDS.ALC),       color: "#22c55e" },
-  { id: "L_ALC_NO",       label: "Alcantarillado: No", field: SP_FIELDS.ALC,       expr: () => exprTieneNo(SP_FIELDS.ALC),       color: "#ef4444" },
-
-  { id: "L_INTERNET_SI",  label: "Internet: Sí",       field: SP_FIELDS.INTERNET,  expr: () => exprTieneSi(SP_FIELDS.INTERNET),  color: "#3b82f6" },
-  { id: "L_INTERNET_NO",  label: "Internet: No",       field: SP_FIELDS.INTERNET,  expr: () => exprTieneNo(SP_FIELDS.INTERNET),  color: "#a3a3a3" },
-
-  { id: "L_BASURAS_SI",   label: "Basuras: Sí",        field: SP_FIELDS.BASURAS,   expr: () => exprTieneSi(SP_FIELDS.BASURAS),   color: "#e879f9" },
-  { id: "L_BASURAS_NO",   label: "Basuras: No",        field: SP_FIELDS.BASURAS,   expr: () => exprTieneNo(SP_FIELDS.BASURAS),   color: "#f97316" },
+  {
+    id: "L_GAS_SI",
+    label: "Gas: Sí",
+    field: SP_FIELDS.GAS,
+    expr: () => exprTieneSi(SP_FIELDS.GAS),
+    color: "#00bcd4",
+  },
+  {
+    id: "L_GAS_NO",
+    label: "Gas: No",
+    field: SP_FIELDS.GAS,
+    expr: () => exprTieneNo(SP_FIELDS.GAS),
+    color: "#ff4d6d",
+  },
+  {
+    id: "L_ACUEDUCTO_SI",
+    label: "Acueducto: Sí",
+    field: SP_FIELDS.ACUEDUCTO,
+    expr: () => exprTieneSi(SP_FIELDS.ACUEDUCTO),
+    color: "#7c3aed",
+  },
+  {
+    id: "L_ACUEDUCTO_NO",
+    label: "Acueducto: No",
+    field: SP_FIELDS.ACUEDUCTO,
+    expr: () => exprTieneNo(SP_FIELDS.ACUEDUCTO),
+    color: "#f59e0b",
+  },
+  {
+    id: "L_ALC_SI",
+    label: "Alcantarillado: Sí",
+    field: SP_FIELDS.ALC,
+    expr: () => exprTieneSi(SP_FIELDS.ALC),
+    color: "#22c55e",
+  },
+  {
+    id: "L_ALC_NO",
+    label: "Alcantarillado: No",
+    field: SP_FIELDS.ALC,
+    expr: () => exprTieneNo(SP_FIELDS.ALC),
+    color: "#ef4444",
+  },
+  {
+    id: "L_INTERNET_SI",
+    label: "Internet: Sí",
+    field: SP_FIELDS.INTERNET,
+    expr: () => exprTieneSi(SP_FIELDS.INTERNET),
+    color: "#3b82f6",
+  },
+  {
+    id: "L_INTERNET_NO",
+    label: "Internet: No",
+    field: SP_FIELDS.INTERNET,
+    expr: () => exprTieneNo(SP_FIELDS.INTERNET),
+    color: "#a3a3a3",
+  },
+  {
+    id: "L_BASURAS_SI",
+    label: "Basuras: Sí",
+    field: SP_FIELDS.BASURAS,
+    expr: () => exprTieneSi(SP_FIELDS.BASURAS),
+    color: "#e879f9",
+  },
+  {
+    id: "L_BASURAS_NO",
+    label: "Basuras: No",
+    field: SP_FIELDS.BASURAS,
+    expr: () => exprTieneNo(SP_FIELDS.BASURAS),
+    color: "#f97316",
+  },
 ];
 
+const ALUMBRADO_LAYER_ID = "L_ALUMBRADO";
+const ALUMBRADO_COLOR = "#38bdf8";
+
 // =====================================================
-// ✅ COLOR-FIX: sincroniza colores del PANEL con FILTER_GROUPS (1:1)
+// ✅ SINCRONIZAR COLORES DEL PANEL
 // =====================================================
 function syncPanelAccentsFromJS() {
   const list = document.getElementById("spToggleList");
@@ -245,18 +356,19 @@ function syncPanelAccentsFromJS() {
   });
 
   const rowAll = list.querySelector(`.sp-row[data-layer="L_ALL"]`);
-  if (rowAll) rowAll.style.setProperty("--sp-accent", "#ffb703"); // mismo que L_BASE
+  if (rowAll) rowAll.style.setProperty("--sp-accent", "#ffb703");
+
+  const rowAlumbrado = list.querySelector(`.sp-row[data-layer="${ALUMBRADO_LAYER_ID}"]`);
+  if (rowAlumbrado) rowAlumbrado.style.setProperty("--sp-accent", ALUMBRADO_COLOR);
 }
 
 // =====================================================
-// ✅ LAYERS DE FILTRO: base + N capas por grupo
-// ✅ FIX2: si ya existen, actualiza filter con setFilter()
+// ✅ CAPAS DE SERVICIOS
 // =====================================================
 function ensureServiciosFilterLayers() {
   const sourceId = "servicios_publicos";
   const baseId = "L_BASE";
 
-  // Base (todos)
   if (!map.getLayer(baseId)) {
     map.addLayer({
       id: baseId,
@@ -272,7 +384,6 @@ function ensureServiciosFilterLayers() {
     });
   }
 
-  // Capas por grupo (crea o actualiza)
   for (const g of FILTER_GROUPS) {
     const newFilter = g.expr();
 
@@ -300,15 +411,10 @@ function ensureServiciosFilterLayers() {
 }
 
 // =====================================================
-// ✅ Interacción sobre servicios (click/hover)
+// ✅ INTERACCIÓN SERVICIOS
 // =====================================================
-function getTopServiciosLayerId(activeLayerIds) {
-  if (activeLayerIds && activeLayerIds.length) return activeLayerIds[0];
-  return "L_BASE";
-}
-
-function wireServiciosLayerInteractions(activeLayerIdsGetter) {
-  const all = ["L_BASE", ...FILTER_GROUPS.map(g => g.id)];
+function wireServiciosLayerInteractions() {
+  const all = ["L_BASE", ...FILTER_GROUPS.map((g) => g.id)];
 
   for (const lid of all) {
     safeOff("mouseenter", lid);
@@ -317,8 +423,13 @@ function wireServiciosLayerInteractions(activeLayerIdsGetter) {
   }
 
   function attach(lid) {
-    map.on("mouseenter", lid, () => (map.getCanvas().style.cursor = "pointer"));
-    map.on("mouseleave", lid, () => (map.getCanvas().style.cursor = ""));
+    map.on("mouseenter", lid, () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+
+    map.on("mouseleave", lid, () => {
+      map.getCanvas().style.cursor = "";
+    });
 
     map.on("click", lid, (e) => {
       const f = e.features && e.features[0];
@@ -332,7 +443,12 @@ function wireServiciosLayerInteractions(activeLayerIdsGetter) {
         .addTo(map);
 
       const hs = map.getSource("highlight");
-      if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
+      if (hs) {
+        hs.setData({
+          type: "FeatureCollection",
+          features: [f],
+        });
+      }
     });
   }
 
@@ -340,13 +456,12 @@ function wireServiciosLayerInteractions(activeLayerIdsGetter) {
 }
 
 // =====================================================
-// ✅ LISTA CON SWITCHES: MULTI-SELECT
+// ✅ SWITCHES MULTISELECT + ALUMBRADO
 // =====================================================
 function wireServiciosToggleList() {
   const list = document.getElementById("spToggleList");
   if (!list) return;
 
-  // ✅ COLOR-FIX: aplica los mismos colores del JS al panel
   syncPanelAccentsFromJS();
 
   const present = getServiciosFieldsPresent();
@@ -354,8 +469,9 @@ function wireServiciosToggleList() {
 
   if (canDetect) {
     FILTER_GROUPS.forEach((g) => {
-      const spKey = Object.keys(SP_FIELDS).find(k => SP_FIELDS[k] === g.field);
+      const spKey = Object.keys(SP_FIELDS).find((k) => SP_FIELDS[k] === g.field);
       const exists = spKey ? !!present[spKey] : true;
+
       if (!exists) {
         const row = list.querySelector(`.sp-row[data-layer="${g.id}"]`);
         if (row) row.style.display = "none";
@@ -364,13 +480,21 @@ function wireServiciosToggleList() {
   }
 
   const rowAll = list.querySelector(`.sp-row[data-layer="L_ALL"]`);
+  const rowAlumbrado = list.querySelector(`.sp-row[data-layer="${ALUMBRADO_LAYER_ID}"]`);
+
   const groupRows = Array.from(list.querySelectorAll(`.sp-row[data-layer]`))
-    .filter(r => r.dataset.layer && r.dataset.layer !== "L_ALL");
+    .filter((r) => {
+      return (
+        r.dataset.layer &&
+        r.dataset.layer !== "L_ALL" &&
+        r.dataset.layer !== ALUMBRADO_LAYER_ID
+      );
+    });
 
   function getActiveGroups() {
     return groupRows
-      .filter(r => r.classList.contains("is-active"))
-      .map(r => r.dataset.layer)
+      .filter((r) => r.classList.contains("is-active"))
+      .map((r) => r.dataset.layer)
       .filter(Boolean);
   }
 
@@ -384,53 +508,115 @@ function wireServiciosToggleList() {
 
     if (!actives.length) {
       setLayerVisibility("L_BASE", true);
-      FILTER_GROUPS.forEach(g => setLayerVisibility(g.id, false));
+      FILTER_GROUPS.forEach((g) => setLayerVisibility(g.id, false));
+
       if (rowAll) rowAll.classList.add("is-active");
       return;
     }
 
     setLayerVisibility("L_BASE", false);
-    FILTER_GROUPS.forEach(g => setLayerVisibility(g.id, actives.includes(g.id)));
+
+    FILTER_GROUPS.forEach((g) => {
+      setLayerVisibility(g.id, actives.includes(g.id));
+    });
+
     if (rowAll) rowAll.classList.remove("is-active");
   }
 
-  if (rowAll) {
+  if (rowAll && !rowAll.dataset.wired) {
+    rowAll.dataset.wired = "1";
+
     rowAll.addEventListener("click", () => {
       rowAll.classList.add("is-active");
-      groupRows.forEach(r => r.classList.remove("is-active"));
+      groupRows.forEach((r) => r.classList.remove("is-active"));
       syncMapLayersFromUI();
 
-      try { popup.remove(); } catch (e) {}
+      try {
+        popup.remove();
+      } catch (e) {}
+
       const hs = map.getSource("highlight");
-      if (hs) hs.setData({ type: "FeatureCollection", features: [] });
+      if (hs) {
+        hs.setData({
+          type: "FeatureCollection",
+          features: [],
+        });
+      }
     });
   }
 
   groupRows.forEach((row) => {
+    if (row.dataset.wired) return;
+    row.dataset.wired = "1";
+
     row.addEventListener("click", () => {
       row.classList.toggle("is-active");
 
-      if (row.classList.contains("is-active") && rowAll) rowAll.classList.remove("is-active");
-      if (!getActiveGroups().length && rowAll) rowAll.classList.add("is-active");
+      if (row.classList.contains("is-active") && rowAll) {
+        rowAll.classList.remove("is-active");
+      }
+
+      if (!getActiveGroups().length && rowAll) {
+        rowAll.classList.add("is-active");
+      }
 
       syncMapLayersFromUI();
 
-      try { popup.remove(); } catch (e) {}
+      try {
+        popup.remove();
+      } catch (e) {}
+
       const hs = map.getSource("highlight");
-      if (hs) hs.setData({ type: "FeatureCollection", features: [] });
+      if (hs) {
+        hs.setData({
+          type: "FeatureCollection",
+          features: [],
+        });
+      }
     });
   });
 
+  if (rowAlumbrado && !rowAlumbrado.dataset.wired) {
+    rowAlumbrado.dataset.wired = "1";
+
+    rowAlumbrado.addEventListener("click", () => {
+      rowAlumbrado.classList.toggle("is-active");
+
+      const visible = rowAlumbrado.classList.contains("is-active");
+      setLayerVisibility(ALUMBRADO_LAYER_ID, visible);
+
+      try {
+        popup.remove();
+      } catch (e) {}
+
+      const hs = map.getSource("highlight");
+      if (hs) {
+        hs.setData({
+          type: "FeatureCollection",
+          features: [],
+        });
+      }
+    });
+  }
+
   if (rowAll) rowAll.classList.add("is-active");
-  groupRows.forEach(r => r.classList.remove("is-active"));
+  groupRows.forEach((r) => r.classList.remove("is-active"));
+
+  if (rowAlumbrado) {
+    rowAlumbrado.classList.remove("is-active");
+    setLayerVisibility(ALUMBRADO_LAYER_ID, false);
+  }
+
   syncMapLayersFromUI();
 }
 
 // =====================================================
-// ✅ CAPA PREDIOS (PRIORIDAD: si hay punto encima, NO muestra predio)
+// ✅ PREDIOS BASE
 // =====================================================
 function isServiciosHitAtPoint(point) {
-  const layers = ["L_BASE", ...FILTER_GROUPS.map(g => g.id)];
+  const layers = ["L_BASE", ...FILTER_GROUPS.map((g) => g.id), ALUMBRADO_LAYER_ID]
+    .filter((id) => map.getLayer(id));
+
   const hits = map.queryRenderedFeatures(point, { layers });
   return hits && hits.length;
 }
@@ -439,8 +625,14 @@ function addPrediosBase() {
   fetch("../src/data/PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson")
     .then((r) => r.json())
     .then((data) => {
-      if (map.getSource("predios_base")) map.getSource("predios_base").setData(data);
-      else map.addSource("predios_base", { type: "geojson", data });
+      if (map.getSource("predios_base")) {
+        map.getSource("predios_base").setData(data);
+      } else {
+        map.addSource("predios_base", {
+          type: "geojson",
+          data,
+        });
+      }
 
       if (!map.getLayer("predios_base_outline")) {
         map.addLayer({
@@ -473,8 +665,13 @@ function addPrediosBase() {
       safeOff("mouseenter", "predios_base_click");
       safeOff("mouseleave", "predios_base_click");
 
-      map.on("mouseenter", "predios_base_click", () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", "predios_base_click", () => (map.getCanvas().style.cursor = ""));
+      map.on("mouseenter", "predios_base_click", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+
+      map.on("mouseleave", "predios_base_click", () => {
+        map.getCanvas().style.cursor = "";
+      });
 
       map.on("click", "predios_base_click", (e) => {
         if (isServiciosHitAtPoint(e.point)) return;
@@ -497,38 +694,136 @@ function addPrediosBase() {
 }
 
 // =====================================================
-// ✅ SERVICIOS: fuente + capas (base + grupos) + interacciones
+// ✅ SERVICIOS PÚBLICOS
 // =====================================================
 function addServiciosPublicos() {
-  const FILE = "Servicios_publicos_puntos.geojson";
+  const FILE = "Servicios_publicos_puntos_nuevo.geojson";
 
   fetch(`../src/data/${FILE}`)
     .then((r) => r.json())
     .then((data) => {
       SERVICIOS_DATA = data;
 
-      if (map.getSource("servicios_publicos")) map.getSource("servicios_publicos").setData(data);
-      else map.addSource("servicios_publicos", { type: "geojson", data });
+      if (map.getSource("servicios_publicos")) {
+        map.getSource("servicios_publicos").setData(data);
+      } else {
+        map.addSource("servicios_publicos", {
+          type: "geojson",
+          data,
+        });
+      }
 
       ensureServiciosFilterLayers();
-      wireServiciosLayerInteractions(() => []);
+      wireServiciosLayerInteractions();
 
       setTimeout(() => {
-        try { wireServiciosToggleList(); } catch (e) {}
+        try {
+          wireServiciosToggleList();
+        } catch (e) {}
       }, 0);
 
       setTimeout(() => {
-        try { wireFilterPanelToggle(); } catch (e) {}
+        try {
+          wireFilterPanelToggle();
+        } catch (e) {}
       }, 0);
 
       try {
-        ["L_BASE", ...FILTER_GROUPS.map(g => g.id)].forEach((lid) => {
+        ["L_BASE", ...FILTER_GROUPS.map((g) => g.id)].forEach((lid) => {
           if (map.getLayer(lid)) map.moveLayer(lid);
         });
+
+        if (map.getLayer(ALUMBRADO_LAYER_ID)) map.moveLayer(ALUMBRADO_LAYER_ID);
         if (map.getLayer("highlight_circle")) map.moveLayer("highlight_circle");
       } catch (e) {}
     })
     .catch((err) => console.error("Error cargando servicios públicos:", err));
+}
+
+// =====================================================
+// ✅ ALUMBRADO PÚBLICO
+// =====================================================
+function addAlumbradoPublico() {
+  const FILE = "alumbrado_publico_con_vereda.geojson";
+
+  fetch(`../src/data/${FILE}`)
+    .then((r) => r.json())
+    .then((data) => {
+      ALUMBRADO_DATA = data;
+
+      if (map.getSource("alumbrado_publico")) {
+        map.getSource("alumbrado_publico").setData(data);
+      } else {
+        map.addSource("alumbrado_publico", {
+          type: "geojson",
+          data,
+        });
+      }
+
+      if (!map.getLayer(ALUMBRADO_LAYER_ID)) {
+        map.addLayer({
+          id: ALUMBRADO_LAYER_ID,
+          type: "circle",
+          source: "alumbrado_publico",
+          layout: {
+            visibility: "none",
+          },
+          paint: {
+            "circle-radius": 6,
+            "circle-color": ALUMBRADO_COLOR,
+            "circle-stroke-color": "#ffffff",
+            "circle-stroke-width": 1.5,
+            "circle-opacity": 0.95,
+          },
+        });
+      }
+
+      safeOff("mouseenter", ALUMBRADO_LAYER_ID);
+      safeOff("mouseleave", ALUMBRADO_LAYER_ID);
+      safeOff("click", ALUMBRADO_LAYER_ID);
+
+      map.on("mouseenter", ALUMBRADO_LAYER_ID, () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+
+      map.on("mouseleave", ALUMBRADO_LAYER_ID, () => {
+        map.getCanvas().style.cursor = "";
+      });
+
+      map.on("click", ALUMBRADO_LAYER_ID, (e) => {
+        const f = e.features && e.features[0];
+        if (!f) return;
+
+        const lngLat = getPointLngLat(f);
+
+        popup
+          .setLngLat(lngLat)
+          .setHTML(popupHTMLAlumbrado(f.properties || {}, lngLat))
+          .addTo(map);
+
+        const hs = map.getSource("highlight");
+        if (hs) {
+          hs.setData({
+            type: "FeatureCollection",
+            features: [f],
+          });
+        }
+      });
+
+      syncPanelAccentsFromJS();
+
+      setTimeout(() => {
+        try {
+          wireServiciosToggleList();
+        } catch (e) {}
+      }, 0);
+
+      try {
+        if (map.getLayer(ALUMBRADO_LAYER_ID)) map.moveLayer(ALUMBRADO_LAYER_ID);
+        if (map.getLayer("highlight_circle")) map.moveLayer("highlight_circle");
+      } catch (e) {}
+    })
+    .catch((err) => console.error("Error cargando alumbrado público:", err));
 }
 
 // =====================================================
@@ -538,7 +833,10 @@ function addHighlight() {
   if (!map.getSource("highlight")) {
     map.addSource("highlight", {
       type: "geojson",
-      data: { type: "FeatureCollection", features: [] },
+      data: {
+        type: "FeatureCollection",
+        features: [],
+      },
     });
   }
 
@@ -559,65 +857,116 @@ function addHighlight() {
 }
 
 // =====================================================
-// ✅ BUSCADOR LOCAL (SERVICIOS)
+// ✅ BUSCADOR LOCAL SERVICIOS + ALUMBRADO
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
   mapboxgl,
   marker: false,
   localGeocoderOnly: true,
-  placeholder: "Buscar (número predial, propietario, tipo, uso, servicios...)",
+  placeholder: "Buscar predial, propietario, servicio, poste, lámpara...",
   localGeocoder: (q) => {
     const query = norm(q);
-    if (!query || !SERVICIOS_DATA || !Array.isArray(SERVICIOS_DATA.features)) return [];
+
+    if (!query) return [];
 
     const results = [];
 
-    for (const feature of SERVICIOS_DATA.features) {
-      const p = feature.properties || {};
+    // Servicios públicos
+    if (SERVICIOS_DATA && Array.isArray(SERVICIOS_DATA.features)) {
+      for (const feature of SERVICIOS_DATA.features) {
+        const p = feature.properties || {};
 
-      const vPredial = norm(p["Número predial"]);
-      const vProp = norm(p["Nombre del propietario"]);
-      const vTipo = norm(p["Tipo de predio"]);
-      const vUso = norm(p["Uso actual del predio"]);
-      const vAc = norm(p["Tiene servicio de acueducto?"]);
-      const vAl = norm(p["Tiene servicio de alcantarillado?"]);
-      const vBa = norm(p["Tiene servicio de recolección de basuras?"]);
-      const vInt = norm(p["Tiene servicio de Internet?"]);
-      const vGas = norm(p["Tiene servicio de Gas?"]);
+        const vPredial = norm(p["n_mero_pre"]);
+        const vProp = norm(p["nombre_del"]);
+        const vTipo = norm(p["tipo_de_pr"]);
+        const vUso = norm(p["uso_actual"]);
+        const vAc = norm(p["tiene_serv"]);
+        const vAl = norm(p["tiene_se_1"]);
+        const vBa = norm(p["tiene_se_2"]);
+        const vInt = norm(p["tiene_se_3"]);
+        const vGas = norm(p["tiene_se_4"]);
 
-      let ok =
-        (vPredial && vPredial.includes(query)) ||
-        (vProp && vProp.includes(query)) ||
-        (vTipo && vTipo.includes(query)) ||
-        (vUso && vUso.includes(query)) ||
-        (vAc && vAc.includes(query)) ||
-        (vAl && vAl.includes(query)) ||
-        (vBa && vBa.includes(query)) ||
-        (vInt && vInt.includes(query)) ||
-        (vGas && vGas.includes(query));
+        let ok =
+          (vPredial && vPredial.includes(query)) ||
+          (vProp && vProp.includes(query)) ||
+          (vTipo && vTipo.includes(query)) ||
+          (vUso && vUso.includes(query)) ||
+          (vAc && vAc.includes(query)) ||
+          (vAl && vAl.includes(query)) ||
+          (vBa && vBa.includes(query)) ||
+          (vInt && vInt.includes(query)) ||
+          (vGas && vGas.includes(query));
 
-      if (!ok) {
-        const big = norm(Object.values(p).join(" "));
-        ok = big.includes(query);
+        if (!ok) {
+          const big = norm(Object.values(p).join(" "));
+          ok = big.includes(query);
+        }
+
+        if (!ok) continue;
+
+        const center = getPointLngLat(feature);
+        const placeName = `${p["n_mero_pre"] ?? "N/A"} | ${p["nombre_del"] ?? "N/A"}`;
+
+        results.push({
+          type: "Feature",
+          geometry: feature.geometry,
+          center,
+          place_name: `Servicios públicos | ${placeName}`,
+          text: (p["n_mero_pre"] ?? p["nombre_del"] ?? "Resultado").toString(),
+          properties: {
+            ...p,
+            __tipo_busqueda: "servicios",
+          },
+          place_type: ["place"],
+        });
+
+        if (results.length >= 10) break;
       }
+    }
 
-      if (!ok) continue;
+    // Alumbrado público
+    if (ALUMBRADO_DATA && Array.isArray(ALUMBRADO_DATA.features) && results.length < 10) {
+      for (const feature of ALUMBRADO_DATA.features) {
+        const p = feature.properties || {};
 
-      const center = getPointLngLat(feature);
-      const placeName = `${p["Número predial"] ?? "N/A"} | ${p["Nombre del propietario"] ?? "N/A"}`;
+        const vTipoPoste = norm(p.tipo_poste);
+        const vCodigoPoste = norm(p.codigo_de_poste);
+        const vCodigoLampara = norm(p.codigo_de_lampara);
+        const vObs = norm(p.observaciones);
+        const vVereda = norm(p.vereda);
 
-      results.push({
-        type: "Feature",
-        geometry: feature.geometry,
-        center,
-        place_name: placeName,
-        text: (p["Número predial"] ?? p["Nombre del propietario"] ?? "Resultado").toString(),
-        properties: p,
-        place_type: ["place"],
-      });
+        let ok =
+          (vTipoPoste && vTipoPoste.includes(query)) ||
+          (vCodigoPoste && vCodigoPoste.includes(query)) ||
+          (vCodigoLampara && vCodigoLampara.includes(query)) ||
+          (vObs && vObs.includes(query)) ||
+          (vVereda && vVereda.includes(query));
 
-      if (results.length >= 10) break;
+        if (!ok) {
+          const big = norm(Object.values(p).join(" "));
+          ok = big.includes(query);
+        }
+
+        if (!ok) continue;
+
+        const center = getPointLngLat(feature);
+
+        results.push({
+          type: "Feature",
+          geometry: feature.geometry,
+          center,
+          place_name: `Alumbrado público | Poste: ${p.codigo_de_poste ?? "N/A"} | Lámpara: ${p.codigo_de_lampara ?? "N/A"}`,
+          text: (p.codigo_de_poste ?? p.codigo_de_lampara ?? "Alumbrado").toString(),
+          properties: {
+            ...p,
+            __tipo_busqueda: "alumbrado",
+          },
+          place_type: ["place"],
+        });
+
+        if (results.length >= 10) break;
+      }
     }
 
     return results;
@@ -633,14 +982,29 @@ geocoder.on("result", (e) => {
   const lngLat = f.center || getPointLngLat(f);
 
   const hs = map.getSource("highlight");
-  if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
+  if (hs) {
+    hs.setData({
+      type: "FeatureCollection",
+      features: [f],
+    });
+  }
 
-  map.flyTo({ center: lngLat, zoom: 18 });
+  map.flyTo({
+    center: lngLat,
+    zoom: 18,
+  });
 
-  popup
-    .setLngLat(lngLat)
-    .setHTML(popupHTMLServicios(f.properties || {}, lngLat))
-    .addTo(map);
+  if (f.properties?.__tipo_busqueda === "alumbrado") {
+    popup
+      .setLngLat(lngLat)
+      .setHTML(popupHTMLAlumbrado(f.properties || {}, lngLat))
+      .addTo(map);
+  } else {
+    popup
+      .setLngLat(lngLat)
+      .setHTML(popupHTMLServicios(f.properties || {}, lngLat))
+      .addTo(map);
+  }
 });
 
 // =====================================================
@@ -649,6 +1013,7 @@ geocoder.on("result", (e) => {
 map.on("style.load", () => {
   addPrediosBase();
   addServiciosPublicos();
+  addAlumbradoPublico();
   addHighlight();
 
   setTimeout(() => {
@@ -656,10 +1021,11 @@ map.on("style.load", () => {
       if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
       if (map.getLayer("predios_base_click")) map.moveLayer("predios_base_click");
 
-      ["L_BASE", ...FILTER_GROUPS.map(g => g.id)].forEach((lid) => {
+      ["L_BASE", ...FILTER_GROUPS.map((g) => g.id)].forEach((lid) => {
         if (map.getLayer(lid)) map.moveLayer(lid);
       });
 
+      if (map.getLayer(ALUMBRADO_LAYER_ID)) map.moveLayer(ALUMBRADO_LAYER_ID);
       if (map.getLayer("highlight_circle")) map.moveLayer("highlight_circle");
     } catch (e) {}
   }, 400);
