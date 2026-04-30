@@ -120,7 +120,8 @@ function crearLeyenda() {
 
   legend.style.position = 'absolute';
   legend.style.bottom = '25px';
-  legend.style.left = '15px';
+  legend.style.right = '15px';
+  legend.style.left = 'auto';
   legend.style.zIndex = '9999';
   legend.style.background = 'rgba(15, 23, 42, 0.94)';
   legend.style.color = '#fff';
