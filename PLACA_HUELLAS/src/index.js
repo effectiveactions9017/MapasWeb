@@ -1,8 +1,9 @@
 // =====================================================
-// ✅ Predial Sesquilé - Mapbox GL JS + Placa Huellas
+// ✅ Predial Sesquilé - Mapbox GL JS + Placa Huellas + Límite Sesquilé
 // ✅ Predios: SOLO CONTORNO, sin relleno
+// ✅ Límite Sesquilé: contorno municipal
 // ✅ Placa huellas: encima de predios y coloreada por vereda
-// ✅ Leyenda sin scroll
+// ✅ Leyenda sin scroll al lado derecho
 // ✅ Cada vereda se prende/apaga independiente
 // =====================================================
 
@@ -27,6 +28,7 @@ let popup = new mapboxgl.Popup({
 
 let PREDIOS_DATA = null;
 let PLACA_DATA = null;
+let LIMITE_DATA = null;
 let TODAS_VEREDAS = [];
 
 const paletteVeredas = [
@@ -146,6 +148,12 @@ function crearLeyenda() {
       Base predial
     </label>
 
+    <label style="display:flex; align-items:center; gap:7px; margin-bottom:10px; cursor:pointer;">
+      <input type="checkbox" id="toggle-limite" checked>
+      <span style="width:18px; height:4px; background:#00ffff; display:inline-block; border-radius:3px;"></span>
+      Límite Sesquilé
+    </label>
+
     <div style="font-weight:800; margin:8px 0 6px;">
       Placa huellas por vereda
     </div>
@@ -164,6 +172,19 @@ function crearLeyenda() {
       'predios_ssk_layer',
       'predios_highlight_fill',
       'predios_highlight_line'
+    ].forEach((id) => {
+      if (map.getLayer(id)) {
+        map.setLayoutProperty(id, 'visibility', visibility);
+      }
+    });
+  });
+
+  document.getElementById('toggle-limite').addEventListener('change', function () {
+    const visibility = this.checked ? 'visible' : 'none';
+
+    [
+      'limite_sesquile_fill',
+      'limite_sesquile_line'
     ].forEach((id) => {
       if (map.getLayer(id)) {
         map.setLayoutProperty(id, 'visibility', visibility);
@@ -220,6 +241,79 @@ function aplicarFiltroVeredas() {
     ['coalesce', ['get', 'vereda'], 'Sin vereda'],
     ['literal', veredasVisibles]
   ]);
+}
+
+// =====================================================
+// CAPA LÍMITE SESQUILÉ
+// =====================================================
+function addLimiteSesquileLayer() {
+  fetch('../src/data/Limite_sesquile (1).geojson')
+    .then((response) => response.json())
+    .then((data) => {
+      LIMITE_DATA = data;
+
+      if (map.getSource('limite_sesquile')) {
+        map.getSource('limite_sesquile').setData(data);
+      } else {
+        map.addSource('limite_sesquile', {
+          type: 'geojson',
+          data: data
+        });
+      }
+
+      if (!map.getLayer('limite_sesquile_fill')) {
+        map.addLayer({
+          id: 'limite_sesquile_fill',
+          source: 'limite_sesquile',
+          type: 'fill',
+          paint: {
+            'fill-color': '#00ffff',
+            'fill-opacity': 0.04
+          }
+        });
+      }
+
+      if (!map.getLayer('limite_sesquile_line')) {
+        map.addLayer({
+          id: 'limite_sesquile_line',
+          source: 'limite_sesquile',
+          type: 'line',
+          paint: {
+            'line-color': '#00ffff',
+            'line-width': 3,
+            'line-opacity': 0.95,
+            'line-dasharray': [2, 1]
+          }
+        });
+      }
+
+      map.on('mouseenter', 'limite_sesquile_line', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', 'limite_sesquile_line', () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      map.on('click', 'limite_sesquile_line', (e) => {
+        const feature = e.features && e.features[0];
+        if (!feature) return;
+
+        const svLngLat = getFeatureLngLat(feature, e.lngLat);
+
+        buildPopupFromFields(
+          feature,
+          e.lngLat,
+          [
+            { label: 'Capa', key: 'nombre' }
+          ],
+          svLngLat
+        );
+      });
+
+      ordenarCapas();
+    })
+    .catch((err) => console.error('Error cargando límite Sesquilé:', err));
 }
 
 // =====================================================
@@ -382,6 +476,14 @@ function addPlacaHuellasLayer() {
 // =====================================================
 function ordenarCapas() {
   try {
+    if (map.getLayer('limite_sesquile_fill')) {
+      map.moveLayer('limite_sesquile_fill');
+    }
+
+    if (map.getLayer('limite_sesquile_line')) {
+      map.moveLayer('limite_sesquile_line');
+    }
+
     if (map.getLayer('predios_ssk_layer')) {
       map.moveLayer('predios_ssk_layer');
     }
@@ -408,6 +510,7 @@ function ordenarCapas() {
 map.on('style.load', () => {
   crearLeyenda();
 
+  addLimiteSesquileLayer();
   addPredialLayer();
   addPlacaHuellasLayer();
 
