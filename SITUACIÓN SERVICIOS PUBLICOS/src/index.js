@@ -1,7 +1,7 @@
 // =====================================================
 // ✅ Visor Predial + Servicios Públicos + Alumbrado – Sesquilé
-// ✅ Servicios: Servicios_publicos_puntos_nuevo.geojson
-// ✅ Alumbrado: alumbrado_publico_con_vereda.geojson
+// ✅ Servicios con nuevos nombres de columnas
+// ✅ Incluye filtro nuevo: Electricidad Sí / No
 // =====================================================
 
 mapboxgl.accessToken =
@@ -135,26 +135,52 @@ function popupHTMLPredio(props) {
 }
 
 // =====================================================
-// ✅ POPUP SERVICIOS
+// ✅ POPUP SERVICIOS CON NUEVOS ATRIBUTOS
 // =====================================================
 const CAMPOS_SERVICIOS = [
-  { label: "Número predial", field: "n_mero_pre" },
-  { label: "Nombre del propietario", field: "nombre_del" },
-  { label: "Tipo de predio", field: "tipo_de_pr" },
-  { label: "Otro - Tipo de predio", field: "tipo_de__1" },
-  { label: "Uso actual del predio", field: "uso_actual" },
-  { label: "Tiene servicio de acueducto?", field: "tiene_serv" },
-  { label: "Entidad prestadora acueducto", field: "entidad_pr" },
-  { label: "Tiene servicio de alcantarillado?", field: "tiene_se_1" },
-  { label: "Entidad prestadora alcantarillado", field: "field_38" },
-  { label: "Tiene servicio de recolección de basuras?", field: "tiene_se_2" },
-  { label: "Entidad prestadora basuras", field: "field_39" },
-  { label: "Tiene servicio de Internet?", field: "tiene_se_3" },
-  { label: "Operador de Internet", field: "field_19" },
-  { label: "Tiene servicio de Gas?", field: "tiene_se_4" },
-  { label: "Operador de Gas", field: "field_50" },
-  { label: "La vivienda es", field: "la_viviend" },
-  { label: "Observación", field: "observacio" },
+  { label: "Número de registro", field: "Número de registro" },
+  { label: "Número predial", field: "Número predial" },
+  { label: "Folio matrícula inmobiliaria", field: "Folio de matrícula inmobiliaria" },
+  { label: "Se realizó la encuesta?", field: "Se realizo la encuesta?" },
+  { label: "Motivo", field: "Motivo." },
+  { label: "Nombre del propietario", field: "Nombre del propietario" },
+  { label: "Tipo de predio", field: "Tipo de predio" },
+  { label: "Otro - Tipo de predio", field: "Otro - Tipo de predio" },
+  { label: "Uso actual del predio", field: "Uso actual del predio" },
+
+  { label: "Tiene servicio de acueducto?", field: "Tiene servicio de acueducto?" },
+  { label: "Entidad prestadora acueducto", field: "Entidad prestadora del servicio....17" },
+  { label: "Cuál acueducto?", field: "Cúal?" },
+
+  { label: "Tiene servicio de alcantarillado?", field: "Tiene servicio de alcantarillado?" },
+  { label: "Entidad prestadora alcantarillado", field: "Entidad prestadora del servicio....20" },
+  { label: "Otra entidad alcantarillado", field: "Otro - Entidad prestadora del servicio....21" },
+
+  { label: "Tiene servicio de recolección de basuras?", field: "Tiene servicio de recolección de basuras?" },
+  { label: "Usuario basuras", field: "Nombre del usuario." },
+  { label: "Entidad prestadora basuras", field: "Entidad prestadora del servicio....24" },
+  { label: "Otra entidad basuras", field: "Otro - Entidad prestadora del servicio....25" },
+
+  { label: "Tiene código interno?", field: "Tiene código interno?" },
+  { label: "Cuál código interno?", field: "Cual?...27" },
+  { label: "Número de documento", field: "Número de documento....28" },
+
+  { label: "Tiene servicio de Internet?", field: "Tiene servicio de Internet?" },
+  { label: "Entidad prestadora Internet", field: "Entidad prestadora del servicio?" },
+  { label: "Usuario Internet", field: "Nombre del usuario" },
+  { label: "Documento usuario Internet", field: "Número de documento....32" },
+
+  { label: "Quién atiende la visita?", field: "Quien atiende la visita?" },
+  { label: "Número de identificación", field: "Número de identificación." },
+  { label: "Número telefónico", field: "Número telefónico." },
+  { label: "Observaciones", field: "Observaciones." },
+  { label: "La vivienda es", field: "La vivienda es?" },
+
+  { label: "Tiene servicio de Gas?", field: "Tiene servicio de Gas?" },
+  { label: "Entidad prestadora Gas", field: "Entidad prestadora del servicio....39" },
+  { label: "Cuál Gas?", field: "Cual?...40" },
+
+  { label: "Tiene servicio de luz eléctrica?", field: "Tiene servicio de luz eléctrica?" },
 ];
 
 function popupHTMLServicios(props, lngLat) {
@@ -238,30 +264,16 @@ function exprTieneNo(fieldName) {
 }
 
 // =====================================================
-// ✅ CAMPOS PARA FILTROS
+// ✅ CAMPOS NUEVOS PARA FILTROS
 // =====================================================
 const SP_FIELDS = {
-  GAS: "tiene_se_4",
-  ACUEDUCTO: "tiene_serv",
-  ALC: "tiene_se_1",
-  INTERNET: "tiene_se_3",
-  BASURAS: "tiene_se_2",
+  GAS: "Tiene servicio de Gas?",
+  ACUEDUCTO: "Tiene servicio de acueducto?",
+  ALC: "Tiene servicio de alcantarillado?",
+  INTERNET: "Tiene servicio de Internet?",
+  BASURAS: "Tiene servicio de recolección de basuras?",
+  ELECTRICIDAD: "Tiene servicio de luz eléctrica?",
 };
-
-function getServiciosFieldsPresent() {
-  const present = {};
-  const feats = SERVICIOS_DATA?.features;
-
-  if (!Array.isArray(feats) || !feats.length) return present;
-
-  const sample = feats.slice(0, Math.min(50, feats.length));
-
-  for (const [k, fieldName] of Object.entries(SP_FIELDS)) {
-    present[k] = sample.some((f) => f?.properties && fieldName in f.properties);
-  }
-
-  return present;
-}
 
 // =====================================================
 // ✅ GRUPOS DE FILTRO SERVICIOS
@@ -336,6 +348,20 @@ const FILTER_GROUPS = [
     field: SP_FIELDS.BASURAS,
     expr: () => exprTieneNo(SP_FIELDS.BASURAS),
     color: "#f97316",
+  },
+  {
+    id: "L_ELECTRICIDAD_SI",
+    label: "Electricidad: Sí",
+    field: SP_FIELDS.ELECTRICIDAD,
+    expr: () => exprTieneSi(SP_FIELDS.ELECTRICIDAD),
+    color: "#fde047",
+  },
+  {
+    id: "L_ELECTRICIDAD_NO",
+    label: "Electricidad: No",
+    field: SP_FIELDS.ELECTRICIDAD,
+    expr: () => exprTieneNo(SP_FIELDS.ELECTRICIDAD),
+    color: "#111827",
   },
 ];
 
@@ -494,23 +520,18 @@ function wireServiciosToggleList() {
     const actives = getActiveGroups();
     const alumbradoActivo = isAlumbradoActive();
 
-    // Servicios
     if (!actives.length && !alumbradoActivo) {
-  // Solo muestra todos cuando NO hay servicios ni alumbrado activos
-  setLayerVisibility("L_BASE", true);
-  FILTER_GROUPS.forEach((g) => setLayerVisibility(g.id, false));
-} else {
-  // Si hay cualquier filtro o alumbrado activo, apaga "Ver todos"
-  setLayerVisibility("L_BASE", false);
-  FILTER_GROUPS.forEach((g) => {
-    setLayerVisibility(g.id, actives.includes(g.id));
-  });
-}
+      setLayerVisibility("L_BASE", true);
+      FILTER_GROUPS.forEach((g) => setLayerVisibility(g.id, false));
+    } else {
+      setLayerVisibility("L_BASE", false);
+      FILTER_GROUPS.forEach((g) => {
+        setLayerVisibility(g.id, actives.includes(g.id));
+      });
+    }
 
-    // Alumbrado independiente
     setLayerVisibility(ALUMBRADO_LAYER_ID, alumbradoActivo);
 
-    // Ver todos solo queda activo si NO hay servicios ni alumbrado activo
     if (rowAll) {
       if (!actives.length && !alumbradoActivo) rowAll.classList.add("is-active");
       else rowAll.classList.remove("is-active");
@@ -522,10 +543,8 @@ function wireServiciosToggleList() {
 
     rowAll.addEventListener("click", () => {
       groupRows.forEach((r) => r.classList.remove("is-active"));
-
       if (rowAlumbrado) rowAlumbrado.classList.remove("is-active");
-
-      if (rowAll) rowAll.classList.add("is-active");
+      rowAll.classList.add("is-active");
 
       syncMapLayersFromUI();
 
@@ -582,6 +601,7 @@ function wireServiciosToggleList() {
 
   syncMapLayersFromUI();
 }
+
 // =====================================================
 // ✅ PREDIOS BASE
 // =====================================================
@@ -658,15 +678,12 @@ function addPrediosBase() {
           .setHTML(popupHTMLPredio(f.properties || {}))
           .addTo(map);
       });
-
-      if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
-      if (map.getLayer("predios_base_click")) map.moveLayer("predios_base_click");
     })
     .catch((err) => console.error("Error cargando predios base:", err));
 }
 
 // =====================================================
-// ✅ SERVICIOS PÚBLICOS
+// ✅ SERVICIOS PÚBLICOS NUEVA CAPA
 // =====================================================
 function addServiciosPublicos() {
   const FILE = "Servicios_publicos_puntos_nuevo.geojson";
@@ -836,28 +853,27 @@ const geocoder = new MapboxGeocoder({
   mapboxgl,
   marker: false,
   localGeocoderOnly: true,
-  placeholder: "Buscar predial, propietario, servicio, poste, lámpara...",
+  placeholder: "Buscar predial, propietario, servicio, electricidad, poste, lámpara...",
   localGeocoder: (q) => {
     const query = norm(q);
-
     if (!query) return [];
 
     const results = [];
 
-    // Servicios públicos
     if (SERVICIOS_DATA && Array.isArray(SERVICIOS_DATA.features)) {
       for (const feature of SERVICIOS_DATA.features) {
         const p = feature.properties || {};
 
-        const vPredial = norm(p["n_mero_pre"]);
-        const vProp = norm(p["nombre_del"]);
-        const vTipo = norm(p["tipo_de_pr"]);
-        const vUso = norm(p["uso_actual"]);
-        const vAc = norm(p["tiene_serv"]);
-        const vAl = norm(p["tiene_se_1"]);
-        const vBa = norm(p["tiene_se_2"]);
-        const vInt = norm(p["tiene_se_3"]);
-        const vGas = norm(p["tiene_se_4"]);
+        const vPredial = norm(p["Número predial"]);
+        const vProp = norm(p["Nombre del propietario"]);
+        const vTipo = norm(p["Tipo de predio"]);
+        const vUso = norm(p["Uso actual del predio"]);
+        const vAc = norm(p["Tiene servicio de acueducto?"]);
+        const vAl = norm(p["Tiene servicio de alcantarillado?"]);
+        const vBa = norm(p["Tiene servicio de recolección de basuras?"]);
+        const vInt = norm(p["Tiene servicio de Internet?"]);
+        const vGas = norm(p["Tiene servicio de Gas?"]);
+        const vElec = norm(p["Tiene servicio de luz eléctrica?"]);
 
         let ok =
           (vPredial && vPredial.includes(query)) ||
@@ -868,7 +884,8 @@ const geocoder = new MapboxGeocoder({
           (vAl && vAl.includes(query)) ||
           (vBa && vBa.includes(query)) ||
           (vInt && vInt.includes(query)) ||
-          (vGas && vGas.includes(query));
+          (vGas && vGas.includes(query)) ||
+          (vElec && vElec.includes(query));
 
         if (!ok) {
           const big = norm(Object.values(p).join(" "));
@@ -878,14 +895,14 @@ const geocoder = new MapboxGeocoder({
         if (!ok) continue;
 
         const center = getPointLngLat(feature);
-        const placeName = `${p["n_mero_pre"] ?? "N/A"} | ${p["nombre_del"] ?? "N/A"}`;
+        const placeName = `${p["Número predial"] ?? "N/A"} | ${p["Nombre del propietario"] ?? "N/A"}`;
 
         results.push({
           type: "Feature",
           geometry: feature.geometry,
           center,
           place_name: `Servicios públicos | ${placeName}`,
-          text: (p["n_mero_pre"] ?? p["nombre_del"] ?? "Resultado").toString(),
+          text: (p["Número predial"] ?? p["Nombre del propietario"] ?? "Resultado").toString(),
           properties: {
             ...p,
             __tipo_busqueda: "servicios",
@@ -897,7 +914,6 @@ const geocoder = new MapboxGeocoder({
       }
     }
 
-    // Alumbrado público
     if (ALUMBRADO_DATA && Array.isArray(ALUMBRADO_DATA.features) && results.length < 10) {
       for (const feature of ALUMBRADO_DATA.features) {
         const p = feature.properties || {};
@@ -980,6 +996,26 @@ geocoder.on("result", (e) => {
 });
 
 // =====================================================
+// ORDEN DE CAPAS
+// =====================================================
+function ordenarCapas() {
+  try {
+    if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
+
+    ["L_BASE", ...FILTER_GROUPS.map((g) => g.id)].forEach((lid) => {
+      if (map.getLayer(lid)) map.moveLayer(lid);
+    });
+
+    if (map.getLayer(ALUMBRADO_LAYER_ID)) map.moveLayer(ALUMBRADO_LAYER_ID);
+    if (map.getLayer("highlight_circle")) map.moveLayer("highlight_circle");
+
+    if (map.getLayer("predios_base_click") && map.getLayer("predios_base_outline")) {
+      map.moveLayer("predios_base_click", "predios_base_outline");
+    }
+  } catch (e) {}
+}
+
+// =====================================================
 // CARGA FINAL
 // =====================================================
 map.on("style.load", () => {
@@ -989,16 +1025,6 @@ map.on("style.load", () => {
   addHighlight();
 
   setTimeout(() => {
-    try {
-      if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
-      if (map.getLayer("predios_base_click")) map.moveLayer("predios_base_click");
-
-      ["L_BASE", ...FILTER_GROUPS.map((g) => g.id)].forEach((lid) => {
-        if (map.getLayer(lid)) map.moveLayer(lid);
-      });
-
-      if (map.getLayer(ALUMBRADO_LAYER_ID)) map.moveLayer(ALUMBRADO_LAYER_ID);
-      if (map.getLayer("highlight_circle")) map.moveLayer("highlight_circle");
-    } catch (e) {}
+    ordenarCapas();
   }, 400);
 });
