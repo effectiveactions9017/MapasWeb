@@ -2,6 +2,7 @@
 // ✅ Visor Predial + Servicios Públicos + Alumbrado – Sesquilé
 // ✅ Servicios: Servicios_publicos_puntos_nuevo.geojson
 // ✅ Alumbrado: alumbrado_publico_con_vereda.geojson
+// ✅ Atributos servicios actualizados
 // =====================================================
 
 mapboxgl.accessToken =
@@ -135,26 +136,54 @@ function popupHTMLPredio(props) {
 }
 
 // =====================================================
-// ✅ POPUP SERVICIOS
+// ✅ POPUP SERVICIOS - ATRIBUTOS ACTUALIZADOS
 // =====================================================
 const CAMPOS_SERVICIOS = [
-  { label: "Número predial", field: "n_mero_pre" },
-  { label: "Nombre del propietario", field: "nombre_del" },
-  { label: "Tipo de predio", field: "tipo_de_pr" },
-  { label: "Otro - Tipo de predio", field: "tipo_de__1" },
-  { label: "Uso actual del predio", field: "uso_actual" },
-  { label: "Tiene servicio de acueducto?", field: "tiene_serv" },
-  { label: "Entidad prestadora acueducto", field: "entidad_pr" },
-  { label: "Tiene servicio de alcantarillado?", field: "tiene_se_1" },
-  { label: "Entidad prestadora alcantarillado", field: "field_38" },
-  { label: "Tiene servicio de recolección de basuras?", field: "tiene_se_2" },
-  { label: "Entidad prestadora basuras", field: "field_39" },
-  { label: "Tiene servicio de Internet?", field: "tiene_se_3" },
-  { label: "Operador de Internet", field: "field_19" },
-  { label: "Tiene servicio de Gas?", field: "tiene_se_4" },
-  { label: "Operador de Gas", field: "field_50" },
-  { label: "La vivienda es", field: "la_viviend" },
-  { label: "Observación", field: "observacio" },
+  { label: "Número de registro", field: "numero_de_registro" },
+  { label: "Número predial", field: "numero_predial" },
+  { label: "Folio matrícula inmobiliaria", field: "folio_de_matricula_inmobiliaria" },
+  { label: "Se realizó la encuesta", field: "se_realizo_la_encuesta" },
+  { label: "Motivo", field: "motivo" },
+  { label: "Nombre del propietario", field: "nombre_del_propietario" },
+  { label: "Tipo de predio", field: "tipo_de_predio" },
+  { label: "Otro tipo de predio", field: "otro_tipo_de_predio" },
+  { label: "Uso actual del predio", field: "uso_actual_del_predio" },
+
+  { label: "Tiene servicio de acueducto?", field: "tiene_servicio_de_acueducto" },
+  { label: "Entidad prestadora acueducto", field: "entidad_prestadora_del_servicio_17" },
+  { label: "Otra entidad acueducto", field: "cual" },
+
+  { label: "Tiene servicio de alcantarillado?", field: "tiene_servicio_de_alcantarillado" },
+  { label: "Entidad prestadora alcantarillado", field: "entidad_prestadora_del_servicio_20" },
+  { label: "Otra entidad alcantarillado", field: "otro_entidad_prestadora_del_servicio_21" },
+
+  { label: "Tiene servicio de recolección de basuras?", field: "tiene_servicio_de_recoleccion_de_basuras" },
+  { label: "Entidad prestadora basuras", field: "entidad_prestadora_del_servicio_24" },
+  { label: "Otra entidad basuras", field: "otro_entidad_prestadora_del_servicio_25" },
+
+  { label: "Tiene código interno", field: "tiene_codigo_interno" },
+  { label: "Código interno", field: "cual_27" },
+
+  { label: "Nombre del usuario", field: "nombre_del_usuario" },
+  { label: "Número de documento usuario", field: "numero_de_documento_28" },
+
+  { label: "Tiene servicio de Internet?", field: "tiene_servicio_de_internet" },
+  { label: "Entidad prestadora Internet", field: "entidad_prestadora_del_servicio" },
+  { label: "Nombre del usuario Internet", field: "nombre_del_usuario_2" },
+  { label: "Número de documento Internet", field: "numero_de_documento_32" },
+
+  { label: "Quién atiende la visita", field: "quien_atiende_la_visita" },
+  { label: "Número de identificación", field: "numero_de_identificacion" },
+  { label: "Número telefónico", field: "numero_telefonico" },
+  { label: "Observaciones", field: "observaciones" },
+
+  { label: "La vivienda es", field: "la_vivienda_es" },
+
+  { label: "Tiene servicio de Gas?", field: "tiene_servicio_de_gas" },
+  { label: "Entidad prestadora Gas", field: "entidad_prestadora_del_servicio_39" },
+  { label: "Otra entidad Gas", field: "cual_40" },
+
+  { label: "Tiene servicio de luz eléctrica?", field: "tiene_servicio_de_luz_electrica" },
 ];
 
 function popupHTMLServicios(props, lngLat) {
@@ -219,7 +248,22 @@ function exprTieneSi(fieldName) {
   return [
     "match",
     v,
-    ["si", "sí", "si_", "sí_", "si.", "sí.", "c_si", "c_sí", "c_si_", "c_sí_"],
+    [
+      "si",
+      "sí",
+      "si_",
+      "sí_",
+      "si.",
+      "sí.",
+      "c_si",
+      "c_sí",
+      "c_si_",
+      "c_sí_",
+      "s",
+      "1",
+      "true",
+      "verdadero",
+    ],
     true,
     false,
   ];
@@ -231,37 +275,34 @@ function exprTieneNo(fieldName) {
   return [
     "match",
     v,
-    ["no", "no_", "no.", "c_no", "c_no_", "c-no", "c-no_"],
+    [
+      "no",
+      "no_",
+      "no.",
+      "c_no",
+      "c_no_",
+      "c-no",
+      "c-no_",
+      "n",
+      "0",
+      "false",
+      "falso",
+    ],
     true,
     false,
   ];
 }
 
 // =====================================================
-// ✅ CAMPOS PARA FILTROS
+// ✅ CAMPOS PARA FILTROS - ACTUALIZADOS
 // =====================================================
 const SP_FIELDS = {
-  GAS: "tiene_se_4",
-  ACUEDUCTO: "tiene_serv",
-  ALC: "tiene_se_1",
-  INTERNET: "tiene_se_3",
-  BASURAS: "tiene_se_2",
+  GAS: "tiene_servicio_de_gas",
+  ACUEDUCTO: "tiene_servicio_de_acueducto",
+  ALC: "tiene_servicio_de_alcantarillado",
+  INTERNET: "tiene_servicio_de_internet",
+  BASURAS: "tiene_servicio_de_recoleccion_de_basuras",
 };
-
-function getServiciosFieldsPresent() {
-  const present = {};
-  const feats = SERVICIOS_DATA?.features;
-
-  if (!Array.isArray(feats) || !feats.length) return present;
-
-  const sample = feats.slice(0, Math.min(50, feats.length));
-
-  for (const [k, fieldName] of Object.entries(SP_FIELDS)) {
-    present[k] = sample.some((f) => f?.properties && fieldName in f.properties);
-  }
-
-  return present;
-}
 
 // =====================================================
 // ✅ GRUPOS DE FILTRO SERVICIOS
@@ -467,12 +508,12 @@ function wireServiciosToggleList() {
   const rowAll = list.querySelector(`.sp-row[data-layer="L_ALL"]`);
   const rowAlumbrado = list.querySelector(`.sp-row[data-layer="${ALUMBRADO_LAYER_ID}"]`);
 
-  const groupRows = Array.from(list.querySelectorAll(`.sp-row[data-layer]`))
-    .filter((r) =>
+  const groupRows = Array.from(list.querySelectorAll(`.sp-row[data-layer]`)).filter(
+    (r) =>
       r.dataset.layer &&
       r.dataset.layer !== "L_ALL" &&
       r.dataset.layer !== ALUMBRADO_LAYER_ID
-    );
+  );
 
   function getActiveGroups() {
     return groupRows
@@ -494,23 +535,18 @@ function wireServiciosToggleList() {
     const actives = getActiveGroups();
     const alumbradoActivo = isAlumbradoActive();
 
-    // Servicios
     if (!actives.length && !alumbradoActivo) {
-  // Solo muestra todos cuando NO hay servicios ni alumbrado activos
-  setLayerVisibility("L_BASE", true);
-  FILTER_GROUPS.forEach((g) => setLayerVisibility(g.id, false));
-} else {
-  // Si hay cualquier filtro o alumbrado activo, apaga "Ver todos"
-  setLayerVisibility("L_BASE", false);
-  FILTER_GROUPS.forEach((g) => {
-    setLayerVisibility(g.id, actives.includes(g.id));
-  });
-}
+      setLayerVisibility("L_BASE", true);
+      FILTER_GROUPS.forEach((g) => setLayerVisibility(g.id, false));
+    } else {
+      setLayerVisibility("L_BASE", false);
+      FILTER_GROUPS.forEach((g) => {
+        setLayerVisibility(g.id, actives.includes(g.id));
+      });
+    }
 
-    // Alumbrado independiente
     setLayerVisibility(ALUMBRADO_LAYER_ID, alumbradoActivo);
 
-    // Ver todos solo queda activo si NO hay servicios ni alumbrado activo
     if (rowAll) {
       if (!actives.length && !alumbradoActivo) rowAll.classList.add("is-active");
       else rowAll.classList.remove("is-active");
@@ -525,11 +561,13 @@ function wireServiciosToggleList() {
 
       if (rowAlumbrado) rowAlumbrado.classList.remove("is-active");
 
-      if (rowAll) rowAll.classList.add("is-active");
+      rowAll.classList.add("is-active");
 
       syncMapLayersFromUI();
 
-      try { popup.remove(); } catch (e) {}
+      try {
+        popup.remove();
+      } catch (e) {}
 
       const hs = map.getSource("highlight");
       if (hs) {
@@ -549,7 +587,9 @@ function wireServiciosToggleList() {
       row.classList.toggle("is-active");
       syncMapLayersFromUI();
 
-      try { popup.remove(); } catch (e) {}
+      try {
+        popup.remove();
+      } catch (e) {}
 
       const hs = map.getSource("highlight");
       if (hs) {
@@ -568,7 +608,9 @@ function wireServiciosToggleList() {
       rowAlumbrado.classList.toggle("is-active");
       syncMapLayersFromUI();
 
-      try { popup.remove(); } catch (e) {}
+      try {
+        popup.remove();
+      } catch (e) {}
 
       const hs = map.getSource("highlight");
       if (hs) {
@@ -582,12 +624,14 @@ function wireServiciosToggleList() {
 
   syncMapLayersFromUI();
 }
+
 // =====================================================
 // ✅ PREDIOS BASE
 // =====================================================
 function isServiciosHitAtPoint(point) {
-  const layers = ["L_BASE", ...FILTER_GROUPS.map((g) => g.id), ALUMBRADO_LAYER_ID]
-    .filter((id) => map.getLayer(id));
+  const layers = ["L_BASE", ...FILTER_GROUPS.map((g) => g.id), ALUMBRADO_LAYER_ID].filter(
+    (id) => map.getLayer(id)
+  );
 
   const hits = map.queryRenderedFeatures(point, { layers });
   return hits && hits.length;
@@ -849,18 +893,23 @@ const geocoder = new MapboxGeocoder({
       for (const feature of SERVICIOS_DATA.features) {
         const p = feature.properties || {};
 
-        const vPredial = norm(p["n_mero_pre"]);
-        const vProp = norm(p["nombre_del"]);
-        const vTipo = norm(p["tipo_de_pr"]);
-        const vUso = norm(p["uso_actual"]);
-        const vAc = norm(p["tiene_serv"]);
-        const vAl = norm(p["tiene_se_1"]);
-        const vBa = norm(p["tiene_se_2"]);
-        const vInt = norm(p["tiene_se_3"]);
-        const vGas = norm(p["tiene_se_4"]);
+        const vPredial = norm(p["numero_predial"]);
+        const vRegistro = norm(p["numero_de_registro"]);
+        const vProp = norm(p["nombre_del_propietario"]);
+        const vTipo = norm(p["tipo_de_predio"]);
+        const vUso = norm(p["uso_actual_del_predio"]);
+        const vAc = norm(p["tiene_servicio_de_acueducto"]);
+        const vAl = norm(p["tiene_servicio_de_alcantarillado"]);
+        const vBa = norm(p["tiene_servicio_de_recoleccion_de_basuras"]);
+        const vInt = norm(p["tiene_servicio_de_internet"]);
+        const vGas = norm(p["tiene_servicio_de_gas"]);
+        const vLuz = norm(p["tiene_servicio_de_luz_electrica"]);
+        const vObs = norm(p["observaciones"]);
+        const vDoc = norm(p["numero_de_identificacion"]);
 
         let ok =
           (vPredial && vPredial.includes(query)) ||
+          (vRegistro && vRegistro.includes(query)) ||
           (vProp && vProp.includes(query)) ||
           (vTipo && vTipo.includes(query)) ||
           (vUso && vUso.includes(query)) ||
@@ -868,7 +917,10 @@ const geocoder = new MapboxGeocoder({
           (vAl && vAl.includes(query)) ||
           (vBa && vBa.includes(query)) ||
           (vInt && vInt.includes(query)) ||
-          (vGas && vGas.includes(query));
+          (vGas && vGas.includes(query)) ||
+          (vLuz && vLuz.includes(query)) ||
+          (vObs && vObs.includes(query)) ||
+          (vDoc && vDoc.includes(query));
 
         if (!ok) {
           const big = norm(Object.values(p).join(" "));
@@ -878,14 +930,17 @@ const geocoder = new MapboxGeocoder({
         if (!ok) continue;
 
         const center = getPointLngLat(feature);
-        const placeName = `${p["n_mero_pre"] ?? "N/A"} | ${p["nombre_del"] ?? "N/A"}`;
+
+        const placeName = `${p["numero_predial"] ?? "N/A"} | ${
+          p["nombre_del_propietario"] ?? "N/A"
+        }`;
 
         results.push({
           type: "Feature",
           geometry: feature.geometry,
           center,
           place_name: `Servicios públicos | ${placeName}`,
-          text: (p["n_mero_pre"] ?? p["nombre_del"] ?? "Resultado").toString(),
+          text: (p["numero_predial"] ?? p["nombre_del_propietario"] ?? "Resultado").toString(),
           properties: {
             ...p,
             __tipo_busqueda: "servicios",
@@ -928,7 +983,9 @@ const geocoder = new MapboxGeocoder({
           type: "Feature",
           geometry: feature.geometry,
           center,
-          place_name: `Alumbrado público | Poste: ${p.codigo_de_poste ?? "N/A"} | Lámpara: ${p.codigo_de_lampara ?? "N/A"}`,
+          place_name: `Alumbrado público | Poste: ${
+            p.codigo_de_poste ?? "N/A"
+          } | Lámpara: ${p.codigo_de_lampara ?? "N/A"}`,
           text: (p.codigo_de_poste ?? p.codigo_de_lampara ?? "Alumbrado").toString(),
           properties: {
             ...p,
