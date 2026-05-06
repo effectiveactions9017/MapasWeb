@@ -45,7 +45,7 @@ map.on("load", () => {
   // =====================================================
   // SERVICIOS
   // =====================================================
-  fetch("../src/data/Servicios_publicos_puntos_nuevo.geojson")
+  fetch("../src/data/Servicios_publicos_puntos_nuevo.geojson?v=" + Date.now())
     .then(r => r.json())
     .then(data => {
 
