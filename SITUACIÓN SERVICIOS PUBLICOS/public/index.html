@@ -5,20 +5,15 @@
   <title>Predial y Servicios Públicos – Sesquilé</title>
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
-  <!-- Mapbox CSS -->
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet"/>
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
-  <!-- Geocoder -->
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
   <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"/>
 
-  <!-- Turf -->
   <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
-  <!-- Fuente -->
   <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="../src/main.css" />
 
   <style>
@@ -30,7 +25,7 @@
       top:15px;
       right:10px;
       z-index:30;
-      width:320px;
+      width:340px;
       max-width: calc(100vw - 20px);
       max-height: calc(100vh - 30px);
       display:flex;
@@ -48,6 +43,7 @@
     .sp-header{
       display:flex;
       justify-content:space-between;
+      align-items:center;
       margin-bottom:10px;
     }
 
@@ -64,6 +60,8 @@
       height:34px;
       border-radius:10px;
       cursor:pointer;
+      font-size:20px;
+      line-height:34px;
     }
 
     #spToggleList{
@@ -76,29 +74,41 @@
       --sp-accent:#00bcd4;
       display:flex;
       justify-content:space-between;
-      padding:12px;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
       cursor:pointer;
+      transition:background .2s ease;
+    }
+
+    .sp-row:hover{
+      background:rgba(255,255,255,0.08);
     }
 
     .sp-left{
       display:flex;
       align-items:center;
       gap:10px;
+      font-size:13px;
     }
 
     .sp-dot{
       width:12px;
       height:12px;
+      min-width:12px;
       border-radius:50%;
       background:var(--sp-accent);
+      box-shadow:0 0 8px var(--sp-accent);
     }
 
     .sp-switch{
       width:52px;
+      min-width:52px;
       height:26px;
       border-radius:20px;
-      background:#aaa;
+      background:#777;
       position:relative;
+      transition:background .2s ease;
     }
 
     .sp-knob{
@@ -109,6 +119,11 @@
       top:3px;
       left:3px;
       border-radius:50%;
+      transition:transform .2s ease;
+    }
+
+    .sp-row.is-active .sp-switch{
+      background:var(--sp-accent);
     }
 
     .sp-row.is-active .sp-knob{
@@ -126,6 +141,13 @@
       right:10px;
       display:none;
       z-index:31;
+      padding:9px 14px;
+      border:none;
+      border-radius:10px;
+      background:rgba(0,0,0,0.72);
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
     }
   </style>
 </head>
@@ -176,7 +198,11 @@
     <div class="sp-row" data-layer="L_BASURAS_SI"><div class="sp-left"><span class="sp-dot"></span><span>Basuras: Sí</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
     <div class="sp-row" data-layer="L_BASURAS_NO"><div class="sp-left"><span class="sp-dot"></span><span>Basuras: No</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
 
-    <!-- 🔵 NUEVA CAPA -->
+    <div class="sp-sep"></div>
+
+    <div class="sp-row" data-layer="L_ELECTRICIDAD_SI"><div class="sp-left"><span class="sp-dot"></span><span>Electricidad: Sí</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
+    <div class="sp-row" data-layer="L_ELECTRICIDAD_NO"><div class="sp-left"><span class="sp-dot"></span><span>Electricidad: No</span></div><span class="sp-switch"><span class="sp-knob"></span></span></div>
+
     <div class="sp-sep"></div>
 
     <div class="sp-row" data-layer="L_ALUMBRADO">
@@ -188,28 +214,11 @@
     </div>
 
   </div>
-
 </div>
 
 <button id="spOpen" class="sp-open">Filtros</button>
 
 <script src="../src/index.js"></script>
-
-<script>
-const panel = document.getElementById('spControl');
-const btnClose = document.getElementById('spClose');
-const btnOpen = document.getElementById('spOpen');
-
-btnClose.onclick = () => {
-  panel.style.display = 'none';
-  btnOpen.style.display = 'block';
-};
-
-btnOpen.onclick = () => {
-  panel.style.display = 'block';
-  btnOpen.style.display = 'none';
-};
-</script>
 
 </body>
 </html>
