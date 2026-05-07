@@ -239,29 +239,26 @@ function exprRaw(fieldName) {
 }
 
 function exprTieneSi(fieldName) {
-  const v = [
-    "downcase",
-    ["trim", ["to-string", ["coalesce", ["get", fieldName], ""]]]
-  ];
+  const v = exprRaw(fieldName);
 
   return [
-    "any",
-    ["==", v, "si"],
-    ["==", v, "sí"],
-    ["==", v, "s"]
+    "match",
+    v,
+    ["si", "sí", "SI", "SÍ", "s", "S"],
+    true,
+    false,
   ];
 }
 
 function exprTieneNo(fieldName) {
-  const v = [
-    "downcase",
-    ["trim", ["to-string", ["coalesce", ["get", fieldName], ""]]]
-  ];
+  const v = exprRaw(fieldName);
 
   return [
-    "any",
-    ["==", v, "no"],
-    ["==", v, "n"]
+    "match",
+    v,
+    ["no", "NO", "n", "N"],
+    true,
+    false,
   ];
 }
 
@@ -470,12 +467,12 @@ function ensureEnergiaFilterLayers() {
       layout: { visibility: "none" },
       filter: newFilter,
       paint: {
-        "circle-radius": 6,
-        "circle-color": g.color,
-        "circle-stroke-color": "#ffffff",
-        "circle-stroke-width": 1.5,
-        "circle-opacity": 0.95,
-      },
+  "circle-radius": 8,
+  "circle-color": g.color,
+  "circle-stroke-color": "#ffffff",
+  "circle-stroke-width": 1.5,
+  "circle-opacity": 0.95,
+},
     });
   }
 }
