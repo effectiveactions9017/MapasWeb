@@ -239,26 +239,29 @@ function exprRaw(fieldName) {
 }
 
 function exprTieneSi(fieldName) {
-  const v = exprRaw(fieldName);
+  const v = [
+    "downcase",
+    ["trim", ["to-string", ["coalesce", ["get", fieldName], ""]]]
+  ];
 
   return [
-    "match",
-    v,
-    ["si", "sí", "si_", "sí_", "si.", "sí.", "c_si", "c_sí", "c_si_", "c_sí_", "s"],
-    true,
-    false,
+    "any",
+    ["==", v, "si"],
+    ["==", v, "sí"],
+    ["==", v, "s"]
   ];
 }
 
 function exprTieneNo(fieldName) {
-  const v = exprRaw(fieldName);
+  const v = [
+    "downcase",
+    ["trim", ["to-string", ["coalesce", ["get", fieldName], ""]]]
+  ];
 
   return [
-    "match",
-    v,
-    ["no", "no_", "no.", "c_no", "c_no_", "c-no", "c-no_", "n"],
-    true,
-    false,
+    "any",
+    ["==", v, "no"],
+    ["==", v, "n"]
   ];
 }
 
