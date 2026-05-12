@@ -467,7 +467,7 @@ function ensureEnergiaFilterLayers() {
       layout: { visibility: "none" },
       filter: newFilter,
       paint: {
-  "circle-radius": 8,
+  "circle-radius": 6,
   "circle-color": g.color,
   "circle-stroke-color": "#ffffff",
   "circle-stroke-width": 1.5,
