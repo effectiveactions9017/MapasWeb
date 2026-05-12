@@ -2,7 +2,7 @@
 // ✅ Visor Predial + Servicios Públicos + Alumbrado – Sesquilé
 // ✅ Servicios: Servicios_publicos_puntos_nuevo.geojson
 // ✅ Alumbrado: alumbrado_publico_con_vereda.geojson
-// ✅ Energía está dentro de Servicios
+// ✅ Energía dentro de Servicios
 // ✅ Campo energía: tiene_luz
 // =====================================================
 
@@ -210,34 +210,33 @@ function popupHTMLAlumbrado(props, lngLat) {
 }
 
 // =====================================================
-// ✅ FILTROS SÍ / NO ROBUSTOS
+// ✅ FILTROS SÍ / NO ROBUSTOS — VERSIÓN QUE FUNCIONABA
 // =====================================================
 function exprRaw(fieldName) {
-  return [
-    "downcase",
-    [
-      "trim",
-      [
-        "to-string",
-        ["coalesce", ["get", fieldName], ""]
-      ]
-    ]
-  ];
+  return ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]];
 }
 
 function exprTieneSi(fieldName) {
+  const v = exprRaw(fieldName);
+
   return [
-    "in",
-    exprRaw(fieldName),
-    ["literal", ["si", "sí", "s"]]
+    "match",
+    v,
+    ["si", "sí", "SI", "SÍ", "s", "S"],
+    true,
+    false,
   ];
 }
 
 function exprTieneNo(fieldName) {
+  const v = exprRaw(fieldName);
+
   return [
-    "in",
-    exprRaw(fieldName),
-    ["literal", ["no", "n"]]
+    "match",
+    v,
+    ["no", "NO", "n", "N"],
+    true,
+    false,
   ];
 }
 
@@ -847,7 +846,6 @@ const geocoder = new MapboxGeocoder({
 
     const results = [];
 
-    // Servicios públicos, incluyendo energía porque está en la misma capa
     if (SERVICIOS_DATA && Array.isArray(SERVICIOS_DATA.features)) {
       for (const feature of SERVICIOS_DATA.features) {
         const p = feature.properties || {};
@@ -858,7 +856,7 @@ const geocoder = new MapboxGeocoder({
         if (!ok) continue;
 
         const center = getPointLngLat(feature);
-        const placeName = `${p["n_mero_pre"] ?? "N/A"} | ${p["nombre_del"] ?? "N/A"} | Energía: ${p["tiene_luz"] ?? "N/A"}`;
+        const placeName = `${p["n_mero_pre"] ?? "N/A"} | ${p["nombre_del"] ?? "N/A"}`;
 
         results.push({
           type: "Feature",
@@ -877,7 +875,6 @@ const geocoder = new MapboxGeocoder({
       }
     }
 
-    // Alumbrado público
     if (ALUMBRADO_DATA && Array.isArray(ALUMBRADO_DATA.features) && results.length < 10) {
       for (const feature of ALUMBRADO_DATA.features) {
         const p = feature.properties || {};
