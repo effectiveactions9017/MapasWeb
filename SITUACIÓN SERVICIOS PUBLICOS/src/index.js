@@ -155,7 +155,6 @@ const CAMPOS_SERVICIOS = [
   { label: "Operador de Internet", field: "field_19" },
   { label: "Tiene servicio de Gas?", field: "tiene_se_4" },
   { label: "Operador de Gas", field: "field_50" },
-  { label: "Tiene servicio de energía?", field: "tiene_luz" },
   { label: "La vivienda es", field: "la_viviend" },
   { label: "Observación", field: "observacio" },
 ];
@@ -249,7 +248,6 @@ const SP_FIELDS = {
   ALC: "tiene_se_1",
   INTERNET: "tiene_se_3",
   BASURAS: "tiene_se_2",
-  ENERGIA: "tiene_luz",
 };
 
 // =====================================================
@@ -325,20 +323,6 @@ const SERVICIOS_FILTER_GROUPS = [
     field: SP_FIELDS.BASURAS,
     expr: () => exprTieneNo(SP_FIELDS.BASURAS),
     color: "#f97316",
-  },
-  {
-    id: "L_ENERGIA_SI",
-    label: "Energía: Sí",
-    field: SP_FIELDS.ENERGIA,
-    expr: () => exprTieneSi(SP_FIELDS.ENERGIA),
-    color: "#facc15",
-  },
-  {
-    id: "L_ENERGIA_NO",
-    label: "Energía: No",
-    field: SP_FIELDS.ENERGIA,
-    expr: () => exprTieneNo(SP_FIELDS.ENERGIA),
-    color: "#ef4444",
   },
 ];
 
