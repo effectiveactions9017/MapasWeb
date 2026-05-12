@@ -60,27 +60,19 @@ function valTxt(v) {
 
 // =====================================================
 // POPUP ENERGIA
+// SOLO MUESTRA: tiene_luz
 // =====================================================
 
 function popupHTMLEnergia(props, lngLat) {
 
   props = props || {};
 
-  let rows = "";
-
-  Object.entries(props).forEach(([key, value]) => {
-
-    rows += `
-      <strong>${key}:</strong> ${valTxt(value)}<br>
-    `;
-  });
-
   return `
     <div style="font-weight:700; margin-bottom:6px;">
       Red de Energía
     </div>
 
-    ${rows}
+    <strong>Tiene luz:</strong> ${valTxt(props.tiene_luz)}<br>
 
     <div style="margin-top:10px;">
       <a href="${streetViewUrl(lngLat)}"
