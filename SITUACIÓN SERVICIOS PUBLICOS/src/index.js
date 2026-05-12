@@ -2,7 +2,7 @@
 // ✅ Visor Predial + Servicios Públicos + Alumbrado – Sesquilé
 // ✅ Servicios: Servicios_publicos_puntos_nuevo.geojson
 // ✅ Alumbrado: alumbrado_publico_con_vereda.geojson
-// ✅ Energía ahora está dentro de Servicios
+// ✅ Energía está dentro de Servicios
 // ✅ Campo energía: tiene_luz
 // =====================================================
 
@@ -216,8 +216,11 @@ function exprRaw(fieldName) {
   return [
     "downcase",
     [
-      "to-string",
-      ["coalesce", ["get", fieldName], ""]
+      "trim",
+      [
+        "to-string",
+        ["coalesce", ["get", fieldName], ""]
+      ]
     ]
   ];
 }
