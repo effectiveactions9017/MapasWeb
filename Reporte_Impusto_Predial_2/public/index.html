@@ -4,21 +4,15 @@
 <head>
   <meta charset="utf-8">
   <title>Predial Sesquilé</title>
-
-  <meta
-    name="viewport"
-    content="initial-scale=1,maximum-scale=1,user-scalable=no"
-  >
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
   <link
     href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css"
     rel="stylesheet"
   />
-
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
-
   <link
     rel="stylesheet"
     href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
@@ -30,37 +24,28 @@
     href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap"
     rel="stylesheet"
   >
-
   <link
     href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css"
     rel="stylesheet"
   >
-
-  <script
-    async
-    defer
-    src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"
-  ></script>
+  <script async defer src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"></script>
 
   <link rel="stylesheet" href="../src/main.css" />
 
   <style>
-
-    html,
-    body{
-      margin:0;
-      padding:0;
-      width:100%;
-      height:100%;
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
     }
 
-    #map{
-      position:absolute;
-      top:0;
-      bottom:0;
-      width:100%;
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
     }
-
   </style>
 </head>
 
@@ -69,116 +54,58 @@
   <div id="map"></div>
 
   <div class="legend-container">
-
     <div class="legend-title">
       Predial<br>Sesquilé
     </div>
 
     <ul class="legend-list">
 
-      <!-- Públicos -->
       <li class="legend-item">
         <div class="legend-item-left">
-          <span
-            class="legend-color"
-            style="background:#4fc3f7;"
-          ></span>
-
-          <span class="legend-label">
-            Predios públicos
-          </span>
+          <span class="legend-color" style="background:#4fc3f7;"></span>
+          <span class="legend-label">Predios públicos</span>
         </div>
-
-        <button
-          class="legend-toggle active"
-          data-category="publicos"
-        >
-          ON
-        </button>
+        <button class="legend-toggle active" data-category="publicos">ON</button>
       </li>
 
-      <!-- Exentos -->
       <li class="legend-item">
         <div class="legend-item-left">
-          <span
-            class="legend-color"
-            style="background:#9b5de5;"
-          ></span>
-
-          <span class="legend-label">
-            Predios exentos
-          </span>
+          <span class="legend-color" style="background:#9b5de5;"></span>
+          <span class="legend-label">Predios exentos</span>
         </div>
-
-        <button
-          class="legend-toggle active"
-          data-category="exentos"
-        >
-          ON
-        </button>
+        <button class="legend-toggle active" data-category="exentos">ON</button>
       </li>
 
-      <!-- Mora -->
       <li class="legend-item">
         <div class="legend-item-left">
-          <span
-            class="legend-color"
-            style="background:#e63946;"
-          ></span>
-
-          <span class="legend-label">
-            Predios con mora
-          </span>
+          <span class="legend-color" style="background:#f77f00;"></span>
+          <span class="legend-label">Predios con abono parcial</span>
         </div>
-
-        <button
-          class="legend-toggle active"
-          data-category="mora"
-        >
-          ON
-        </button>
+        <button class="legend-toggle active" data-category="abono">ON</button>
       </li>
 
-      <!-- Al día -->
       <li class="legend-item">
         <div class="legend-item-left">
-          <span
-            class="legend-color"
-            style="background:#2ec4b6;"
-          ></span>
-
-          <span class="legend-label">
-            Predios al día
-          </span>
+          <span class="legend-color" style="background:#e63946;"></span>
+          <span class="legend-label">Predios con mora</span>
         </div>
-
-        <button
-          class="legend-toggle active"
-          data-category="aldia"
-        >
-          ON
-        </button>
+        <button class="legend-toggle active" data-category="mora">ON</button>
       </li>
 
-      <!-- Sin pagar -->
       <li class="legend-item">
         <div class="legend-item-left">
-          <span
-            class="legend-color"
-            style="background:#ffb703;"
-          ></span>
-
-          <span class="legend-label">
-            Posibles sin pagar
-          </span>
+          <span class="legend-color" style="background:#2ec4b6;"></span>
+          <span class="legend-label">Predios al día</span>
         </div>
+        <button class="legend-toggle active" data-category="aldia">ON</button>
+      </li>
 
-        <button
-          class="legend-toggle active"
-          data-category="sinpago"
-        >
-          ON
-        </button>
+      <li class="legend-item">
+        <div class="legend-item-left">
+          <span class="legend-color" style="background:#ffb703;"></span>
+          <span class="legend-label">Posibles sin pagar</span>
+        </div>
+        <button class="legend-toggle active" data-category="sinpago">ON</button>
       </li>
 
     </ul>
@@ -186,7 +113,6 @@
     <a class="legend-credit">
       &#9400; EffectiveActions
     </a>
-
   </div>
 
   <script src="../src/index.js"></script>
