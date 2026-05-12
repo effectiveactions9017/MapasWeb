@@ -1,20 +1,7 @@
 // =====================================================
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
-// ✅ Búsqueda local por: codigo, NOMBRE, NUMERO_DOCUMENTO
-// ✅ Resalta 1 o varios predios (mismo codigo o documento)
-// ✅ POPUP SOLO POR CLICK
-// ✅ + BOTÓN STREET VIEW
-// ✅ + ELIMINAR DUPLICADOS POR CODIGO
-// ✅ + CLASIFICACIÓN POR CATEGORÍAS
-// ✅ + BOTONES EN LEYENDA PARA PRENDER / APAGAR
-// ✅ + PREDIOS PÚBLICOS EN AZUL CLARO
-// ✅ + PREDIOS PÚBLICOS SE RESALTAN UNO POR UNO
-// ✅ + NUEVA CATEGORÍA: ABONO PARCIAL
-// ✅ + POPUP CON SALDO PENDIENTE
-// ✅ + CAMPOS REALES:
-//        - valor.ultimo.pago
-//        - total.valor.mora
-//        - pago marzo
+// ✅ Públicos: MUNICIPIO DE SESQUILE
+// ✅ Nueva categoría: PREDIOS EXENTOS
 // =====================================================
 
 mapboxgl.accessToken =
@@ -38,28 +25,40 @@ let popup = new mapboxgl.Popup({
 
 let PREDIOS_DATA = null;
 
+// =====================================================
 // Capas por categoría
+// =====================================================
 const CATEGORY_CONFIG = {
   publicos: {
     label: 'Predios públicos',
     color: '#4fc3f7',
     layerId: 'predios_publicos_layer'
   },
+
+  exentos: {
+    label: 'Predios exentos',
+    color: '#9b5de5',
+    layerId: 'predios_exentos_layer'
+  },
+
   abono: {
     label: 'Predios con abono parcial',
     color: '#f77f00',
     layerId: 'predios_abono_layer'
   },
+
   mora: {
     label: 'Predios con mora',
     color: '#e63946',
     layerId: 'predios_mora_layer'
   },
+
   aldia: {
     label: 'Predios al día',
     color: '#2ec4b6',
     layerId: 'predios_aldia_layer'
   },
+
   sinpago: {
     label: 'Posibles predios sin pagar',
     color: '#ffb703',
@@ -97,7 +96,24 @@ function toNumberSafe(v) {
   return isNaN(n) ? 0 : n;
 }
 
-// ✅ Elimina duplicados por código para evitar sobreposición visual
+// =====================================================
+// ✅ Lista de propietarios exentos
+// =====================================================
+const EXENTOS_NOMBRES = [
+  'agencia-nacional-de-infraestructu',
+  'agencia-nacional-de-infraestructura',
+  'ferrocarriles-nacionales',
+  'iglesia pentecostal unida de colombia',
+  'iglesia-de-jesucristo-de-los-sant',
+  'inco instituto nacional de concesiones',
+  'inco-institut0-nacional-de-conces',
+  'inco-instituto nacional-de-conces',
+  'inco-instituto-nacional-de-conces'
+];
+
+// =====================================================
+// Eliminar duplicados por código
+// =====================================================
 function deduplicateGeoJSONByCodigo(fc) {
   if (!fc || !Array.isArray(fc.features)) return fc;
 
@@ -124,18 +140,15 @@ function deduplicateGeoJSONByCodigo(fc) {
   };
 }
 
-// ✅ Clasificación única por prioridad:
-// 1) Públicos
-// 2) Si tiene pago marzo y mora:
-//      - pago marzo >= mora => al día
-//      - pago marzo < mora  => abono parcial
-// 3) Si solo tiene pago marzo => al día
-// 4) Si solo tiene mora => mora
-// 5) Si tiene pago febrero => al día
-// 6) Si no tiene nada => sin pagar
+// =====================================================
+// Clasificación del predio
+// =====================================================
 function getCategoriaPredio(props = {}) {
   const nombre = norm(props.NOMBRE);
+
   const esPublico = nombre === 'municipio de sesquile';
+
+  const esExento = EXENTOS_NOMBRES.includes(nombre);
 
   const tienePagoMarzo = hasValue(props['pago marzo']);
   const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
@@ -146,13 +159,17 @@ function getCategoriaPredio(props = {}) {
 
   if (esPublico) return 'publicos';
 
+  if (esExento) return 'exentos';
+
   if (tienePagoMarzo && tieneValorMora) {
     if (pagoMarzo >= valorMora) return 'aldia';
     return 'abono';
   }
 
   if (tienePagoMarzo) return 'aldia';
+
   if (tieneValorMora) return 'mora';
+
   if (tienePagoFebrero) return 'aldia';
 
   return 'sinpago';
@@ -162,7 +179,9 @@ function getCategoriaLabel(cat) {
   return CATEGORY_CONFIG[cat]?.label || 'Sin categoría';
 }
 
-// ✅ Punto representativo del feature
+// =====================================================
+// Punto representativo
+// =====================================================
 function getFeatureLngLat(feature, fallbackLngLat = null) {
   if (
     fallbackLngLat &&
@@ -173,6 +192,7 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
   }
 
   const c = feature?.geometry?.coordinates;
+
   if (
     Array.isArray(c) &&
     c.length >= 2 &&
@@ -194,6 +214,9 @@ function streetViewUrl([lng, lat]) {
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 }
 
+// =====================================================
+// Popup
+// =====================================================
 function buildPopupHTML(props, lngLat = null) {
   props = props || {};
 
@@ -204,7 +227,6 @@ function buildPopupHTML(props, lngLat = null) {
   const tieneValorMora = hasValue(props['total.valor.mora']);
 
   const pagoMarzo = toNumberSafe(props['pago marzo']);
-  const pagoFebrero = toNumberSafe(props['valor.ultimo.pago']);
   const valorMora = toNumberSafe(props['total.valor.mora']);
   const saldoPendiente = Math.max(valorMora - pagoMarzo, 0);
 
@@ -229,6 +251,8 @@ function buildPopupHTML(props, lngLat = null) {
 
   if (categoria === 'publicos') {
     infoPagoHTML += `<strong>Categoría:</strong> Predio público<br>`;
+  } else if (categoria === 'exentos') {
+    infoPagoHTML += `<strong>Categoría:</strong> Predio exento<br>`;
   } else if (categoria === 'abono') {
     infoPagoHTML += `<strong>Categoría:</strong> Predio con abono parcial<br>`;
   } else if (categoria === 'mora') {
@@ -239,7 +263,9 @@ function buildPopupHTML(props, lngLat = null) {
     infoPagoHTML += `<strong>Categoría:</strong> Posible predio sin pagar<br>`;
   }
 
-  if (categoria === 'abono') {
+  if (categoria === 'exentos') {
+    infoPagoHTML += `<strong>Estado tributario:</strong> Exento<br>`;
+  } else if (categoria === 'abono') {
     infoPagoHTML += `<strong>Valor en mora:</strong> ${valorMoraTxt}<br>`;
     infoPagoHTML += `<strong>Abono marzo:</strong> ${pagoMarzoTxt}<br>`;
     infoPagoHTML += `<strong>Saldo pendiente:</strong> ${saldoPendienteTxt}<br>`;
@@ -280,7 +306,7 @@ function buildPopupHTML(props, lngLat = null) {
 }
 
 // =====================================================
-// Procesar dataset y agregar categoría
+// Procesar dataset
 // =====================================================
 function enrichPrediosData(rawFC) {
   const dedup = deduplicateGeoJSONByCodigo(rawFC);
@@ -302,7 +328,7 @@ function enrichPrediosData(rawFC) {
 }
 
 // =====================================================
-// Crear source y capas por categoría
+// Crear source y capas
 // =====================================================
 function addPrediosLayer(geojsonFile, sourceId) {
   fetch(`../src/data/${geojsonFile}`)
@@ -347,7 +373,7 @@ function addCategoryLayers(sourceId) {
 }
 
 // =====================================================
-// Eventos sobre capas
+// Eventos
 // =====================================================
 function handlePredioClick(e) {
   const feature = e.features && e.features[0];
@@ -370,9 +396,9 @@ function bindCategoryLayerEvents() {
   Object.values(CATEGORY_CONFIG).forEach((cfg) => {
     const layerId = cfg.layerId;
 
-    try { map.off('click', layerId, handlePredioClick); } catch (e) {}
-    try { map.off('mouseenter', layerId); } catch (e) {}
-    try { map.off('mouseleave', layerId); } catch (e) {}
+    try {
+      map.off('click', layerId, handlePredioClick);
+    } catch (e) {}
 
     map.on('click', layerId, handlePredioClick);
 
@@ -427,6 +453,7 @@ function setHighlight(featuresArr) {
     type: 'FeatureCollection',
     features: featuresArr || []
   };
+
   const hlSource = map.getSource('predios_highlight');
   if (hlSource) hlSource.setData(fc);
 }
@@ -434,6 +461,7 @@ function setHighlight(featuresArr) {
 function zoomToFeatureCollection(fc) {
   try {
     const bounds = turf.bbox(fc);
+
     if (
       Array.isArray(bounds) &&
       bounds.length === 4 &&
@@ -448,8 +476,11 @@ function zoomToFeatureCollection(fc) {
 
 function highlightGroupFromFeature(feature) {
   const props = feature.properties || {};
+
   const features =
-    PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
+    PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features)
+      ? PREDIOS_DATA.features
+      : [];
 
   if (!features.length) {
     setHighlight([feature]);
@@ -458,8 +489,8 @@ function highlightGroupFromFeature(feature) {
 
   const categoria = getCategoriaPredio(props);
 
-  // ✅ Si es predio público, resaltar SOLO ese predio
-  if (categoria === 'publicos') {
+  // Públicos y exentos se resaltan individualmente
+  if (categoria === 'publicos' || categoria === 'exentos') {
     const group = [feature];
     setHighlight(group);
     zoomToFeatureCollection({ type: 'FeatureCollection', features: group });
@@ -547,11 +578,15 @@ const geocoder = new MapboxGeocoder({
     if (!q) return matchingFeatures;
 
     const features =
-      PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
+      PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features)
+        ? PREDIOS_DATA.features
+        : [];
+
     if (!features.length) return matchingFeatures;
 
     for (const feature of features) {
       const props = feature.properties || {};
+
       const codigo = (props.codigo ?? '').toString().toLowerCase();
       const nombre = (props.NOMBRE ?? '').toString().toLowerCase();
       const documento = (props.NUMERO_DOCUMENTO ?? '').toString().toLowerCase();
@@ -583,7 +618,11 @@ const geocoder = new MapboxGeocoder({
         matchValue = nomTxt;
       }
 
-      const props2 = { ...props, __matchField: matchField, __matchValue: matchValue };
+      const props2 = {
+        ...props,
+        __matchField: matchField,
+        __matchValue: matchValue
+      };
 
       matchingFeatures.push({
         type: 'Feature',
@@ -598,7 +637,6 @@ const geocoder = new MapboxGeocoder({
       });
     }
 
-    // ordenar para que salgan primero las coincidencias más cercanas
     matchingFeatures.sort((a, b) => {
       const aProps = a.properties || {};
       const bProps = b.properties || {};
@@ -627,6 +665,7 @@ const geocoder = new MapboxGeocoder({
     return matchingFeatures.slice(0, 10);
   }
 });
+
 // =====================================================
 // Al seleccionar resultado
 // =====================================================
@@ -639,12 +678,16 @@ geocoder.on('result', (e) => {
   const matchValue = (properties.__matchValue ?? '').toString().trim();
 
   const features =
-    PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
+    PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features)
+      ? PREDIOS_DATA.features
+      : [];
 
   let toHighlight = [];
 
-  // ✅ Si el resultado es predio público, solo resaltar uno
-  if (getCategoriaPredio(properties) === 'publicos') {
+  const categoria = getCategoriaPredio(properties);
+
+  // Públicos y exentos se resaltan individualmente
+  if (categoria === 'publicos' || categoria === 'exentos') {
     toHighlight = [
       {
         type: 'Feature',
@@ -654,6 +697,7 @@ geocoder.on('result', (e) => {
     ];
   } else if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
     const mv = norm(matchValue);
+
     toHighlight = features.filter((f) => {
       const p = f.properties || {};
       const v = matchField === 'NUMERO_DOCUMENTO' ? p.NUMERO_DOCUMENTO : p.codigo;
@@ -673,14 +717,19 @@ geocoder.on('result', (e) => {
 
   setHighlight(toHighlight);
 
-  const fc = { type: 'FeatureCollection', features: toHighlight };
+  const fc = {
+    type: 'FeatureCollection',
+    features: toHighlight
+  };
+
   zoomToFeatureCollection(fc);
 
-  const featureForPopup = toHighlight[0] || {
-    type: 'Feature',
-    geometry: result.geometry,
-    properties: properties
-  };
+  const featureForPopup =
+    toHighlight[0] || {
+      type: 'Feature',
+      geometry: result.geometry,
+      properties: properties
+    };
 
   const popupLngLat = getFeatureLngLat(
     featureForPopup,
