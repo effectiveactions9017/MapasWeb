@@ -5,7 +5,6 @@
 // ✅ Mora
 // ✅ Al día
 // ✅ Posibles sin pagar
-// ✅ Popup con LIQUIDACION
 // =====================================================
 
 mapboxgl.accessToken =
@@ -38,21 +37,25 @@ const CATEGORY_CONFIG = {
     color: '#4fc3f7',
     layerId: 'predios_publicos_layer'
   },
+
   exentos: {
     label: 'Predios exentos',
     color: '#9b5de5',
     layerId: 'predios_exentos_layer'
   },
+
   mora: {
     label: 'Predios con mora',
     color: '#e63946',
     layerId: 'predios_mora_layer'
   },
+
   aldia: {
     label: 'Predios al día',
     color: '#2ec4b6',
     layerId: 'predios_aldia_layer'
   },
+
   sinpago: {
     label: 'Posibles predios sin pagar',
     color: '#ffb703',
@@ -75,11 +78,8 @@ function norm(v) {
 
 function formatCOP(value, fallback = 'N/A') {
   if (value === null || value === undefined || value === '') return fallback;
-
-  const clean = value.toString().replace(/[^0-9.-]/g, '');
-  const n = Number(clean);
-
-  return isNaN(n) ? value : '$ ' + n.toLocaleString('es-CO');
+  const n = Number(value);
+  return isNaN(n) ? fallback : '$ ' + n.toLocaleString('es-CO');
 }
 
 function hasValue(v) {
@@ -162,8 +162,11 @@ function getCategoriaPredio(props = {}) {
   const tieneValorMora = hasValue(props['total.valor.mora']);
 
   if (esPublico) return 'publicos';
+
   if (esExento) return 'exentos';
+
   if (tieneValorMora) return 'mora';
+
   if (tienePagoMarzo || tienePagoFebrero) return 'aldia';
 
   return 'sinpago';
@@ -205,16 +208,8 @@ function buildPopupHTML(props, lngLat = null) {
   const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
   const tieneValorMora = hasValue(props['total.valor.mora']);
 
-  const liquidacionValor =
-    props.LIQUIDACION ??
-    props.Liquidacion ??
-    props.liquidacion ??
-    props['LIQUIDACIÓN'] ??
-    props['Liquidación'] ??
-    props['liquidación'];
-
-  const liquidacionTxt = hasValue(liquidacionValor)
-    ? formatCOP(liquidacionValor, liquidacionValor)
+  const liquidacionTxt = hasValue(props.LIQUIDACION)
+    ? formatCOP(props.LIQUIDACION, 'N/A')
     : 'N/A';
 
   const pagoMarzoTxt = tienePagoMarzo
@@ -244,9 +239,7 @@ function buildPopupHTML(props, lngLat = null) {
 
     if (tienePagoMarzo) {
       infoPagoHTML += `<strong>Pago marzo:</strong> ${pagoMarzoTxt}<br>`;
-    }
-
-    if (tienePagoFebrero) {
+    } else if (tienePagoFebrero) {
       infoPagoHTML += `<strong>Pago febrero:</strong> ${pagoFebreroTxt}<br>`;
     }
   } else {
@@ -552,7 +545,7 @@ const geocoder = new MapboxGeocoder({
 
   localGeocoder: function (query) {
     const matchingFeatures = [];
-    const q = norm(query);
+    const q = (query || '').toString().toLowerCase().trim();
     if (!q) return matchingFeatures;
 
     const features =
@@ -565,10 +558,10 @@ const geocoder = new MapboxGeocoder({
     for (const feature of features) {
       const props = feature.properties || {};
 
-      const codigo = norm(props.codigo);
-      const codigoAnt = norm(props.codigo_ant);
-      const nombre = norm(props.NOMBRE);
-      const documento = norm(props.NUMERO_DOCUMENTO);
+      const codigo = (props.codigo ?? '').toString().toLowerCase();
+      const codigoAnt = (props.codigo_ant ?? '').toString().toLowerCase();
+      const nombre = (props.NOMBRE ?? '').toString().toLowerCase();
+      const documento = (props.NUMERO_DOCUMENTO ?? '').toString().toLowerCase();
 
       const match =
         (codigo && codigo.includes(q)) ||
@@ -612,7 +605,9 @@ const geocoder = new MapboxGeocoder({
         type: 'Feature',
         geometry: feature.geometry,
         properties: props2,
-        place_name: `Código: ${codTxt || 'N/A'} | Código ant: ${codAntTxt || 'N/A'} | Nombre: ${nomTxt || 'N/A'} | Doc: ${docTxt || 'N/A'}`,
+        place_name: `Código: ${codTxt || 'N/A'} | Código ant: ${codAntTxt || 'N/A'} | Nombre: ${nomTxt || 'N/A'} | Doc: ${
+          docTxt || 'N/A'
+        }`,
         text: nomTxt || codTxt || codAntTxt || docTxt || 'Resultado',
         center: centro,
         place_type: ['place']
@@ -722,4 +717,4 @@ map.on('style.load', () => {
     map.addControl(geocoder, 'top-left');
     map._controlsAddedOnce = true;
   }
-});
+}); es solo a este ponerle al informacion el el pop up de LIQUIDACION NADA MAS PERO DAMELO COMPLETO ACTUALIZADO
