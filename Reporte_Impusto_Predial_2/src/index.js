@@ -5,6 +5,7 @@
 // ✅ Mora
 // ✅ Al día
 // ✅ Posibles sin pagar
+// ✅ Popup con LIQUIDACION
 // =====================================================
 
 mapboxgl.accessToken =
@@ -78,7 +79,10 @@ function norm(v) {
 
 function formatCOP(value, fallback = 'N/A') {
   if (value === null || value === undefined || value === '') return fallback;
-  const n = Number(value);
+
+  const clean = value.toString().replace(/[^0-9.-]/g, '');
+  const n = Number(clean);
+
   return isNaN(n) ? fallback : '$ ' + n.toLocaleString('es-CO');
 }
 
@@ -208,6 +212,18 @@ function buildPopupHTML(props, lngLat = null) {
   const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
   const tieneValorMora = hasValue(props['total.valor.mora']);
 
+  const liquidacionValor =
+    props.LIQUIDACION ??
+    props.Liquidacion ??
+    props.liquidacion ??
+    props['LIQUIDACIÓN'] ??
+    props['Liquidación'] ??
+    props['liquidación'];
+
+  const liquidacionTxt = hasValue(liquidacionValor)
+    ? formatCOP(liquidacionValor, 'N/A')
+    : 'N/A';
+
   const pagoMarzoTxt = tienePagoMarzo
     ? formatCOP(props['pago marzo'], 'N/A')
     : '';
@@ -258,6 +274,7 @@ function buildPopupHTML(props, lngLat = null) {
     <strong>Código anterior:</strong> ${props.codigo_ant ?? 'N/A'}<br>
     <strong>Nombre:</strong> ${props.NOMBRE ?? 'N/A'}<br>
     <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? 'N/A'}<br>
+    <strong>Liquidación:</strong> ${liquidacionTxt}<br>
     ${infoPagoHTML}
 
     <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
@@ -295,7 +312,12 @@ function enrichPrediosData(rawFC) {
 // =====================================================
 function addPrediosLayer(geojsonFile, sourceId) {
   fetch(`../src/data/${geojsonFile}`)
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`No se pudo cargar el GeoJSON: ${response.status} ${response.statusText}`);
+      }
+      return response.json();
+    })
     .then((rawData) => {
       const data = enrichPrediosData(rawData);
       PREDIOS_DATA = data;
@@ -699,17 +721,17 @@ geocoder.on('result', (e) => {
 // =====================================================
 // Cargar capa predial + resaltado
 // =====================================================
-map.on('style.load', () => {
+map.on('load', () => {
+  ensureHighlightLayers();
+
   addPrediosLayer(
     'PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson',
     'predios_ssk'
   );
-
-  ensureHighlightLayers();
 
   if (!map._controlsAddedOnce) {
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
     map.addControl(geocoder, 'top-left');
     map._controlsAddedOnce = true;
   }
-}); es solo a este ponerle al informacion el el pop up de LIQUIDACION NADA MAS PERO DAMELO COMPLETO ACTUALIZADO
+});
