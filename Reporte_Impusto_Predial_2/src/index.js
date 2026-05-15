@@ -208,10 +208,6 @@ function buildPopupHTML(props, lngLat = null) {
   const tienePagoFebrero = hasValue(props['valor.ultimo.pago']);
   const tieneValorMora = hasValue(props['total.valor.mora']);
 
-  const liquidacionTxt = hasValue(props.LIQUIDACION)
-    ? formatCOP(props.LIQUIDACION, 'N/A')
-    : 'N/A';
-
   const pagoMarzoTxt = tienePagoMarzo
     ? formatCOP(props['pago marzo'], 'N/A')
     : '';
@@ -262,7 +258,6 @@ function buildPopupHTML(props, lngLat = null) {
     <strong>Código anterior:</strong> ${props.codigo_ant ?? 'N/A'}<br>
     <strong>Nombre:</strong> ${props.NOMBRE ?? 'N/A'}<br>
     <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? 'N/A'}<br>
-    <strong>Liquidación:</strong> ${liquidacionTxt}<br>
     ${infoPagoHTML}
 
     <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
