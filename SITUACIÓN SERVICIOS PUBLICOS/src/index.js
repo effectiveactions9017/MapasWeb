@@ -866,22 +866,19 @@ function addEnergiaMarkers() {
         const esSi = ["si", "s", "sí"].includes(tieneLuzNorm);
 
         const el = document.createElement("div");
-el.className = "marker-energia";
+        el.className = "marker-energia";
+        el.style.width = "12px";
+        el.style.height = "12px";
+        el.style.borderRadius = "50%";
+        el.style.backgroundColor = esSi ? "#FFD700" : "#FF3B30";
+        el.style.border = "1.5px solid #ffffff";
+        el.style.boxShadow = "none";
+        el.style.opacity = "0.95";
+        el.style.cursor = "pointer";
+        el.style.display = "none";
+        el.style.zIndex = "999";
+        el.style.pointerEvents = "auto";
 
-el.style.width = "12px";
-el.style.height = "12px";
-el.style.borderRadius = "50%";
-el.style.backgroundColor = esSi ? "#FFD700" : "#FF3B30";
-el.style.border = "1.5px solid #ffffff";
-el.style.boxShadow = "none";
-el.style.opacity = "0.95";
-el.style.cursor = "pointer";
-el.style.display = "none";
-el.style.zIndex = "999";
-
-el.addEventListener("click", function (ev) {
-  ev.stopPropagation();
-});
         const popupEnergia = new mapboxgl.Popup({
           closeButton: true,
           closeOnClick: true,
@@ -894,7 +891,8 @@ el.addEventListener("click", function (ev) {
             <div style="margin-top:10px;">
               <a href="${streetViewUrl(coords)}" target="_blank"
                  style="display:inline-block; padding:6px 10px; border-radius:6px;
-                        background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+                        background:#00bcd4; color:#000; font-weight:700;
+                        font-size:12px; text-decoration:none;">
                 📷 Street View
               </a>
             </div>
@@ -904,12 +902,22 @@ el.addEventListener("click", function (ev) {
         `);
 
         const marker = new mapboxgl.Marker({
-  element: el,
-  anchor: "center"
-})
-  .setLngLat(coords)
-  .setPopup(popupEnergia)
-  .addTo(map);
+          element: el,
+          anchor: "center",
+        })
+          .setLngLat(coords)
+          .addTo(map);
+
+        el.addEventListener("click", function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+
+          popup.remove();
+
+          popupEnergia
+            .setLngLat(coords)
+            .addTo(map);
+        });
 
         if (esSi) {
           ENERGIA_MARKERS_SI.push(marker);
@@ -918,7 +926,9 @@ el.addEventListener("click", function (ev) {
         }
       });
 
-      try { wireServiciosToggleList(); } catch (e) {}
+      try {
+        wireServiciosToggleList();
+      } catch (e) {}
     })
     .catch((error) => {
       console.error("Error cargando energia_1.geojson:", error);
