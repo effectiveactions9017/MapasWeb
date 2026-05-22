@@ -10,48 +10,54 @@ const map = new mapboxgl.Map({
   antialias: true
 });
 
-let geojsonData = null;
-
 let popup = new mapboxgl.Popup({
   closeButton: true,
   closeOnClick: true,
-  className: 'custom-popup'
+  className: "custom-popup"
 });
 
-map.on('load', () => {
+map.on("load", () => {
 
-  fetch('../src/data/energia.geojson')
-    .then(response => response.json())
+  fetch("../src/data/energia_1.geojson")
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("No se pudo cargar energia_1.geojson");
+      }
+      return response.json();
+    })
     .then(data => {
 
-      geojsonData = data;
-
-      map.addSource('energia', {
-        type: 'geojson',
-        data: geojsonData
+      map.addSource("energia", {
+        type: "geojson",
+        data: data
       });
 
       map.addLayer({
-        id: 'energia',
-        type: 'circle',
-        source: 'energia',
+        id: "energia",
+        type: "circle",
+        source: "energia",
         paint: {
-          'circle-radius': 6,
-          'circle-color': '#FFD700',
-          'circle-stroke-color': '#000000',
-          'circle-stroke-width': 1.5,
-          'circle-opacity': 0.9
+          "circle-radius": 7,
+          "circle-color": [
+            "match",
+            ["get", "Tiene_Luz"],
+            "Si", "#FFD700",
+            "No", "#FF3B30",
+            "#999999"
+          ],
+          "circle-stroke-color": "#000000",
+          "circle-stroke-width": 1.5,
+          "circle-opacity": 0.95
         }
       });
 
-      map.on('click', 'energia', (e) => {
+      map.on("click", "energia", (e) => {
         const props = e.features[0].properties;
 
-        let popupContent = `<strong>Información del punto</strong><br><br>`;
-
-        Object.keys(props).forEach(key => {
-          popupContent += `<strong>${key}:</strong> ${props[key]}<br>`;
-        });
+        let popupContent = `
+          <strong>Información del punto</strong><br><br>
+          <strong>Tiene luz:</strong> ${props.Tiene_Luz || "No"}<br>
+        `;
 
         popupContent += `<br><a style="font-size:9px;">© EffectiveActions</a>`;
 
@@ -61,17 +67,17 @@ map.on('load', () => {
           .addTo(map);
       });
 
-      map.on('mouseenter', 'energia', () => {
-        map.getCanvas().style.cursor = 'pointer';
+      map.on("mouseenter", "energia", () => {
+        map.getCanvas().style.cursor = "pointer";
       });
 
-      map.on('mouseleave', 'energia', () => {
-        map.getCanvas().style.cursor = '';
+      map.on("mouseleave", "energia", () => {
+        map.getCanvas().style.cursor = "";
       });
 
     })
     .catch(error => {
-      console.error('Error cargando energia.geojson:', error);
+      console.error("Error cargando la capa:", error);
     });
 
 });
