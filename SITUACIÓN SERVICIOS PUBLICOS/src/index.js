@@ -885,6 +885,7 @@ el.style.cursor = "pointer";
 
 el.style.display = "none";
 
+el.style.zIndex = "999";
         const popupEnergia = new mapboxgl.Popup({
           closeButton: true,
           closeOnClick: true,
@@ -906,10 +907,13 @@ el.style.display = "none";
           </div>
         `);
 
-        const marker = new mapboxgl.Marker(el)
-          .setLngLat(coords)
-          .setPopup(popupEnergia)
-          .addTo(map);
+        const marker = new mapboxgl.Marker({
+  element: el,
+  anchor: "center"
+})
+  .setLngLat(coords)
+  .setPopup(popupEnergia)
+  .addTo(map);
 
         if (esSi) {
           ENERGIA_MARKERS_SI.push(marker);
