@@ -866,15 +866,24 @@ function addEnergiaMarkers() {
         const esSi = ["si", "s", "sí"].includes(tieneLuzNorm);
 
         const el = document.createElement("div");
-        el.className = "marker-energia";
-        el.style.width = "14px";
-        el.style.height = "14px";
-        el.style.borderRadius = "50%";
-        el.style.backgroundColor = esSi ? "#FFD700" : "#FF3B30";
-        el.style.border = "2px solid #000";
-        el.style.boxShadow = "0 0 6px rgba(0,0,0,0.8)";
-        el.style.cursor = "pointer";
-        el.style.display = "none";
+el.className = "marker-energia";
+
+el.style.width = "12px";
+el.style.height = "12px";
+
+el.style.borderRadius = "50%";
+
+el.style.backgroundColor = esSi ? "#FFD700" : "#FF3B30";
+
+el.style.border = "1.5px solid #ffffff";
+
+el.style.boxShadow = "none";
+
+el.style.opacity = "0.95";
+
+el.style.cursor = "pointer";
+
+el.style.display = "none";
 
         const popupEnergia = new mapboxgl.Popup({
           closeButton: true,
