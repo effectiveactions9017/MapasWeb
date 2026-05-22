@@ -1,41 +1,333 @@
-<div class="sp-sep"></div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Predial y Servicios Públicos – Sesquilé</title>
 
-<!-- ===================================================== -->
-<!-- ENERGÍA -->
-<!-- ===================================================== -->
+  <meta
+    name="viewport"
+    content="initial-scale=1,maximum-scale=1,user-scalable=no"
+  >
 
-<div class="sp-row" data-layer="L_ENERGIA_SI">
+  <!-- MAPBOX -->
+  <link
+    href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css"
+    rel="stylesheet"
+  />
 
-  <div class="sp-left">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
-    <span class="sp-dot"></span>
+  <!-- GEOCODER -->
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
 
-    <span>
-      Energía: Sí
-    </span>
+  <link
+    rel="stylesheet"
+    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
+  />
 
+  <!-- TURF -->
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
+  <!-- FUENTE -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="../src/main.css" />
+
+  <style>
+    body{
+      margin:0;
+      padding:0;
+      font-family:'Libre Franklin', sans-serif;
+    }
+
+    #map{
+      position:absolute;
+      top:0;
+      bottom:0;
+      width:100%;
+    }
+
+    .sp-panel{
+      position:absolute;
+      top:15px;
+      right:10px;
+      z-index:30;
+      width:340px;
+      max-width:calc(100vw - 20px);
+      max-height:calc(100vh - 30px);
+      display:flex;
+      flex-direction:column;
+      padding:12px;
+      border-radius:14px;
+      background:rgba(0,0,0,0.72);
+      backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,0.12);
+      box-shadow:0 18px 40px rgba(0,0,0,0.35);
+      color:#fff;
+      overflow:hidden;
+    }
+
+    .sp-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+    }
+
+    .sp-title{
+      font-weight:800;
+      font-size:16px;
+    }
+
+    .sp-close{
+      background:rgba(255,255,255,0.1);
+      border:none;
+      color:#fff;
+      width:34px;
+      height:34px;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:20px;
+      line-height:34px;
+    }
+
+    #spToggleList{
+      overflow:auto;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.10);
+    }
+
+    .sp-row{
+      --sp-accent:#00bcd4;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      cursor:pointer;
+      transition:background .2s ease;
+    }
+
+    .sp-row:hover{
+      background:rgba(255,255,255,0.08);
+    }
+
+    .sp-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:13px;
+    }
+
+    .sp-dot{
+      width:12px;
+      height:12px;
+      min-width:12px;
+      border-radius:50%;
+      background:var(--sp-accent);
+      box-shadow:0 0 8px var(--sp-accent);
+    }
+
+    .sp-switch{
+      width:52px;
+      min-width:52px;
+      height:26px;
+      border-radius:20px;
+      background:#777;
+      position:relative;
+      transition:background .2s ease;
+    }
+
+    .sp-knob{
+      position:absolute;
+      width:20px;
+      height:20px;
+      background:#fff;
+      top:3px;
+      left:3px;
+      border-radius:50%;
+      transition:transform .2s ease;
+    }
+
+    .sp-row.is-active .sp-switch{
+      background:var(--sp-accent);
+    }
+
+    .sp-row.is-active .sp-knob{
+      transform:translateX(26px);
+    }
+
+    .sp-sep{
+      height:1px;
+      background:rgba(255,255,255,0.1);
+    }
+
+    .sp-open{
+      position:absolute;
+      top:15px;
+      right:10px;
+      display:none;
+      z-index:31;
+      padding:9px 14px;
+      border:none;
+      border-radius:10px;
+      background:rgba(0,0,0,0.72);
+      color:#fff;
+      font-weight:700;
+      cursor:pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<div id="spControl" class="sp-panel">
+
+  <div class="sp-header">
+    <div class="sp-title">Filtros</div>
+    <button id="spClose" class="sp-close">×</button>
   </div>
 
-  <span class="sp-switch">
-    <span class="sp-knob"></span>
-  </span>
+  <div id="spToggleList">
 
-</div>
+    <div class="sp-row is-active" data-layer="L_ALL">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Ver todos</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
 
-<div class="sp-row" data-layer="L_ENERGIA_NO">
+    <div class="sp-sep"></div>
 
-  <div class="sp-left">
+    <div class="sp-row" data-layer="L_GAS_SI">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Gas: Sí</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
 
-    <span class="sp-dot"></span>
+    <div class="sp-row" data-layer="L_GAS_NO">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Gas: No</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
 
-    <span>
-      Energía: No
-    </span>
+    <div class="sp-sep"></div>
+
+    <div class="sp-row" data-layer="L_ACUEDUCTO_SI">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Acueducto: Sí</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
+
+    <div class="sp-row" data-layer="L_ACUEDUCTO_NO">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Acueducto: No</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
+
+    <div class="sp-sep"></div>
+
+    <div class="sp-row" data-layer="L_ALC_SI">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Alcantarillado: Sí</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
+
+    <div class="sp-row" data-layer="L_ALC_NO">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Alcantarillado: No</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
+
+    <div class="sp-sep"></div>
+
+    <div class="sp-row" data-layer="L_INTERNET_SI">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Internet: Sí</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
+
+    <div class="sp-row" data-layer="L_INTERNET_NO">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Internet: No</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
+
+    <div class="sp-sep"></div>
+
+    <div class="sp-row" data-layer="L_BASURAS_SI">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Basuras: Sí</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
+
+    <div class="sp-row" data-layer="L_BASURAS_NO">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Basuras: No</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
+
+    <div class="sp-sep"></div>
+
+    <!-- ENERGÍA -->
+    <div class="sp-row" data-layer="L_ENERGIA_SI">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Energía: Sí</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
+
+    <div class="sp-row" data-layer="L_ENERGIA_NO">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Energía: No</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
+
+    <div class="sp-sep"></div>
+
+    <div class="sp-row" data-layer="L_ALUMBRADO">
+      <div class="sp-left">
+        <span class="sp-dot"></span>
+        <span>Alumbrado público</span>
+      </div>
+      <span class="sp-switch"><span class="sp-knob"></span></span>
+    </div>
 
   </div>
-
-  <span class="sp-switch">
-    <span class="sp-knob"></span>
-  </span>
-
 </div>
+
+<button id="spOpen" class="sp-open">Filtros</button>
+
+<script src="../src/index.js"></script>
+
+</body>
+</html>
