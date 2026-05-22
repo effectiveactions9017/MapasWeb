@@ -1,8 +1,5 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoiZWZmZWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21iOWY1eGtiMGQ2cjJqcG9xbTRjZnQxMiJ9.8p55iS2R45-p8lxTerDL9Q';
 
-// ======================================================
-// 🗺️ MAPA
-// ======================================================
 const map = new mapboxgl.Map({
   container: "map",
   style: "mapbox://styles/mapbox/satellite-v9",
@@ -13,97 +10,77 @@ const map = new mapboxgl.Map({
   antialias: true
 });
 
-// ======================================================
-// 📌 POPUP
-// ======================================================
 let popup = new mapboxgl.Popup({
   closeButton: true,
   closeOnClick: true,
   className: "custom-popup"
 });
 
-// ======================================================
-// 🚀 CARGAR MAPA
-// ======================================================
 map.on("load", () => {
 
-  // ====================================================
-  // 📂 CARGAR GEOJSON
-  // ====================================================
   fetch("../src/data/energia_1.geojson")
-    .then(response => {
-
-      if (!response.ok) {
-        throw new Error("No se pudo cargar el archivo GeoJSON");
-      }
-
-      return response.json();
-    })
-
+    .then(response => response.json())
     .then(data => {
 
-      console.log("GeoJSON cargado:", data);
-
-      // ==================================================
-      // 📍 SOURCE
-      // ==================================================
       map.addSource("energia", {
         type: "geojson",
         data: data,
         cluster: false
       });
 
-      // ==================================================
-      // 🔴 CAPA DE PUNTOS
-      // ==================================================
       map.addLayer({
         id: "energia",
         type: "circle",
         source: "energia",
-
+        minzoom: 0,
+        maxzoom: 24,
         paint: {
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
 
-          // Tamaño punto
-          "circle-radius": 7,
+            5, 14,
+            10, 12,
+            15, 8,
+            20, 6
+          ],
 
-          // Color según Tiene_Luz
           "circle-color": [
             "match",
             ["get", "Tiene_Luz"],
-
-            "Si", "#FFD700", // amarillo
-            "No", "#FF3B30", // rojo
-
-            "#999999" // gris default
+            "Si", "#FFD700",
+            "No", "#FF3B30",
+            "#00BFFF"
           ],
 
-          // Borde
           "circle-stroke-color": "#000000",
-          "circle-stroke-width": 1.5,
+          "circle-stroke-width": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            5, 2,
+            15, 1.5,
+            20, 1
+          ],
 
-          // Transparencia
-          "circle-opacity": 1
+          "circle-opacity": 1,
+          "circle-stroke-opacity": 1
         }
       });
 
-      // ==================================================
-      // 🖱️ CLICK POPUP
-      // ==================================================
-      map.on("click", "energia", (e) => {
+      map.moveLayer("energia");
 
+      map.on("click", "energia", (e) => {
         const feature = e.features[0];
         const props = feature.properties;
 
-        let popupContent = `
+        const popupContent = `
           <div style="font-size:13px;">
             <strong>Servicios Públicos</strong><br><br>
-
             <strong>Tiene Luz:</strong> ${props.Tiene_Luz || "No"}<br>
-
             <br>
-            <a style="font-size:9px;">
-              © EffectiveActions
-            </a>
+            <a style="font-size:9px;">© EffectiveActions</a>
           </div>
         `;
 
@@ -111,12 +88,8 @@ map.on("load", () => {
           .setLngLat(feature.geometry.coordinates)
           .setHTML(popupContent)
           .addTo(map);
-
       });
 
-      // ==================================================
-      // 🖱️ CURSOR
-      // ==================================================
       map.on("mouseenter", "energia", () => {
         map.getCanvas().style.cursor = "pointer";
       });
@@ -126,9 +99,8 @@ map.on("load", () => {
       });
 
     })
-
     .catch(error => {
-      console.error("Error cargando el GeoJSON:", error);
+      console.error("Error cargando energia_1.geojson:", error);
     });
 
 });
