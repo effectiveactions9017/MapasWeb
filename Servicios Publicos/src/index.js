@@ -19,25 +19,33 @@ let popup = new mapboxgl.Popup({
 map.on("load", () => {
 
   fetch("../src/data/energia_1.geojson")
-    .then(response => {
-      if (!response.ok) {
-        throw new Error("No se pudo cargar energia_1.geojson");
-      }
-      return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
 
       map.addSource("energia", {
         type: "geojson",
-        data: data
+        data: data,
+        cluster: false,
+        tolerance: 0,
+        buffer: 512,
+        maxzoom: 24
       });
 
       map.addLayer({
         id: "energia",
         type: "circle",
         source: "energia",
+        minzoom: 0,
+        maxzoom: 24,
         paint: {
-          "circle-radius": 7,
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            10, 4,
+            15, 7,
+            20, 10
+          ],
           "circle-color": [
             "match",
             ["get", "Tiene_Luz"],
@@ -57,9 +65,8 @@ map.on("load", () => {
         let popupContent = `
           <strong>Información del punto</strong><br><br>
           <strong>Tiene luz:</strong> ${props.Tiene_Luz || "No"}<br>
+          <br><a style="font-size:9px;">© EffectiveActions</a>
         `;
-
-        popupContent += `<br><a style="font-size:9px;">© EffectiveActions</a>`;
 
         popup
           .setLngLat(e.lngLat)
@@ -77,7 +84,7 @@ map.on("load", () => {
 
     })
     .catch(error => {
-      console.error("Error cargando la capa:", error);
+      console.error("Error cargando energia_1.geojson:", error);
     });
 
 });
