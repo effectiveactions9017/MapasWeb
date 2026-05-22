@@ -876,7 +876,7 @@ function addEnergiaMarkers() {
         el.style.opacity = "0.95";
         el.style.cursor = "pointer";
         el.style.display = "none";
-        el.style.zIndex = "999";
+        el.style.zIndex = "10";
         el.style.pointerEvents = "auto";
 
         const htmlEnergia = `
@@ -912,6 +912,10 @@ function addEnergiaMarkers() {
             .setLngLat(coords)
             .setHTML(htmlEnergia)
             .addTo(map);
+
+          if (popup.getElement()) {
+            popup.getElement().style.zIndex = "2000";
+          }
         });
 
         if (esSi) {
