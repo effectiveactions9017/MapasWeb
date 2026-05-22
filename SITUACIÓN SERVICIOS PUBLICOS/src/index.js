@@ -879,11 +879,7 @@ function addEnergiaMarkers() {
         el.style.zIndex = "999";
         el.style.pointerEvents = "auto";
 
-        const popupEnergia = new mapboxgl.Popup({
-          closeButton: true,
-          closeOnClick: true,
-          className: "custom-popup",
-        }).setHTML(`
+        const htmlEnergia = `
           <div style="font-size:13px;">
             <div style="font-weight:700; margin-bottom:6px;">Energía eléctrica</div>
             <strong>Tiene Luz:</strong> ${valTxt(tieneLuz)}<br>
@@ -899,7 +895,7 @@ function addEnergiaMarkers() {
 
             <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
           </div>
-        `);
+        `;
 
         const marker = new mapboxgl.Marker({
           element: el,
@@ -912,10 +908,9 @@ function addEnergiaMarkers() {
           ev.preventDefault();
           ev.stopPropagation();
 
-          popup.remove();
-
-          popupEnergia
+          popup
             .setLngLat(coords)
+            .setHTML(htmlEnergia)
             .addTo(map);
         });
 
