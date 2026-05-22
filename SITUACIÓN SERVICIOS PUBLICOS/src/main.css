@@ -15,9 +15,7 @@ body {
 }
 
 /* ==========================================================
-   ✅ PANEL FILTRO (Servicios públicos — filtro)
-   ✅ FIX: que NO se salga de pantalla + scroll interno
-   (usa tus IDs: #spControl, #spOpen, #spClose)
+   ✅ PANEL FILTRO
    ========================================================== */
 .sp-panel{
   position:absolute;
@@ -73,6 +71,7 @@ body {
   cursor:pointer;
   transition: transform .12s ease, background .12s ease;
 }
+
 .sp-close:hover{
   background:rgba(255,255,255,0.18);
   transform: translateY(-1px);
@@ -86,7 +85,6 @@ body {
   flex: 0 0 auto;
 }
 
-/* Botón para re-abrir el panel cuando está cerrado */
 .sp-open{
   position:absolute;
   top:15px;
@@ -109,18 +107,16 @@ body {
 
   max-width: calc(100vw - 20px);
 }
+
 .sp-open:hover{
   background:rgba(0,0,0,0.82);
 }
 
 /* ==========================================================
-   ✅ LISTA CON SWITCHES (multi-select)
+   ✅ LISTA CON SWITCHES
    ========================================================== */
-
-/* ✅ contenedor de la lista: scroll interno si no cabe */
 #spToggleList{
   margin-top: 8px;
-
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
@@ -132,15 +128,13 @@ body {
   background: rgba(10,10,10,0.35);
 }
 
-/* Scrollbar (Chrome/Edge) */
 #spToggleList::-webkit-scrollbar{ width:10px; }
 #spToggleList::-webkit-scrollbar-track{ background:rgba(255,255,255,0.06); border-radius:10px; }
 #spToggleList::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.18); border-radius:10px; }
 #spToggleList::-webkit-scrollbar-thumb:hover{ background:rgba(255,255,255,0.26); }
 
-/* fila */
 .sp-row{
-  --sp-accent: #00bcd4; /* ✅ fallback HEX (el JS lo reemplaza por fila) */
+  --sp-accent: #00bcd4;
 
   display:flex;
   align-items:center;
@@ -157,17 +151,18 @@ body {
 
   transition: background .12s ease, border-color .12s ease;
 }
+
 .sp-row:hover{
   background:rgba(15,15,15,0.65);
 }
 
-/* ✅ lado izquierdo: punto de color + texto */
 .sp-left{
   display:flex;
   align-items:center;
   gap:10px;
   min-width:0;
 }
+
 .sp-dot{
   width:12px;
   height:12px;
@@ -178,7 +173,6 @@ body {
   flex: 0 0 auto;
 }
 
-/* texto */
 .sp-label{
   font-weight:800;
   font-size:14px;
@@ -189,7 +183,6 @@ body {
   text-overflow:ellipsis;
 }
 
-/* switch */
 .sp-switch{
   position:relative;
   width:52px;
@@ -204,7 +197,6 @@ body {
   transition: background .12s ease, border-color .12s ease;
 }
 
-/* bolita */
 .sp-switch::after{
   content:"";
   position:absolute;
@@ -222,26 +214,28 @@ body {
 }
 
 /* ==========================================================
-   ✅ ACTIVO (multi-select): varios pueden estar activos
+   ✅ ACTIVO
    ========================================================== */
 .sp-row.is-active{
   background: color-mix(in srgb, var(--sp-accent) 14%, rgba(0,0,0,0.55));
 }
+
 .sp-row.is-active .sp-switch{
   background: var(--sp-accent);
   border-color: var(--sp-accent);
 }
+
 .sp-row.is-active .sp-switch::after{
   left: calc(100% - 23px);
   background:#0b0b0b;
 }
+
 .sp-row.is-active .sp-dot{
   box-shadow:
     0 0 0 3px rgba(0,0,0,0.22),
     0 0 18px color-mix(in srgb, var(--sp-accent) 70%, transparent);
 }
 
-/* separador opcional */
 .sp-divider{
   height:1px;
   background:rgba(255,255,255,0.10);
@@ -249,7 +243,7 @@ body {
 }
 
 /* ==========================================================
-   ❌ LEYENDA (DESACTIVADA / ya no se usa)
+   ❌ LEYENDA DESACTIVADA
    ========================================================== */
 .legend-container {
   display: none !important;
@@ -258,6 +252,10 @@ body {
 /* ==========================================================
    POPUP PERSONALIZADO
    ========================================================== */
+.custom-popup {
+  z-index: 2000 !important;
+}
+
 .custom-popup .mapboxgl-popup-content {
   font-size: 0.8rem;
   padding: 10px 15px;
@@ -275,40 +273,70 @@ body {
   color: #00bcd4;
   text-decoration: none;
 }
-.mapboxgl-popup-content a:hover { text-decoration: underline; }
 
-/* Flechas del popup */
+.mapboxgl-popup-content a:hover { 
+  text-decoration: underline; 
+}
+
 .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
   border-bottom-color: rgba(0, 0, 0, 0.85);
 }
+
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
   border-top-color: rgba(0, 0, 0, 0.85);
 }
-.mapboxgl-popup-anchor-left .mapboxgl-popup-tip { border-right-color: rgba(0, 0, 0, 0.85); }
-.mapboxgl-popup-anchor-right .mapboxgl-popup-tip { border-left-color: rgba(0, 0, 0, 0.85); }
+
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip { 
+  border-right-color: rgba(0, 0, 0, 0.85); 
+}
+
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip { 
+  border-left-color: rgba(0, 0, 0, 0.85); 
+}
 
 /* ==========================================================
-   GEOCODER
+   ✅ GEOCODER / BUSCADOR ENCIMA DE TODO
    ========================================================== */
+.mapboxgl-ctrl-top-left{
+  z-index: 5000 !important;
+}
+
 .mapboxgl-ctrl-geocoder {
   width: 320px !important;
   min-width: 320px !important;
+  position: relative;
+  z-index: 5001 !important;
+}
+
+.mapboxgl-ctrl-geocoder * {
+  z-index: 5002 !important;
 }
 
 /* ==========================================================
    Responsive
    ========================================================== */
 @media (max-width: 520px){
-  .mapboxgl-ctrl-geocoder { width: 260px !important; min-width: 260px !important; }
-  .sp-panel{ width: 260px; }
-  .sp-switch{ width:46px; }
+  .mapboxgl-ctrl-geocoder { 
+    width: 260px !important; 
+    min-width: 260px !important; 
+  }
+
+  .sp-panel{ 
+    width: 260px; 
+  }
+
+  .sp-switch{ 
+    width:46px; 
+  }
 }
 
-/* ✅ extra: si el alto es pequeño, reduce el top para que quepa */
 @media (max-height: 540px){
-  .sp-panel{ top:10px; max-height: calc(100vh - 20px); }
+  .sp-panel{ 
+    top:10px; 
+    max-height: calc(100vh - 20px); 
+  }
 }
