@@ -2,8 +2,8 @@
 // ✅ Visor Predial + Servicios Públicos + Alumbrado – Sesquilé
 // ✅ Servicios: Servicios_publicos_puntos_nuevo.geojson
 // ✅ Alumbrado: alumbrado_publico_con_vereda.geojson
-// ✅ Energía dentro de Servicios
-// ✅ Campo energía: tiene_luz
+// ✅ Energía: energia_1.geojson
+// ✅ Energía se maneja con HTML Markers
 // =====================================================
 
 mapboxgl.accessToken =
@@ -36,6 +36,9 @@ const popup = new mapboxgl.Popup({
 // =====================================================
 let SERVICIOS_DATA = null;
 let ALUMBRADO_DATA = null;
+let ENERGIA_DATA = null;
+let ENERGIA_MARKERS_SI = [];
+let ENERGIA_MARKERS_NO = [];
 
 // =====================================================
 // HELPERS
@@ -209,7 +212,7 @@ function popupHTMLAlumbrado(props, lngLat) {
 }
 
 // =====================================================
-// ✅ FILTROS SÍ / NO ROBUSTOS — VERSIÓN QUE FUNCIONABA
+// ✅ FILTROS SÍ / NO ROBUSTOS
 // =====================================================
 function exprRaw(fieldName) {
   return ["downcase", ["to-string", ["coalesce", ["get", fieldName], ""]]];
@@ -326,7 +329,23 @@ const SERVICIOS_FILTER_GROUPS = [
   },
 ];
 
-const ALL_FILTER_GROUPS = [...SERVICIOS_FILTER_GROUPS];
+// =====================================================
+// ✅ GRUPOS ENERGÍA — SOLO PANEL, NO CAPAS MAPBOX
+// =====================================================
+const ENERGIA_FILTER_GROUPS = [
+  {
+    id: "L_ENERGIA_SI",
+    label: "Energía: Sí",
+    color: "#FFD700",
+  },
+  {
+    id: "L_ENERGIA_NO",
+    label: "Energía: No",
+    color: "#FF3B30",
+  },
+];
+
+const ALL_FILTER_GROUPS = [...SERVICIOS_FILTER_GROUPS, ...ENERGIA_FILTER_GROUPS];
 
 const ALUMBRADO_LAYER_ID = "L_ALUMBRADO";
 const ALUMBRADO_COLOR = "#38bdf8";
@@ -445,7 +464,7 @@ function wireServiciosLayerInteractions() {
 }
 
 // =====================================================
-// ✅ SWITCHES MULTISELECT + ALUMBRADO
+// ✅ SWITCHES MULTISELECT + ALUMBRADO + ENERGÍA
 // =====================================================
 function wireServiciosToggleList() {
   const list = document.getElementById("spToggleList");
@@ -479,25 +498,52 @@ function wireServiciosToggleList() {
     map.setLayoutProperty(id, "visibility", visible ? "visible" : "none");
   }
 
+  function setEnergiaVisible(actives) {
+    const energiaSiActiva = actives.includes("L_ENERGIA_SI");
+    const energiaNoActiva = actives.includes("L_ENERGIA_NO");
+
+    ENERGIA_MARKERS_SI.forEach((m) => {
+      m.getElement().style.display = energiaSiActiva ? "block" : "none";
+    });
+
+    ENERGIA_MARKERS_NO.forEach((m) => {
+      m.getElement().style.display = energiaNoActiva ? "block" : "none";
+    });
+  }
+
   function syncMapLayersFromUI() {
     const actives = getActiveGroups();
     const alumbradoActivo = isAlumbradoActive();
 
-    if (!actives.length && !alumbradoActivo) {
+    const hayServiciosActivos = SERVICIOS_FILTER_GROUPS.some((g) =>
+      actives.includes(g.id)
+    );
+
+    const hayEnergiaActiva =
+      actives.includes("L_ENERGIA_SI") || actives.includes("L_ENERGIA_NO");
+
+    if (!hayServiciosActivos && !alumbradoActivo && !hayEnergiaActiva) {
       setLayerVisibility("L_BASE", true);
-      ALL_FILTER_GROUPS.forEach((g) => setLayerVisibility(g.id, false));
+      SERVICIOS_FILTER_GROUPS.forEach((g) => setLayerVisibility(g.id, false));
+      setEnergiaVisible([]);
     } else {
       setLayerVisibility("L_BASE", false);
-      ALL_FILTER_GROUPS.forEach((g) => {
+
+      SERVICIOS_FILTER_GROUPS.forEach((g) => {
         setLayerVisibility(g.id, actives.includes(g.id));
       });
+
+      setEnergiaVisible(actives);
     }
 
     setLayerVisibility(ALUMBRADO_LAYER_ID, alumbradoActivo);
 
     if (rowAll) {
-      if (!actives.length && !alumbradoActivo) rowAll.classList.add("is-active");
-      else rowAll.classList.remove("is-active");
+      if (!hayServiciosActivos && !alumbradoActivo && !hayEnergiaActiva) {
+        rowAll.classList.add("is-active");
+      } else {
+        rowAll.classList.remove("is-active");
+      }
     }
   }
 
@@ -508,8 +554,7 @@ function wireServiciosToggleList() {
       groupRows.forEach((r) => r.classList.remove("is-active"));
 
       if (rowAlumbrado) rowAlumbrado.classList.remove("is-active");
-
-      if (rowAll) rowAll.classList.add("is-active");
+      rowAll.classList.add("is-active");
 
       syncMapLayersFromUI();
 
@@ -785,6 +830,93 @@ function addAlumbradoPublico() {
 }
 
 // =====================================================
+// ✅ ENERGÍA ELÉCTRICA — HTML MARKERS
+// =====================================================
+function addEnergiaMarkers() {
+  const FILE = "energia_1.geojson";
+
+  ENERGIA_MARKERS_SI.forEach((m) => m.remove());
+  ENERGIA_MARKERS_NO.forEach((m) => m.remove());
+
+  ENERGIA_MARKERS_SI = [];
+  ENERGIA_MARKERS_NO = [];
+
+  fetch(`../src/data/${FILE}`)
+    .then((response) => response.json())
+    .then((data) => {
+      ENERGIA_DATA = data;
+
+      if (!data || !Array.isArray(data.features)) {
+        console.warn("energia_1.geojson no tiene features válidos");
+        return;
+      }
+
+      data.features.forEach((feature) => {
+        const coords = getPointLngLat(feature);
+        const props = feature.properties || {};
+
+        const tieneLuz =
+          props.Tiene_Luz ??
+          props.tiene_luz ??
+          props.tiene_luz_ ??
+          props.energia ??
+          "No";
+
+        const tieneLuzNorm = norm(tieneLuz);
+        const esSi = ["si", "s", "sí"].includes(tieneLuzNorm);
+
+        const el = document.createElement("div");
+        el.className = "marker-energia";
+        el.style.width = "14px";
+        el.style.height = "14px";
+        el.style.borderRadius = "50%";
+        el.style.backgroundColor = esSi ? "#FFD700" : "#FF3B30";
+        el.style.border = "2px solid #000";
+        el.style.boxShadow = "0 0 6px rgba(0,0,0,0.8)";
+        el.style.cursor = "pointer";
+        el.style.display = "none";
+
+        const popupEnergia = new mapboxgl.Popup({
+          closeButton: true,
+          closeOnClick: true,
+          className: "custom-popup",
+        }).setHTML(`
+          <div style="font-size:13px;">
+            <div style="font-weight:700; margin-bottom:6px;">Energía eléctrica</div>
+            <strong>Tiene Luz:</strong> ${valTxt(tieneLuz)}<br>
+
+            <div style="margin-top:10px;">
+              <a href="${streetViewUrl(coords)}" target="_blank"
+                 style="display:inline-block; padding:6px 10px; border-radius:6px;
+                        background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+                📷 Street View
+              </a>
+            </div>
+
+            <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
+          </div>
+        `);
+
+        const marker = new mapboxgl.Marker(el)
+          .setLngLat(coords)
+          .setPopup(popupEnergia)
+          .addTo(map);
+
+        if (esSi) {
+          ENERGIA_MARKERS_SI.push(marker);
+        } else {
+          ENERGIA_MARKERS_NO.push(marker);
+        }
+      });
+
+      try { wireServiciosToggleList(); } catch (e) {}
+    })
+    .catch((error) => {
+      console.error("Error cargando energia_1.geojson:", error);
+    });
+}
+
+// =====================================================
 // ✅ HIGHLIGHT
 // =====================================================
 function addHighlight() {
@@ -815,7 +947,7 @@ function addHighlight() {
 }
 
 // =====================================================
-// ✅ BUSCADOR LOCAL SERVICIOS + ALUMBRADO
+// ✅ BUSCADOR LOCAL SERVICIOS + ALUMBRADO + ENERGÍA
 // =====================================================
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
@@ -887,6 +1019,35 @@ const geocoder = new MapboxGeocoder({
       }
     }
 
+    if (ENERGIA_DATA && Array.isArray(ENERGIA_DATA.features) && results.length < 10) {
+      for (const feature of ENERGIA_DATA.features) {
+        const p = feature.properties || {};
+
+        const big = norm(Object.values(p).join(" "));
+        const ok = big.includes(query);
+
+        if (!ok) continue;
+
+        const center = getPointLngLat(feature);
+        const tieneLuz = p.Tiene_Luz ?? p.tiene_luz ?? p.tiene_luz_ ?? p.energia ?? "N/A";
+
+        results.push({
+          type: "Feature",
+          geometry: feature.geometry,
+          center,
+          place_name: `Energía eléctrica | Tiene luz: ${tieneLuz}`,
+          text: `Energía ${tieneLuz}`,
+          properties: {
+            ...p,
+            __tipo_busqueda: "energia",
+          },
+          place_type: ["place"],
+        });
+
+        if (results.length >= 10) break;
+      }
+    }
+
     return results;
   },
 });
@@ -912,7 +1073,30 @@ geocoder.on("result", (e) => {
     zoom: 18,
   });
 
-  if (f.properties?.__tipo_busqueda === "alumbrado") {
+  if (f.properties?.__tipo_busqueda === "energia") {
+    const p = f.properties || {};
+    const tieneLuz = p.Tiene_Luz ?? p.tiene_luz ?? p.tiene_luz_ ?? p.energia ?? "N/A";
+
+    popup
+      .setLngLat(lngLat)
+      .setHTML(`
+        <div style="font-size:13px;">
+          <div style="font-weight:700; margin-bottom:6px;">Energía eléctrica</div>
+          <strong>Tiene Luz:</strong> ${valTxt(tieneLuz)}<br>
+
+          <div style="margin-top:10px;">
+            <a href="${streetViewUrl(lngLat)}" target="_blank"
+               style="display:inline-block; padding:6px 10px; border-radius:6px;
+                      background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+              📷 Street View
+            </a>
+          </div>
+
+          <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
+        </div>
+      `)
+      .addTo(map);
+  } else if (f.properties?.__tipo_busqueda === "alumbrado") {
     popup
       .setLngLat(lngLat)
       .setHTML(popupHTMLAlumbrado(f.properties || {}, lngLat))
@@ -932,6 +1116,7 @@ map.on("style.load", () => {
   addPrediosBase();
   addServiciosPublicos();
   addAlumbradoPublico();
+  addEnergiaMarkers();
   addHighlight();
 
   setTimeout(() => {
