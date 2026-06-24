@@ -1,5 +1,33 @@
 // =====================================================
-// 🗺️ ABRIR MÓDULO MAPA + DASHBOARD OPCIONAL
+// VARIABLES GLOBALES
+// =====================================================
+
+let dashboardActual = null;
+
+
+// =====================================================
+// NORMALIZAR RUTAS EN GITHUB PAGES
+// =====================================================
+
+function normalizarRutaDashboard(ruta) {
+
+  if (!ruta) return null;
+
+  if (ruta.startsWith("http")) {
+    return ruta;
+  }
+
+  if (ruta.startsWith("./")) {
+    return ruta;
+  }
+
+  return "./" + ruta;
+
+}
+
+
+// =====================================================
+// ABRIR MÓDULO MAPA + DASHBOARD OPCIONAL
 // =====================================================
 
 function abrirModulo(titulo, descripcion, mapaUrl, dashboardUrl = null) {
@@ -16,7 +44,6 @@ function abrirModulo(titulo, descripcion, mapaUrl, dashboardUrl = null) {
   const btnDashboard = document.getElementById("btnDashboard");
   const btnMapa = document.getElementById("btnMapa");
 
-
   if (
     !inicio ||
     !modulo ||
@@ -31,95 +58,80 @@ function abrirModulo(titulo, descripcion, mapaUrl, dashboardUrl = null) {
     return;
   }
 
-
-  // pantalla inicio fuera
-
   inicio.style.display = "none";
   modulo.style.display = "block";
-
-
-  // textos
 
   tituloModulo.innerText = titulo;
   descripcionModulo.innerText = descripcion;
 
-
-  // limpiar dashboard anterior
+  dashboardActual = normalizarRutaDashboard(dashboardUrl);
 
   dashboardFrame.src = "";
   dashboardFrame.style.display = "none";
 
-
-  // cargar mapa
-
   mapaFrame.src = mapaUrl;
   mapaFrame.style.display = "block";
 
-
-  // activar dashboard si existe
-
-  if (dashboardUrl){
-
-    dashboardFrame.src = dashboardUrl;
-
+  if (dashboardActual) {
     btnDashboard.style.display = "inline-flex";
-
-  }else{
-
+  } else {
     btnDashboard.style.display = "none";
-
   }
 
-
   btnMapa.style.display = "none";
-
 }
 
 
-
 // =====================================================
-// 📊 CAMBIAR A DASHBOARD
+// CAMBIAR A DASHBOARD
 // =====================================================
 
 function verDashboard(){
 
-  document.getElementById("mapaFrame").style.display="none";
+  const mapaFrame = document.getElementById("mapaFrame");
+  const dashboardFrame = document.getElementById("dashboardFrame");
+  const btnDashboard = document.getElementById("btnDashboard");
+  const btnMapa = document.getElementById("btnMapa");
 
-  document.getElementById("dashboardFrame").style.display="block";
+  if (!dashboardActual) {
+    alert("Este módulo no tiene dashboard asociado.");
+    return;
+  }
 
-  document.getElementById("btnDashboard").style.display="none";
+  dashboardFrame.src = dashboardActual;
 
-  document.getElementById("btnMapa").style.display="inline-flex";
+  mapaFrame.style.display = "none";
+  dashboardFrame.style.display = "block";
 
+  btnDashboard.style.display = "none";
+  btnMapa.style.display = "inline-flex";
 }
 
 
-
 // =====================================================
-// 🗺️ VOLVER AL MAPA
+// VOLVER AL MAPA
 // =====================================================
 
 function verMapa(){
 
-  document.getElementById("mapaFrame").style.display="block";
+  const mapaFrame = document.getElementById("mapaFrame");
+  const dashboardFrame = document.getElementById("dashboardFrame");
+  const btnDashboard = document.getElementById("btnDashboard");
+  const btnMapa = document.getElementById("btnMapa");
 
-  document.getElementById("dashboardFrame").style.display="none";
+  mapaFrame.style.display = "block";
+  dashboardFrame.style.display = "none";
 
-  document.getElementById("btnDashboard").style.display="inline-flex";
-
-  document.getElementById("btnMapa").style.display="none";
-
+  btnDashboard.style.display = "inline-flex";
+  btnMapa.style.display = "none";
 }
 
 
-
 // =====================================================
-// 📊 ABRIR SOLO DASHBOARD
-// caracterización socioeconómica
+// ABRIR SOLO DASHBOARD
 // =====================================================
 
 function abrirDashboardSolo(titulo, descripcion, dashboardUrl){
-
 
   const inicio = document.getElementById("inicio");
   const modulo = document.getElementById("modulo");
@@ -133,81 +145,55 @@ function abrirDashboardSolo(titulo, descripcion, dashboardUrl){
   const btnDashboard = document.getElementById("btnDashboard");
   const btnMapa = document.getElementById("btnMapa");
 
+  inicio.style.display = "none";
+  modulo.style.display = "block";
 
+  tituloModulo.innerText = titulo;
+  descripcionModulo.innerText = descripcion;
 
-  inicio.style.display="none";
-  modulo.style.display="block";
+  mapaFrame.src = "";
+  mapaFrame.style.display = "none";
 
+  dashboardActual = normalizarRutaDashboard(dashboardUrl);
 
-  tituloModulo.innerText=titulo;
-  descripcionModulo.innerText=descripcion;
+  dashboardFrame.src = dashboardActual;
+  dashboardFrame.style.display = "block";
 
-
-
-  // eliminar cualquier mapa anterior
-
-  mapaFrame.src="";
-  mapaFrame.style.display="none";
-
-
-
-  // abrir dashboard directamente
-
-  dashboardFrame.src=dashboardUrl;
-  dashboardFrame.style.display="block";
-
-
-
-  // no hay cambio mapa/dashboard
-
-  btnDashboard.style.display="none";
-  btnMapa.style.display="none";
-
-
+  btnDashboard.style.display = "none";
+  btnMapa.style.display = "none";
 }
 
 
-
 // =====================================================
-// ⬅️ REGRESAR AL INICIO
+// REGRESAR AL INICIO
 // =====================================================
 
 function limpiarVisor(){
 
-  document.getElementById("inicio").style.display="flex";
+  document.getElementById("inicio").style.display = "flex";
+  document.getElementById("modulo").style.display = "none";
 
-  document.getElementById("modulo").style.display="none";
+  document.getElementById("mapaFrame").src = "";
+  document.getElementById("dashboardFrame").src = "";
 
-
-  document.getElementById("mapaFrame").src="";
-
-  document.getElementById("dashboardFrame").src="";
-
-
+  dashboardActual = null;
 }
 
 
-
 // =====================================================
-// ⛶ PANTALLA COMPLETA
+// PANTALLA COMPLETA
 // =====================================================
 
 function pantallaCompleta(){
 
- const visor=document.getElementById("modulo");
+ const visor = document.getElementById("modulo");
 
+ if (!visor) return;
 
- if(!visor)return;
-
-
- if(document.fullscreenElement){
-
+ if (document.fullscreenElement){
     document.exitFullscreen();
-
- }else{
-
+ } else {
     visor.requestFullscreen();
-
  }
 
 }
