@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>IA Territorial TERRI+</title>
+<style>
+body{
+  margin:0;
+  font-family:'Segoe UI',Arial,sans-serif;
+  background:#f3f7f8;
+  color:#0C2D48;
+}
+
+.ia-container{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  padding:24px;
+}
+
+.ia-header{
+  background:linear-gradient(135deg,#0C2D48,#1D3557);
+  color:white;
+  border-radius:20px;
+  padding:24px;
+  margin-bottom:20px;
+}
+
+.ia-header h1{
+  margin:0;
+  font-size:30px;
+}
+
+.ia-header p{
+  margin:8px 0 0;
+  color:#dff3ef;
+}
+
+.ia-grid{
+  display:grid;
+  grid-template-columns:1fr 1.4fr;
+  gap:20px;
+  flex:1;
+  min-height:0;
+}
+
+.card{
+  background:white;
+  border-radius:18px;
+  padding:22px;
+  box-shadow:0 8px 22px rgba(12,45,72,.12);
+}
+
+.card h2{
+  margin-top:0;
+  font-size:20px;
+}
+
+.pregunta{
+  padding:14px;
+  border-radius:14px;
+  background:#e8f6f3;
+  margin-bottom:10px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.pregunta:hover{
+  background:#d2eee8;
+}
+
+.chat{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
+
+.chat-box{
+  flex:1;
+  background:#f8fbfc;
+  border:1px solid #dceeee;
+  border-radius:16px;
+  padding:18px;
+  overflow:auto;
+  margin-bottom:14px;
+}
+
+.mensaje{
+  background:white;
+  padding:14px;
+  border-radius:14px;
+  margin-bottom:12px;
+  box-shadow:0 3px 10px rgba(12,45,72,.08);
+}
+
+.input-area{
+  display:flex;
+  gap:10px;
+}
+
+.input-area input{
+  flex:1;
+  height:48px;
+  border-radius:14px;
+  border:1px solid #cfdede;
+  padding:0 15px;
+  font-size:15px;
+}
+
+.input-area button{
+  width:150px;
+  border:none;
+  border-radius:14px;
+  background:#1D3557;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.input-area button:hover{
+  background:#0C2D48;
+}
+</style>
+</head>
+
+<body>
+
+<div class="ia-container">
+
+  <div class="ia-header">
+    <h1>🤖 IA Territorial TERRI+</h1>
+    <p>Asistente inteligente para consultar capas, mapas, predios, recaudo, ambiente y gestión territorial.</p>
+  </div>
+
+  <div class="ia-grid">
+
+    <div class="card">
+      <h2>Consultas sugeridas</h2>
+
+      <div class="pregunta" onclick="usarPregunta('Analiza los predios con oportunidad de incremento predial')">
+        🏠 Predios con oportunidad de incremento predial
+      </div>
+
+      <div class="pregunta" onclick="usarPregunta('Analiza posibles oportunidades de incremento del ICA')">
+        💰 Oportunidades de incremento del ICA
+      </div>
+
+      <div class="pregunta" onclick="usarPregunta('Resume la situación de servicios públicos del municipio')">
+        🚰 Servicios públicos
+      </div>
+
+      <div class="pregunta" onclick="usarPregunta('Analiza pérdida de bosque y oportunidades ambientales')">
+        🌳 Deforestación y ambiente
+      </div>
+
+      <div class="pregunta" onclick="usarPregunta('Identifica oportunidades para bonos de carbono')">
+        ♻️ Bonos de carbono
+      </div>
+
+      <div class="pregunta" onclick="usarPregunta('Analiza el crecimiento urbano y nuevas construcciones')">
+        🏗️ Crecimiento urbano
+      </div>
+
+    </div>
+
+    <div class="card chat">
+
+      <h2>Pregúntale al territorio</h2>
+
+      <div id="chatBox" class="chat-box">
+        <div class="mensaje">
+          Hola, soy la IA Territorial de TERRI+.  
+          Por ahora estoy en modo interfaz. El siguiente paso será conectarme con PostGIS, GeoSQL y tus capas geográficas.
+        </div>
+      </div>
+
+      <div class="input-area">
+        <input id="preguntaInput" placeholder="Ejemplo: ¿Qué predios tienen mayor oportunidad de recaudo?">
+        <button onclick="enviarPregunta()">Analizar</button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function usarPregunta(texto){
+  document.getElementById("preguntaInput").value = texto;
+}
+
+function enviarPregunta(){
+  const input = document.getElementById("preguntaInput");
+  const chat = document.getElementById("chatBox");
+  const pregunta = input.value.trim();
+
+  if(!pregunta) return;
+
+  chat.innerHTML += `
+    <div class="mensaje">
+      <strong>Tú:</strong><br>${pregunta}
+    </div>
+  `;
+
+  chat.innerHTML += `
+    <div class="mensaje">
+      <strong>IA TERRI+:</strong><br>
+      Esta consulta será enviada al servidor IA para analizar PostGIS, capas territoriales y mapas del visor.
+      <br><br>
+      Próximo paso: conectar esta interfaz con una API en Python/FastAPI.
+    </div>
+  `;
+
+  input.value = "";
+  chat.scrollTop = chat.scrollHeight;
+}
+</script>
+
+</body>
+</html>
