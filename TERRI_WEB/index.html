@@ -8,79 +8,36 @@
 <link rel="stylesheet" href="css/style.css"/>
 </head>
 
-
 <body>
 
-
-<!-- =========================
-LOGIN TERRI+
-========================= -->
-
 <div id="login" class="login">
-
   <div class="login-box">
-
     <h1>TERRI<span>+</span></h1>
-
     <p>Plataforma inteligente de análisis territorial</p>
-
     <input id="usuario" placeholder="Usuario">
-
     <input id="password" type="password" placeholder="Contraseña">
-
     <button onclick="iniciarSesion()">Ingresar</button>
-
     <div id="loginError"></div>
-
   </div>
-
 </div>
 
-
-
-<!-- =========================
-HEADER TERRI+
-========================= -->
-
 <header class="header">
-
-
   <div class="header-content">
-
-
     <img 
       src="https://huggingface.co/spaces/Davideffectiveactions/Geovisor_Sesquile/resolve/main/escudo-municipio.png"
       class="header-logo"
     >
 
-
     <div>
-
       <h1>TERRI<span>+</span></h1>
-
-      <p>
-        Geovisor inteligente del territorio
-      </p>
-
+      <p>Geovisor inteligente del territorio</p>
     </div>
-
-
   </div>
-
-
 </header>
-
-
-
-<!-- =========================
-CONTENEDOR PRINCIPAL
-========================= -->
 
 <div class="app">
 
-
 <aside class="sidebar">
-
 
 <h2>🌎 MAPAS SESQUILÉ</h2>
 
@@ -88,11 +45,11 @@ CONTENEDOR PRINCIPAL
 🔎 Buscador Predial
 </button>
 
-<button onclick="abrirModulo('🏠 Oportunidades para incremento del predial','Consulta cartografía catastral y referencias territoriales.','https://effectiveactions9017.github.io/MapasWeb/Catastro_SESQUILE/public/index.html','dashboards/predial.html')">
+<button onclick="abrirModulo('🏠 Oportunidades para incremento del predial','Consulta cartografía catastral y referencias territoriales.','https://effectiveactions9017.github.io/MapasWeb/Catastro_SESQUILE/public/index.html','./dashboards/predial.html')">
 🏠 Incremento Predial
 </button>
 
-<button onclick="abrirModulo('💰 Oportunidades para incremento del ICA','Análisis territorial del recaudo ICA para gestión fiscal.','https://effectiveactions9017.github.io/MapasWeb/RECAUDO%20IMPUESTOS%20ICA_SESQUILE/public/index.html','dashboards/ica.html')">
+<button onclick="abrirModulo('💰 Oportunidades para incremento del ICA','Análisis territorial del recaudo ICA para gestión fiscal.','https://effectiveactions9017.github.io/MapasWeb/RECAUDO%20IMPUESTOS%20ICA_SESQUILE/public/index.html','./dashboards/ica.html')">
 💰 Incremento ICA
 </button>
 
@@ -100,19 +57,19 @@ CONTENEDOR PRINCIPAL
 👥 Contribuyentes ICA
 </button>
 
-<button onclick="abrirModulo('🚰 Situación Servicios Públicos','Diagnóstico territorial de cobertura de servicios.','https://effectiveactions9017.github.io/MapasWeb/SITUACI%C3%93N%20SERVICIOS%20PUBLICOS/public/index.html','dashboards/servicios.html')">
+<button onclick="abrirModulo('🚰 Situación Servicios Públicos','Diagnóstico territorial de cobertura de servicios.','https://effectiveactions9017.github.io/MapasWeb/SITUACI%C3%93N%20SERVICIOS%20PUBLICOS/public/index.html','./dashboards/servicios.html')">
 🚰 Servicios Públicos
 </button>
 
-<button onclick="abrirModulo('🏛️ Activos Públicos','Inventario georreferenciado de activos públicos.','https://effectiveactions9017.github.io/MapasWeb/ACTIVOS_PUBLICOS_SESQUILE/public/index.html','dashboards/activos.html')">
+<button onclick="abrirModulo('🏛️ Activos Públicos','Inventario georreferenciado de activos públicos.','https://effectiveactions9017.github.io/MapasWeb/ACTIVOS_PUBLICOS_SESQUILE/public/index.html','./dashboards/activos.html')">
 🏛️ Activos Públicos
 </button>
 
-<button onclick="abrirModulo('🏗️ Crecimiento Urbano','Seguimiento a expansión urbana y construcciones.','https://effectiveactions9017.github.io/MapasWeb/SESQUILE/mapEvConst/public/index.html','dashboards/construcciones.html')">
+<button onclick="abrirModulo('🏗️ Crecimiento Urbano','Seguimiento a expansión urbana y construcciones.','https://effectiveactions9017.github.io/MapasWeb/SESQUILE/mapEvConst/public/index.html','./dashboards/construcciones.html')">
 🏗️ Crecimiento Urbano
 </button>
 
-<button onclick="abrirModulo('🧭 Uso del Suelo','Identificación de oportunidades según uso permitido.','https://effectiveactions9017.github.io/MapasWeb/OPORTUNIDADES%20USO%20DLE%20SUELO%20SESQUILE/public/index.html','dashboards/suelo.html')">
+<button onclick="abrirModulo('🧭 Uso del Suelo','Identificación de oportunidades según uso permitido.','https://effectiveactions9017.github.io/MapasWeb/OPORTUNIDADES%20USO%20DLE%20SUELO%20SESQUILE/public/index.html','./dashboards/suelo.html')">
 🧭 Uso del Suelo
 </button>
 
@@ -120,15 +77,15 @@ CONTENEDOR PRINCIPAL
 🌳 Pérdida Forestación
 </button>
 
-<button onclick="abrirModulo('♻️ Bonos de Carbono','Potencial de conservación y aprovechamiento económico.','https://effectiveactions9017.github.io/MapasWeb/BONOS%20DE%20CARBONO%20SESQUILE/public/index.html','dashboards/bonos.html')">
+<button onclick="abrirModulo('♻️ Bonos de Carbono','Potencial de conservación y aprovechamiento económico.','https://effectiveactions9017.github.io/MapasWeb/BONOS%20DE%20CARBONO%20SESQUILE/public/index.html','./dashboards/bonos.html')">
 ♻️ Bonos Carbono
 </button>
 
-<button onclick="abrirModulo('📑 Reporte Impuesto Predial','Consulta análisis del impuesto predial.','https://effectiveactions9017.github.io/MapasWeb/Reporte_Impusto_Predial_2/public/index.html','dashboards/reporte_predial.html')">
+<button onclick="abrirModulo('📑 Reporte Impuesto Predial','Consulta análisis del impuesto predial.','https://effectiveactions9017.github.io/MapasWeb/Reporte_Impusto_Predial_2/public/index.html','./dashboards/reporte_predial.html')">
 📑 Reporte Predial
 </button>
 
-<button onclick="abrirModulo('📊 Reporte Cartera','Análisis de cartera y recaudo municipal.','https://effectiveactions9017.github.io/MapasWeb/Reporte%20de%20Cartera_Sesquile/public/index.html','dashboards/cartera.html')">
+<button onclick="abrirModulo('📊 Reporte Cartera','Análisis de cartera y recaudo municipal.','https://effectiveactions9017.github.io/MapasWeb/Reporte%20de%20Cartera_Sesquile/public/index.html','./dashboards/cartera.html')">
 📊 Reporte Cartera
 </button>
 
@@ -136,7 +93,7 @@ CONTENEDOR PRINCIPAL
 🛣️ Placa Huellas
 </button>
 
-<button onclick="abrirDashboardSolo('👨‍👩‍👧 Caracterización Socioeconómica','Indicadores sociales, educación, salud y ocupación poblacional.','dashboards/caracterizacion_socioeconomica.html')">
+<button onclick="abrirDashboardSolo('👨‍👩‍👧 Caracterización Socioeconómica','Indicadores sociales, educación, salud y ocupación poblacional.','./dashboards/caracterizacion_socioeconomica.html')">
 👨‍👩‍👧 Caracterización Socioeconómica
 </button>
 
@@ -148,7 +105,6 @@ CONTENEDOR PRINCIPAL
 <main class="visor-contenedor">
 
 <div id="inicio" class="inicio">
-
   <div class="home-portada">
 
     <div class="home-encabezado">
@@ -191,7 +147,6 @@ CONTENEDOR PRINCIPAL
     </div>
 
   </div>
-
 </div>
 
 <div id="modulo" class="modulo" style="display:none;">
