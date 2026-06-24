@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dashboard Predial</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  padding:20px;
+  background:linear-gradient(135deg,#eef7f7,#f7fbfc);
+  font-family:'Segoe UI',Arial,sans-serif;
+  color:#1f2d3d;
+}
+
+.contenedor{
+  width:100%;
+  min-height:calc(100vh - 40px);
+  background:#fff;
+  border-radius:22px;
+  padding:26px;
+  box-shadow:0 12px 32px rgba(0,0,0,.08);
+}
+
+.titulo{
+  margin:0;
+  font-size:34px;
+  font-weight:800;
+  color:#004d4d;
+}
+
+.subtitulo{
+  margin:10px 0 20px;
+  font-size:16px;
+  color:rgba(0,0,0,.68);
+}
+
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:24px;
+}
+
+.card{
+  background:#f5fbfb;
+  border-radius:16px;
+  padding:18px;
+  border:1px solid rgba(0,147,160,.15);
+}
+
+.card b{
+  display:block;
+  font-size:14px;
+  margin-bottom:8px;
+  color:#005b61;
+}
+
+.card span{
+  font-size:24px;
+  font-weight:800;
+  color:#1f2d3d;
+}
+
+.card.dinero{
+  background:linear-gradient(135deg,#e8f8ef,#f7fcf9);
+  border:1px solid rgba(12,106,59,.25);
+}
+
+.card.dinero span{
+  color:#0c6a3b;
+}
+
+.grafico{
+  background:#fbfdfd;
+  border-radius:18px;
+  padding:20px;
+  border:1px solid #e5efef;
+  height:360px;
+}
+
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+  <h1 class="titulo">📊 Dashboard Predial Inteligente</h1>
+
+  <p class="subtitulo">
+    Indicadores clave sobre predios con y sin información en registro R1,
+    áreas asociadas, recursos estimados y distribución porcentual.
+  </p>
+
+  <div class="kpi-grid">
+
+    <div class="card">
+      <b>Predios en catastro y en registro R1</b>
+      <span>4.196</span>
+    </div>
+
+    <div class="card">
+      <b>Total predios base catastral</b>
+      <span>4.356</span>
+    </div>
+
+    <div class="card">
+      <b>Predios vigentes en registro R1</b>
+      <span>5.811</span>
+    </div>
+
+    <div class="card">
+      <b>Predios en catastro pero no en registro R1</b>
+      <span>160</span>
+    </div>
+
+    <div class="card">
+      <b>Predios en registro pero no en catastro</b>
+      <span>1.615</span>
+    </div>
+
+    <div class="card">
+      <b>Área con información en catastro y registro R1</b>
+      <span>13.406,75 ha</span>
+    </div>
+
+    <div class="card">
+      <b>Área en catastro pero no en registro R1</b>
+      <span>513,34 ha</span>
+    </div>
+
+    <div class="card dinero">
+      <b>💰 Potencial Recaudo Adicional</b>
+      <span>$142.860.320</span>
+    </div>
+
+  </div>
+
+  <div class="grafico">
+    <canvas id="graficoPredial"></canvas>
+  </div>
+
+</div>
+
+<script>
+const ctx = document.getElementById("graficoPredial");
+
+new Chart(ctx, {
+  type: "bar",
+  data: {
+    labels: ["Con R1", "Sin R1"],
+    datasets: [{
+      data: [96.33, 3.67],
+      backgroundColor: [
+        "rgba(29,53,87,0.90)",
+        "rgba(27,79,114,0.88)"
+      ],
+      borderRadius: 10,
+      maxBarThickness: 90
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {display:false},
+      tooltip: {
+        callbacks: {
+          label: c => c.raw.toLocaleString("es-CO", {
+            minimumFractionDigits:2,
+            maximumFractionDigits:2
+          }) + "%"
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero:true,
+        max:100,
+        ticks: {
+          callback: v => v + "%"
+        }
+      }
+    }
+  }
+});
+</script>
+
+</body>
+</html>

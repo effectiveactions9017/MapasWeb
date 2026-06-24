@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<title>Caracterización Socioeconómica</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Archivo+Narrow:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{box-sizing:border-box;}
+
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    min-height:100%;
+    background:linear-gradient(135deg,#eef7f7,#f8fbfb);
+    font-family:'Archivo Narrow','Segoe UI',sans-serif;
+    color:#0C2D48;
+}
+
+body{
+    padding:18px;
+}
+
+.contenedor{
+    width:100%;
+    max-width:1380px;
+    margin:0 auto;
+}
+
+.subtitulo{
+    margin:8px 0 0 0;
+    font-size:16px;
+    opacity:.92;
+}
+
+.kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+    margin-bottom:16px;
+}
+
+.kpi-card{
+    background:#ffffff;
+    border-radius:18px;
+    padding:16px;
+    border:1px solid rgba(29,53,87,0.12);
+    box-shadow:0 10px 24px rgba(12,45,72,0.10);
+}
+
+.kpi-label{
+    font-size:14px;
+    color:rgba(12,45,72,0.72);
+    margin-bottom:8px;
+}
+
+.kpi-value{
+    font-family:'Barlow Condensed','Archivo Narrow',sans-serif;
+    font-size:30px;
+    font-weight:800;
+    color:#1B4F72;
+    line-height:1;
+}
+
+.grid-principal{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+}
+
+.card{
+    background:#ffffff;
+    border-radius:18px;
+    padding:16px;
+    border:1px solid rgba(29,53,87,0.12);
+    box-shadow:0 10px 24px rgba(12,45,72,0.10);
+    min-width:0;
+}
+
+.card-full{
+    grid-column:1 / -1;
+}
+
+.card-title{
+    margin:0 0 12px 0;
+    font-family:'Barlow Condensed','Archivo Narrow',sans-serif;
+    font-size:24px;
+    color:#1D3557;
+    line-height:1;
+}
+
+.chart-box{
+    position:relative;
+    width:100%;
+    height:280px;
+}
+
+.chart-box-small{
+    position:relative;
+    width:100%;
+    height:240px;
+}
+
+.tabla-wrap{
+    width:100%;
+    overflow:auto;
+    max-height:330px;
+    border-radius:14px;
+    border:1px solid rgba(29,53,87,0.10);
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:15px;
+}
+
+thead th{
+    position:sticky;
+    top:0;
+    background:#E0F2F1;
+    color:#0C2D48;
+    text-align:left;
+    padding:10px;
+    border-bottom:1px solid rgba(29,53,87,0.14);
+    z-index:2;
+}
+
+tbody td{
+    padding:8px 10px;
+    border-bottom:1px solid rgba(29,53,87,0.08);
+}
+
+tbody tr:hover{
+    background:#f4fbfb;
+}
+
+.nota{
+    font-size:13px;
+    color:rgba(12,45,72,0.65);
+    margin-top:8px;
+}
+
+@media(max-width:1100px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .grid-principal{grid-template-columns:1fr;}
+}
+
+@media(max-width:700px){
+    body{padding:10px;}
+    .kpi-grid{grid-template-columns:1fr;}
+    .chart-box,.chart-box-small{height:260px;}
+}
+</style>
+</head>
+
+<body>
+<div class="contenedor">
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Total encuestas</div>
+            <div class="kpi-value">9.683</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Población femenina</div>
+            <div class="kpi-value">51,4%</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Afiliación a salud</div>
+            <div class="kpi-value">91,1%</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Sabe leer</div>
+            <div class="kpi-value">88,8%</div>
+        </div>
+    </div>
+
+    <div class="grid-principal">
+
+        <div class="card card-full">
+            <h2 class="card-title">Tabla lugar / país de nacimiento</h2>
+            <div class="tabla-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Respuesta</th>
+                            <th>Cantidad</th>
+                            <th>Porcentaje</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaNacimiento"></tbody>
+                </table>
+            </div>
+            <div class="nota">Se usa municipio de nacimiento; si está vacío, se toma país de nacimiento/origen.</div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Estado civil</h2>
+            <div class="chart-box">
+                <canvas id="graficoEstadoCivil"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Género</h2>
+            <div class="chart-box">
+                <canvas id="graficoGenero"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Ocupación principal</h2>
+            <div class="chart-box">
+                <canvas id="graficoOcupacion"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Tipo de régimen de salud</h2>
+            <div class="chart-box">
+                <canvas id="graficoRegimenSalud"></canvas>
+            </div>
+        </div>
+
+        <div class="card card-full">
+            <h2 class="card-title">Tabla tipo de trabajo</h2>
+            <div class="tabla-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Respuesta</th>
+                            <th>Cantidad</th>
+                            <th>Porcentaje</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaTrabajo"></tbody>
+                </table>
+            </div>
+            <div class="nota">Se usa “Especifique en qué trabaja”; si está vacío, se toma “actividad independiente”.</div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Formación para el trabajo</h2>
+            <div class="chart-box-small">
+                <canvas id="graficoFormacion"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Sabe leer</h2>
+            <div class="chart-box-small">
+                <canvas id="graficoLeer"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Sabe escribir</h2>
+            <div class="chart-box-small">
+                <canvas id="graficoEscribir"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Ayuda social del Gobierno</h2>
+            <div class="chart-box-small">
+                <canvas id="graficoAyuda"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Discapacidad</h2>
+            <div class="chart-box-small">
+                <canvas id="graficoDiscapacidad"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Enfermedad crónica</h2>
+            <div class="chart-box-small">
+                <canvas id="graficoCronica"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Enfermedad psicológica</h2>
+            <div class="chart-box-small">
+                <canvas id="graficoPsicologica"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Afiliación a régimen de salud</h2>
+            <div class="chart-box-small">
+                <canvas id="graficoAfiliado"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+const nacimiento = [
+    ["SESQUILÉ",2787,28.8],
+    ["BOGOTÁ, D.C.",1529,15.8],
+    ["Venezuela",495,5.11],
+    ["ZIPAQUIRÁ",486,5.02],
+    ["CHÍA",477,4.93],
+    ["GUATAVITA",430,4.44],
+    ["CHOCONTÁ",416,4.3],
+    ["SUESCA",248,2.56],
+    ["SOPÓ",101,1.04],
+    ["TUNJA",74,0.76]
+];
+
+const estadoCivil = [
+    ["soltero",3232,33.4],
+    ["menor a 5 años",2284,23.6],
+    ["libre",2226,23.0],
+    ["casado",1685,17.4],
+    ["viudo",255,2.63],
+    ["Sin respuesta",1,0.01]
+];
+
+const genero = [
+    ["femenino",4981,51.4],
+    ["masculino",4700,48.5],
+    ["Sin respuesta",2,0.02]
+];
+
+const ocupacion = [
+    ["Empleado",2511,25.9],
+    ["Estudiante",2243,23.2],
+    ["Ama_casa",1599,16.5],
+    ["Trabajador_Independiente",1392,14.4],
+    ["otro",1264,13.0],
+    ["desempleado",673,6.95],
+    ["Sin respuesta",1,0.01]
+];
+
+const tipoTrabajo = [
+    ["Sin respuesta",5780,59.7],
+    ["Operario",409,4.22],
+    ["Operaria",273,2.82],
+    ["Oficios varios",161,1.66],
+    ["Construccion",152,1.57],
+    ["Flores",112,1.16],
+    ["Conductor",108,1.12],
+    ["Comerciante",106,1.09],
+    ["Agricultura",101,1.04],
+    ["Ganaderia",87,0.9]
+];
+
+const formacion = [
+    ["no",6236,64.4],
+    ["Sin respuesta",2213,22.8],
+    ["si",1234,12.7]
+];
+
+const leer = [
+    ["si",8598,88.8],
+    ["no",1084,11.2],
+    ["Sin respuesta",1,0.01]
+];
+
+const escribir = [
+    ["si",8612,88.9],
+    ["no",1070,11.0],
+    ["Sin respuesta",1,0.01]
+];
+
+const ayuda = [
+    ["no",8820,91.1],
+    ["si",860,8.88],
+    ["Sin respuesta",3,0.03]
+];
+
+const discapacidad = [
+    ["no",9164,94.6],
+    ["si",517,5.34],
+    ["Sin respuesta",2,0.02]
+];
+
+const cronica = [
+    ["no",8422,87.0],
+    ["si",1258,13.0],
+    ["Sin respuesta",3,0.03]
+];
+
+const psicologica = [
+    ["no",9624,99.4],
+    ["si",58,0.6],
+    ["Sin respuesta",1,0.01]
+];
+
+const afiliado = [
+    ["si",8818,91.1],
+    ["no",864,8.92],
+    ["Sin respuesta",1,0.01]
+];
+
+const regimen = [
+    ["Con",5904,61.0],
+    ["sub",2787,28.8],
+    ["Sin respuesta",865,8.93],
+    ["otro",67,0.69],
+    ["esp",60,0.62]
+];
+
+function fmtNumero(n){
+    return Number(n).toLocaleString("es-CO");
+}
+
+function fmtPorcentaje(n){
+    return Number(n).toLocaleString("es-CO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }) + "%";
+}
+
+function llenarTabla(id, data){
+    const tbody = document.getElementById(id);
+    tbody.innerHTML = data.map(d => `
+        <tr>
+            <td>${d[0]}</td>
+            <td>${fmtNumero(d[1])}</td>
+            <td>${fmtPorcentaje(d[2])}</td>
+        </tr>
+    `).join("");
+}
+
+llenarTabla("tablaNacimiento", nacimiento);
+llenarTabla("tablaTrabajo", tipoTrabajo);
+
+const colores = [
+    "rgba(29,53,87,0.92)",
+    "rgba(27,79,114,0.88)",
+    "rgba(69,123,157,0.88)",
+    "rgba(42,157,143,0.84)",
+    "rgba(162,217,206,0.92)",
+    "rgba(12,45,72,0.70)",
+    "rgba(120,160,170,0.75)"
+];
+
+function graficoBarras(id, data){
+    new Chart(document.getElementById(id), {
+        type:"bar",
+        data:{
+            labels:data.map(d=>d[0]),
+            datasets:[{
+                data:data.map(d=>d[2]),
+                backgroundColor:colores,
+                borderRadius:8,
+                maxBarThickness:56
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{display:false},
+                tooltip:{
+                    callbacks:{
+                        label:(ctx)=>fmtPorcentaje(ctx.raw)
+                    }
+                }
+            },
+            scales:{
+                y:{
+                    beginAtZero:true,
+                    ticks:{callback:(v)=>v+"%"}
+                },
+                x:{
+                    ticks:{font:{size:11}}
+                }
+            }
+        }
+    });
+}
+
+function graficoTorta(id, data){
+    new Chart(document.getElementById(id), {
+        type:"pie",
+        data:{
+            labels:data.map(d=>d[0]),
+            datasets:[{
+                data:data.map(d=>d[2]),
+                backgroundColor:colores,
+                borderColor:"#ffffff",
+                borderWidth:2
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{
+                    position:"bottom",
+                    labels:{boxWidth:12,font:{size:11}}
+                },
+                tooltip:{
+                    callbacks:{
+                        label:(ctx)=>ctx.label + ": " + fmtPorcentaje(ctx.raw)
+                    }
+                }
+            }
+        }
+    });
+}
+
+graficoBarras("graficoEstadoCivil", estadoCivil);
+graficoBarras("graficoGenero", genero);
+graficoBarras("graficoOcupacion", ocupacion);
+graficoBarras("graficoRegimenSalud", regimen);
+
+graficoTorta("graficoFormacion", formacion);
+graficoTorta("graficoLeer", leer);
+graficoTorta("graficoEscribir", escribir);
+graficoTorta("graficoAyuda", ayuda);
+graficoTorta("graficoDiscapacidad", discapacidad);
+graficoTorta("graficoCronica", cronica);
+graficoTorta("graficoPsicologica", psicologica);
+graficoTorta("graficoAfiliado", afiliado);
+</script>
+
+</body>
+</html>

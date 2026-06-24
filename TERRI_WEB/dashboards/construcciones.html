@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+<title>Dashboard Construcciones</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #eef7f7, #f7fbfc);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #1f2d3d;
+}
+
+.contenedor {
+  width: 100%;
+  height: calc(100vh - 40px);
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 26px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0, 77, 77, 0.08);
+}
+
+.titulo {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 800;
+  color: #004d4d;
+}
+
+.subtitulo {
+  margin: 10px 0 20px 0;
+  font-size: 16px;
+  color: rgba(0,0,0,0.68);
+}
+
+.resumen {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 25px;
+}
+
+.card {
+  background: #f5fbfb;
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid rgba(0,147,160,0.15);
+}
+
+.card b {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 8px;
+  color: #005b61;
+}
+
+.card span {
+  font-size: 25px;
+  font-weight: 800;
+  color: #1f2d3d;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 17px;
+}
+
+thead th {
+  background: #e8f4f4;
+  color: #004d4d;
+  padding: 14px;
+  text-align: left;
+  border-bottom: 2px solid #cfe3e3;
+}
+
+tbody td {
+  padding: 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+tbody tr:hover {
+  background: #f8fbfb;
+}
+
+@media (max-width: 900px) {
+  .resumen {
+    grid-template-columns: 1fr;
+  }
+
+  .titulo {
+    font-size: 28px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+  <h1 class="titulo">🏗️ Evolución de Construcciones Detectadas</h1>
+
+  <p class="subtitulo">
+    Número de construcciones nuevas detectadas y área total entre 2020 y 2024.
+  </p>
+
+  <div class="resumen">
+    <div class="card">
+      <b>Total construcciones</b>
+      <span>3.978</span>
+    </div>
+
+    <div class="card">
+      <b>Área total detectada</b>
+      <span>259.894 m²</span>
+    </div>
+
+    <div class="card">
+      <b>Promedio área por construcción</b>
+      <span>65 m²</span>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Año</th>
+        <th>Número de construcciones nuevas detectadas</th>
+        <th>Suma de Área Detectada</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr>
+        <td>2020</td>
+        <td>311</td>
+        <td>31.163 m²</td>
+      </tr>
+
+      <tr>
+        <td>2021</td>
+        <td>260</td>
+        <td>23.656 m²</td>
+      </tr>
+
+      <tr>
+        <td>2022</td>
+        <td>157</td>
+        <td>24.473 m²</td>
+      </tr>
+
+      <tr>
+        <td>2023</td>
+        <td>73</td>
+        <td>11.182 m²</td>
+      </tr>
+
+      <tr>
+        <td>2024</td>
+        <td>3.177</td>
+        <td>169.420 m²</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+</body>
+</html>

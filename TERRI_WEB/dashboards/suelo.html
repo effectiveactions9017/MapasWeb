@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dashboard Uso del Suelo</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+margin:0;
+padding:0;
+width:100%;
+height:100%;
+overflow:hidden;
+background:linear-gradient(135deg,#eef7f7,#f7fbfc);
+font-family:'Segoe UI',Arial,sans-serif;
+}
+
+body{
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.contenedor{
+width:100%;
+max-width:1400px;
+height:95vh;
+display:flex;
+flex-direction:column;
+gap:10px;
+padding:14px;
+background:#ffffff;
+border-radius:20px;
+box-shadow:0 10px 28px rgba(0,0,0,0.08);
+overflow:hidden;
+}
+
+.subtitulo{
+font-size:13px;
+color:rgba(0,0,0,0.65);
+margin:0;
+line-height:1.35;
+}
+
+.resumen{
+display:grid;
+grid-template-columns:repeat(4,minmax(0,1fr));
+gap:10px;
+}
+
+.card{
+background:#f5fbfb;
+border-radius:12px;
+padding:10px 12px;
+border:1px solid rgba(0,147,160,0.15);
+min-width:0;
+min-height:78px;
+}
+
+.card b{
+display:block;
+font-size:11px;
+color:#005b61;
+line-height:1.25;
+margin-bottom:6px;
+}
+
+.card span{
+display:block;
+font-size:16px;
+font-weight:700;
+color:#1f2d3d;
+line-height:1.15;
+word-break:break-word;
+}
+
+.card.destacado{
+background:linear-gradient(135deg,#e6f7f7,#f0fbfb);
+border:1px solid rgba(0,147,160,0.25);
+}
+
+.card.destacado span{
+color:#007f82;
+}
+
+.paneles{
+flex:1;
+min-height:0;
+display:grid;
+grid-template-columns:0.95fr 1.05fr;
+gap:12px;
+overflow:hidden;
+}
+
+.grafico-box,.tabla-box{
+background:#fbfdfd;
+border:1px solid #e5efef;
+border-radius:16px;
+padding:12px;
+min-height:0;
+overflow:hidden;
+display:flex;
+flex-direction:column;
+}
+
+.grafico-titulo{
+font-size:16px;
+font-weight:700;
+color:#004d4d;
+margin:0 0 8px 0;
+line-height:1.2;
+}
+
+.barras-scroll{
+flex:1;
+min-height:0;
+overflow-y:auto;
+overflow-x:hidden;
+padding-right:6px;
+}
+
+.fila-barra{
+display:grid;
+grid-template-columns:190px 1fr;
+align-items:center;
+gap:10px;
+margin-bottom:8px;
+}
+
+.etiqueta{
+font-size:11px;
+font-weight:700;
+text-align:right;
+color:#234040;
+line-height:1.2;
+}
+
+.barra-contenedor{
+width:100%;
+height:30px;
+background:#e8f4f4;
+border-radius:999px;
+overflow:visible;
+position:relative;
+}
+
+.barra{
+height:100%;
+min-width:12px;
+display:flex;
+align-items:center;
+justify-content:flex-end;
+padding-right:8px;
+color:white;
+font-size:11px;
+font-weight:700;
+border-radius:999px;
+position:relative;
+}
+
+.valor{
+white-space:nowrap;
+color:white;
+font-size:11px;
+font-weight:800;
+}
+
+.valor.fuera{
+position:absolute;
+right:-38px;
+top:50%;
+transform:translateY(-50%);
+color:#004d4d;
+background:transparent;
+font-weight:800;
+}
+
+.panel-derecho{
+min-height:0;
+display:grid;
+grid-template-rows:48% 52%;
+gap:12px;
+overflow:hidden;
+}
+
+.pie-wrap{
+display:flex;
+align-items:flex-start;
+gap:12px;
+min-height:0;
+height:100%;
+overflow:hidden;
+}
+
+.pie-chart{
+min-width:180px;
+width:180px;
+height:180px;
+border-radius:50%;
+background:conic-gradient(
+#0097a0 0% 39.72%,
+#00acc1 39.72% 67.20%,
+#26a69a 67.20% 79.25%,
+#4db6ac 79.25% 85.40%,
+#66bb6a 85.40% 89.05%,
+#7cb342 89.05% 92.10%,
+#8bc34a 92.10% 94.65%,
+#5c6bc0 94.65% 96.33%,
+#29b6f6 96.33% 97.57%,
+#78909c 97.57% 98.78%,
+#90a4ae 98.78% 99.43%,
+#80cbc4 99.43% 99.75%,
+#aed581 99.75% 99.95%,
+#b0bec5 99.95% 99.98%,
+#c5e1a5 99.98% 100%
+);
+position:relative;
+flex-shrink:0;
+margin-top:4px;
+}
+
+.pie-chart::after{
+content:"";
+position:absolute;
+inset:38px;
+background:white;
+border-radius:50%;
+}
+
+.pie-center{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+z-index:2;
+text-align:center;
+width:100px;
+}
+
+.pie-center .n1{
+font-size:10px;
+color:#006d70;
+font-weight:700;
+margin-bottom:4px;
+}
+
+.pie-center .n2{
+font-size:18px;
+font-weight:800;
+color:#004d4d;
+line-height:1;
+}
+
+.legend{
+flex:1;
+min-width:0;
+height:100%;
+overflow-y:auto;
+display:grid;
+gap:6px;
+padding-right:4px;
+align-content:start;
+}
+
+.legend-item{
+display:grid;
+grid-template-columns:14px 1fr auto;
+gap:8px;
+align-items:center;
+background:#f7fbfb;
+border:1px solid #e5efef;
+border-radius:10px;
+padding:6px 8px;
+}
+
+.legend-color{
+width:10px;
+height:10px;
+border-radius:50%;
+display:inline-block;
+}
+
+.legend-text{
+font-size:11px;
+color:#234040;
+font-weight:600;
+}
+
+.legend-value{
+font-size:11px;
+color:#006d70;
+font-weight:800;
+}
+
+.tabla-scroll{
+flex:1;
+min-height:0;
+overflow-y:auto;
+border-radius:12px;
+border:1px solid #e4efef;
+background:white;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+thead th{
+position:sticky;
+top:0;
+background:#eaf6f6;
+color:#004d4d;
+font-size:11px;
+font-weight:800;
+text-align:left;
+padding:9px 10px;
+border-bottom:1px solid #d9eaea;
+z-index:2;
+}
+
+tbody td{
+padding:8px 10px;
+font-size:11px;
+border-bottom:1px solid #eef4f4;
+color:#2a3c3c;
+vertical-align:top;
+line-height:1.35;
+}
+
+tbody tr:hover{
+background:#f6fbfb;
+}
+</style>
+</head>
+
+<body>
+<div class="contenedor">
+
+<p class="subtitulo">
+Distribución de predios por destino, participación porcentual y destinos por vereda / barrio.
+</p>
+
+<div class="resumen">
+<div class="card"><b>Total de predios analizados</b><span>4.356</span></div>
+<div class="card"><b>Total de categorías de destino</b><span>15</span></div>
+<div class="card"><b>Destino principal</b><span>Dotacional social/comunitario</span></div>
+<div class="card destacado"><b>Participación del destino principal</b><span>39,72%</span></div>
+</div>
+
+<div class="paneles">
+
+<div class="grafico-box">
+<h2 class="grafico-titulo">📊 Número de predios por destino</h2>
+<div class="barras-scroll">
+
+<div class="fila-barra"><div class="etiqueta">Dotacional social/comunitario</div><div class="barra-contenedor"><div class="barra" style="width:100%;background:#0097a0;"><span class="valor">1.730</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Agropecuario</div><div class="barra-contenedor"><div class="barra" style="width:69.19%;background:#00acc1;"><span class="valor">1.197</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Otros</div><div class="barra-contenedor"><div class="barra" style="width:30.35%;background:#26a69a;"><span class="valor">525</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">No determinado</div><div class="barra-contenedor"><div class="barra" style="width:15.49%;background:#4db6ac;"><span class="valor">268</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Lote</div><div class="barra-contenedor"><div class="barra" style="width:9.19%;background:#66bb6a;"><span class="valor fuera">159</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Protección</div><div class="barra-contenedor"><div class="barra" style="width:7.69%;background:#7cb342;"><span class="valor fuera">133</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Residencial</div><div class="barra-contenedor"><div class="barra" style="width:6.42%;background:#8bc34a;"><span class="valor fuera">111</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Institucional/Gob.</div><div class="barra-contenedor"><div class="barra" style="width:4.22%;background:#5c6bc0;"><span class="valor fuera">73</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Industrial</div><div class="barra-contenedor"><div class="barra" style="width:3.12%;background:#29b6f6;"><span class="valor fuera">54</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Comercial</div><div class="barra-contenedor"><div class="barra" style="width:3.06%;background:#78909c;"><span class="valor fuera">53</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Dotacional</div><div class="barra-contenedor"><div class="barra" style="width:2.8%;background:#90a4ae;"><span class="valor fuera">28</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Servicios</div><div class="barra-contenedor"><div class="barra" style="width:2.8%;background:#80cbc4;"><span class="valor fuera">14</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Educativo</div><div class="barra-contenedor"><div class="barra" style="width:2.8%;background:#aed581;"><span class="valor fuera">9</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Dotacional institucional</div><div class="barra-contenedor"><div class="barra" style="width:2.8%;background:#b0bec5;"><span class="valor fuera">1</span></div></div></div>
+<div class="fila-barra"><div class="etiqueta">Mixto</div><div class="barra-contenedor"><div class="barra" style="width:2.8%;background:#c5e1a5;"><span class="valor fuera">1</span></div></div></div>
+
+</div>
+</div>
+
+<div class="panel-derecho">
+
+<div class="grafico-box">
+<h2 class="grafico-titulo">🥧 Porcentaje de predios por destino</h2>
+<div class="pie-wrap">
+<div class="pie-chart">
+<div class="pie-center">
+<div class="n1">Total predios</div>
+<div class="n2">4.356</div>
+</div>
+</div>
+
+<div class="legend">
+<div class="legend-item"><span class="legend-color" style="background:#0097a0;"></span><span class="legend-text">Dotacional social/comunitario</span><span class="legend-value">39,72%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#00acc1;"></span><span class="legend-text">Agropecuario</span><span class="legend-value">27,48%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#26a69a;"></span><span class="legend-text">Otros</span><span class="legend-value">12,05%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#4db6ac;"></span><span class="legend-text">No determinado</span><span class="legend-value">6,15%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#66bb6a;"></span><span class="legend-text">Lote</span><span class="legend-value">3,65%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#7cb342;"></span><span class="legend-text">Protección</span><span class="legend-value">3,05%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#8bc34a;"></span><span class="legend-text">Residencial</span><span class="legend-value">2,55%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#5c6bc0;"></span><span class="legend-text">Institucional/Gob.</span><span class="legend-value">1,68%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#29b6f6;"></span><span class="legend-text">Industrial</span><span class="legend-value">1,24%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#78909c;"></span><span class="legend-text">Comercial</span><span class="legend-value">1,22%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#90a4ae;"></span><span class="legend-text">Dotacional</span><span class="legend-value">0,64%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#80cbc4;"></span><span class="legend-text">Servicios</span><span class="legend-value">0,32%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#aed581;"></span><span class="legend-text">Educativo</span><span class="legend-value">0,21%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#b0bec5;"></span><span class="legend-text">Dotacional institucional</span><span class="legend-value">0,02%</span></div>
+<div class="legend-item"><span class="legend-color" style="background:#c5e1a5;"></span><span class="legend-text">Mixto</span><span class="legend-value">0,02%</span></div>
+</div>
+</div>
+</div>
+
+<div class="tabla-box">
+<h2 class="grafico-titulo">📋 Destinos por vereda / barrio</h2>
+<div class="subtitulo" style="margin-bottom:10px;">
+Total de veredas / zonas identificadas: <b>13</b>
+</div>
+
+<div class="tabla-scroll">
+<table>
+<thead>
+<tr>
+<th>Vereda / Barrio</th>
+<th>Destinos y número de predios</th>
+<th style="text-align:right;">Total predios</th>
+</tr>
+</thead>
+
+<tbody>
+<tr><td>BOITA</td><td>Protección <b>(55)</b><br>Agropecuario <b>(36)</b><br>No determinado <b>(29)</b><br>Lote <b>(22)</b><br>Dotacional social/comunitario <b>(19)</b><br>Otros <b>(15)</b><br>Industrial <b>(4)</b><br>Dotacional <b>(2)</b><br>Comercial <b>(1)</b><br>Dotacional institucional <b>(1)</b><br>Educativo <b>(1)</b><br>Residencial <b>(1)</b><br>Servicios <b>(1)</b></td><td style="text-align:right;">187</td></tr>
+
+<tr><td>BOITIVA</td><td>Agropecuario <b>(322)</b><br>Dotacional social/comunitario <b>(120)</b><br>Otros <b>(50)</b><br>No determinado <b>(29)</b><br>Protección <b>(18)</b><br>Comercial <b>(10)</b><br>Industrial <b>(8)</b><br>Residencial <b>(5)</b><br>Dotacional <b>(2)</b><br>Institucional/Gob. <b>(1)</b><br>Mixto <b>(1)</b></td><td style="text-align:right;">566</td></tr>
+
+<tr><td>CARBONERA ALTA</td><td>No determinado <b>(1)</b><br>Otros <b>(1)</b></td><td style="text-align:right;">2</td></tr>
+
+<tr><td>CHALECHE</td><td>Dotacional social/comunitario <b>(105)</b><br>Otros <b>(33)</b><br>Agropecuario <b>(12)</b><br>Institucional/Gob. <b>(9)</b><br>Industrial <b>(3)</b><br>No determinado <b>(3)</b><br>Comercial <b>(2)</b><br>Dotacional <b>(1)</b><br>Lote <b>(1)</b><br>Protección <b>(1)</b><br>Servicios <b>(1)</b></td><td style="text-align:right;">171</td></tr>
+
+<tr><td>EL HATO</td><td>Dotacional social/comunitario <b>(105)</b><br>Lote <b>(32)</b><br>Otros <b>(25)</b><br>Agropecuario <b>(6)</b><br>Dotacional <b>(6)</b><br>No determinado <b>(5)</b><br>Educativo <b>(3)</b><br>Industrial <b>(3)</b></td><td style="text-align:right;">185</td></tr>
+
+<tr><td>ESPIGAS</td><td>Dotacional social/comunitario <b>(183)</b><br>Otros <b>(52)</b><br>Agropecuario <b>(16)</b><br>No determinado <b>(11)</b><br>Lote <b>(7)</b><br>Educativo <b>(3)</b><br>Residencial <b>(1)</b></td><td style="text-align:right;">273</td></tr>
+
+<tr><td>GOBERNADOR</td><td>Dotacional social/comunitario <b>(147)</b><br>Otros <b>(30)</b><br>Agropecuario <b>(28)</b><br>Lote <b>(6)</b><br>Industrial <b>(5)</b><br>Dotacional <b>(3)</b><br>Institucional/Gob. <b>(3)</b><br>No determinado <b>(2)</b><br>Comercial <b>(1)</b></td><td style="text-align:right;">225</td></tr>
+
+<tr><td>NESCUATA</td><td>Dotacional social/comunitario <b>(182)</b><br>Agropecuario <b>(108)</b><br>Otros <b>(70)</b><br>Lote <b>(36)</b><br>Industrial <b>(15)</b><br>No determinado <b>(11)</b><br>Dotacional <b>(3)</b><br>Comercial <b>(2)</b><br>Protección <b>(2)</b><br>Servicios <b>(1)</b></td><td style="text-align:right;">430</td></tr>
+
+<tr><td>RANCHERA</td><td>Dotacional social/comunitario <b>(335)</b><br>Otros <b>(81)</b><br>Lote <b>(16)</b><br>No determinado <b>(10)</b><br>Protección <b>(6)</b><br>Dotacional <b>(2)</b><br>Educativo <b>(2)</b><br>Industrial <b>(2)</b><br>Agropecuario <b>(1)</b><br>Servicios <b>(1)</b></td><td style="text-align:right;">456</td></tr>
+
+<tr><td>SALINAS</td><td>Dotacional social/comunitario <b>(81)</b><br>Otros <b>(43)</b><br>Lote <b>(9)</b><br>Agropecuario <b>(6)</b><br>No determinado <b>(5)</b><br>Institucional/Gob. <b>(3)</b><br>Protección <b>(1)</b></td><td style="text-align:right;">148</td></tr>
+
+<tr><td>SAN JOSÉ</td><td>Dotacional social/comunitario <b>(175)</b><br>Otros <b>(59)</b><br>Lote <b>(26)</b><br>Institucional/Gob. <b>(25)</b><br>Agropecuario <b>(18)</b><br>No determinado <b>(4)</b><br>Protección <b>(3)</b><br>Comercial <b>(1)</b></td><td style="text-align:right;">311</td></tr>
+
+<tr><td>TIERRA NEGRA</td><td>Dotacional social/comunitario <b>(262)</b><br>Otros <b>(62)</b><br>Institucional/Gob. <b>(32)</b><br>Dotacional <b>(9)</b><br>No determinado <b>(8)</b><br>Agropecuario <b>(6)</b><br>Lote <b>(3)</b><br>Comercial <b>(2)</b><br>Industrial <b>(2)</b><br>Protección <b>(1)</b><br>Residencial <b>(1)</b><br>Servicios <b>(1)</b></td><td style="text-align:right;">389</td></tr>
+
+<tr><td>URBANO</td><td>Agropecuario <b>(638)</b><br>No determinado <b>(150)</b><br>Residencial <b>(103)</b><br>Protección <b>(46)</b><br>Comercial <b>(34)</b><br>Dotacional social/comunitario <b>(16)</b><br>Industrial <b>(12)</b><br>Servicios <b>(9)</b><br>Otros <b>(4)</b><br>Lote <b>(1)</b></td><td style="text-align:right;">1.013</td></tr>
+</tbody>
+
+</table>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+</body>
+</html>

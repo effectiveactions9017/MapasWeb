@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dashboard Cartera en Mora</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  min-height:100%;
+  background:linear-gradient(135deg,#eef7f7,#f7fbfc);
+  font-family:'Segoe UI',Arial,sans-serif;
+  color:#1f2d3d;
+}
+
+body{padding:20px}
+
+.contenedor{
+  max-width:1180px;
+  margin:0 auto;
+  background:#ffffff;
+  border-radius:22px;
+  padding:26px;
+  box-shadow:0 12px 32px rgba(0,0,0,.08);
+  border:1px solid rgba(0,77,77,.08);
+}
+
+.subtitulo{
+  margin:0 0 20px;
+  font-size:16px;
+  color:rgba(0,0,0,.68);
+  line-height:1.5;
+}
+
+.resumen{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:22px;
+}
+
+.card{
+  background:#f5fbfb;
+  border-radius:14px;
+  padding:14px;
+  border:1px solid rgba(0,147,160,.15);
+}
+
+.card b{
+  display:block;
+  font-size:14px;
+  margin-bottom:6px;
+  color:#005b61;
+}
+
+.card span{
+  font-size:20px;
+  font-weight:800;
+  color:#1f2d3d;
+}
+
+.card.principal{
+  background:linear-gradient(135deg,#e6f7f7,#f0fbfb);
+  border:1px solid rgba(0,147,160,.25);
+}
+
+.card.principal span{
+  color:#007f82;
+}
+
+.bloque-tabla{
+  background:#fbfdfd;
+  border:1px solid #e5efef;
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:18px;
+}
+
+.titulo-tabla{
+  margin:0 0 12px;
+  font-size:22px;
+  color:#004d4d;
+}
+
+.tabla-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:auto;
+  font-size:14px;
+  min-width:560px;
+}
+
+thead th{
+  background:linear-gradient(90deg,#0097a0,#00b7c2);
+  color:#ffffff;
+  padding:12px 10px;
+  text-align:center;
+  border-bottom:2px solid #0da9b4;
+  font-weight:700;
+  line-height:1.2;
+}
+
+thead th:first-child{
+  border-top-left-radius:12px;
+  width:30%;
+}
+
+thead th:last-child{
+  border-top-right-radius:12px;
+}
+
+tbody td{
+  padding:11px 8px;
+  border-bottom:1px solid #e5e7eb;
+  font-weight:500;
+  text-align:center;
+  vertical-align:middle;
+  line-height:1.25;
+}
+
+tbody td:first-child{
+  text-align:center;
+  width:30%;
+}
+
+tbody tr:nth-child(even){
+  background:#f8fbfb;
+}
+
+tbody tr:hover{
+  background:#eef8f8;
+}
+
+.fila-total td{
+  font-weight:800;
+  color:#004d4d;
+  background:#edf8f8;
+}
+
+.tabla-dinero{
+  font-size:13px;
+}
+
+.tabla-dinero tbody td{
+  padding:10px 7px;
+}
+
+.nota{
+  margin-top:14px;
+  font-size:13px;
+  color:rgba(0,0,0,.65);
+  line-height:1.5;
+}
+
+@media(max-width:1100px){
+  .resumen{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:640px){
+  .resumen{grid-template-columns:1fr}
+  .contenedor{padding:18px}
+  .bloque-tabla{padding:16px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+  <p class="subtitulo">
+    Resumen de los predios únicos en mora, el valor total de cartera por recuperar
+    y la distribución según nivel de riesgo y antigüedad de la deuda.
+  </p>
+
+  <div class="resumen">
+    <div class="card principal">
+      <b>Total cartera por recuperar</b>
+      <span>$3.677.213.537</span>
+    </div>
+
+    <div class="card">
+      <b>Total predios únicos en mora</b>
+      <span>601</span>
+    </div>
+
+    <div class="card">
+      <b>Predios con riesgo alto</b>
+      <span>85</span>
+    </div>
+
+    <div class="card principal">
+      <b>Cartera en riesgo alto</b>
+      <span>$2.731.755.605</span>
+    </div>
+  </div>
+
+  <div class="bloque-tabla">
+    <h2 class="titulo-tabla">📌 Cantidad de predios por vigencia y riesgo</h2>
+
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Categoría de vigencia</th>
+            <th>Alto</th>
+            <th>Bajo</th>
+            <th>Medio</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>3 a 5 años</td>
+            <td>25</td>
+            <td>106</td>
+            <td>19</td>
+            <td>150</td>
+          </tr>
+
+          <tr>
+            <td>Hasta 2 años</td>
+            <td>13</td>
+            <td>254</td>
+            <td>9</td>
+            <td>276</td>
+          </tr>
+
+          <tr>
+            <td>Más de 5 años</td>
+            <td>47</td>
+            <td>104</td>
+            <td>24</td>
+            <td>175</td>
+          </tr>
+
+          <tr class="fila-total">
+            <td>Total</td>
+            <td>85</td>
+            <td>464</td>
+            <td>52</td>
+            <td>601</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bloque-tabla">
+    <h2 class="titulo-tabla">💰 Valor de cartera por vigencia y riesgo</h2>
+
+    <div class="tabla-wrap">
+      <table class="tabla-dinero">
+        <thead>
+          <tr>
+            <th>Categoría de vigencia</th>
+            <th>Alto</th>
+            <th>Bajo</th>
+            <th>Medio</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr>
+            <td>3 a 5 años</td>
+            <td>$807.052.734</td>
+            <td>$195.817.260</td>
+            <td>$117.472.905</td>
+            <td>$1.120.342.899</td>
+          </tr>
+
+          <tr>
+            <td>Hasta 2 años</td>
+            <td>$224.675.732</td>
+            <td>$220.949.942</td>
+            <td>$54.114.846</td>
+            <td>$499.740.520</td>
+          </tr>
+
+          <tr>
+            <td>Más de 5 años</td>
+            <td>$1.700.027.139</td>
+            <td>$205.777.013</td>
+            <td>$151.325.966</td>
+            <td>$2.057.130.118</td>
+          </tr>
+
+          <tr class="fila-total">
+            <td>Total</td>
+            <td>$2.731.755.605</td>
+            <td>$622.544.215</td>
+            <td>$322.913.717</td>
+            <td>$3.677.213.537</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="nota">
+      La categoría con mayor valor acumulado es <b>Más de 5 años</b>,
+      con una cartera estimada de <b>$2.057.130.118</b>.
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

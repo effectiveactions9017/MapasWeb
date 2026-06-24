@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Reporte Impuesto Predial</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Archivo+Narrow:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  background: linear-gradient(135deg, #f4fbfb, #edf7f7);
+  font-family: 'Archivo Narrow', 'Segoe UI', sans-serif;
+  color: #103b3f;
+}
+
+body {
+  padding: 18px;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,147,160,0.12);
+}
+
+.sub {
+  margin: 0 0 22px 0;
+  font-size: 16px;
+  color: rgba(0,0,0,0.68);
+  line-height: 1.45;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.kpi-card {
+  background: #ffffff;
+  border: 1px solid rgba(0,147,160,0.14);
+  border-radius: 16px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+  padding: 16px;
+  min-width: 0;
+}
+
+.kpi-label {
+  font-size: 15px;
+  line-height: 1.2;
+  color: rgba(0,0,0,0.64);
+  margin-bottom: 10px;
+  min-height: 36px;
+}
+
+.kpi-value {
+  font-family: 'Barlow Condensed', 'Archivo Narrow', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  color: #005f66;
+  letter-spacing: -0.2px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.money {
+  color: #0c6a3b;
+}
+
+.recaudo-destacado {
+  border: 2px solid rgba(12,106,59,0.24);
+  box-shadow: 0 10px 20px rgba(12,106,59,0.10);
+  background: linear-gradient(135deg, #ffffff, #f4fbf6);
+}
+
+@media (max-width: 1000px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  body {
+    padding: 10px;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-value {
+    font-size: 24px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <p class="sub">
+    Indicadores clave del comportamiento del impuesto predial en el municipio:
+    predios únicos, predios del municipio, predios exentos, pagos realizados en febrero y marzo,
+    predios al día, predios que aún están en mora, posibles predios sin pagar
+    y recaudo potencial estimado.
+  </p>
+
+  <div class="kpi-grid">
+
+    <div class="kpi-card">
+      <div class="kpi-label">Número de predios únicos del municipio</div>
+      <div class="kpi-value">4.356</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">Predios de propiedad del municipio</div>
+      <div class="kpi-value">132</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">Número de predios exentos</div>
+      <div class="kpi-value">97</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">Predios que pagaron en febrero</div>
+      <div class="kpi-value">1.185</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">Predios que pagaron en marzo</div>
+      <div class="kpi-value">1.714</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">Predios al día</div>
+      <div class="kpi-value">2.739</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">Predios que aún están en mora</div>
+      <div class="kpi-value">551</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-label">Posibles predios sin pagar</div>
+      <div class="kpi-value">837</div>
+    </div>
+
+    <div class="kpi-card recaudo-destacado">
+      <div class="kpi-label">💰 Recaudo potencial estimado</div>
+      <div class="kpi-value money">$ 747.338.049</div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>

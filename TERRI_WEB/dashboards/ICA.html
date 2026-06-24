@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dashboard ICA</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  padding:20px;
+  background:linear-gradient(135deg,#eef7f7,#f7fbfc);
+  font-family:'Segoe UI',Arial,sans-serif;
+  color:#1f2d3d;
+}
+
+.contenedor{
+  width:100%;
+  min-height:calc(100vh - 40px);
+  background:#fff;
+  border-radius:22px;
+  padding:30px;
+  box-shadow:0 12px 32px rgba(0,0,0,.08);
+}
+
+.titulo{
+  margin:0;
+  font-size:36px;
+  font-weight:800;
+  color:#004d4d;
+}
+
+.subtitulo{
+  margin:12px 0 28px;
+  font-size:18px;
+  color:rgba(0,0,0,.68);
+}
+
+.resumen{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+}
+
+.card{
+  background:#f5fbfb;
+  border-radius:18px;
+  padding:24px;
+  border:1px solid rgba(0,147,160,.15);
+}
+
+.card b{
+  display:block;
+  font-size:17px;
+  color:#005b61;
+  margin-bottom:14px;
+}
+
+.card span{
+  font-size:34px;
+  font-weight:800;
+  color:#1f2d3d;
+}
+
+.card.dinero{
+  background:linear-gradient(135deg,#e6f7f7,#f0fbfb);
+  border:1px solid rgba(0,147,160,.25);
+}
+
+.card.dinero span{
+  color:#007f82;
+}
+
+@media(max-width:900px){
+  .resumen{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+  <h1 class="titulo">💰 Dashboard ICA</h1>
+
+  <p class="subtitulo">
+    Indicadores principales asociados a la actividad económica y potencial de recaudo del municipio.
+  </p>
+
+  <div class="resumen">
+
+    <div class="card">
+      <b>Número de contribuyentes del ICA activos</b>
+      <span>643</span>
+    </div>
+
+    <div class="card">
+      <b>Número de unidades productivas no registradas</b>
+      <span>273</span>
+    </div>
+
+    <div class="card dinero">
+      <b>Aproximado de recursos adicionales para el municipio</b>
+      <span>$172.343.562</span>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8"/>
+<title>TERRI+ Web</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+
+
+<body>
+
+
+<!-- =========================
+LOGIN TERRI+
+========================= -->
+
+<div id="login" class="login">
+
+  <div class="login-box">
+
+    <h1>TERRI<span>+</span></h1>
+
+    <p>Plataforma inteligente de análisis territorial</p>
+
+    <input id="usuario" placeholder="Usuario">
+
+    <input id="password" type="password" placeholder="Contraseña">
+
+    <button onclick="iniciarSesion()">Ingresar</button>
+
+    <div id="loginError"></div>
+
+  </div>
+
+</div>
+
+
+
+<!-- =========================
+HEADER TERRI+
+========================= -->
+
+<header class="header">
+
+
+  <div class="header-content">
+
+
+    <img 
+      src="https://huggingface.co/spaces/Davideffectiveactions/Geovisor_Sesquile/resolve/main/escudo-municipio.png"
+      class="header-logo"
+    >
+
+
+    <div>
+
+      <h1>TERRI<span>+</span></h1>
+
+      <p>
+        Geovisor inteligente del territorio
+      </p>
+
+    </div>
+
+
+  </div>
+
+
+</header>
+
+
+
+<!-- =========================
+CONTENEDOR PRINCIPAL
+========================= -->
+
+<div class="app">
+
+
+<aside class="sidebar">
+
+
+<h2>🌎 MAPAS SESQUILÉ</h2>
+
+<button onclick="abrirModulo('📄 Buscador Predial','Visualiza información predial para verificación y análisis.','https://effectiveactions9017.github.io/MapasWeb/Catastro_SESQUILE_2/public/index.html')">
+🔎 Buscador Predial
+</button>
+
+<button onclick="abrirModulo('🏠 Oportunidades para incremento del predial','Consulta cartografía catastral y referencias territoriales.','https://effectiveactions9017.github.io/MapasWeb/Catastro_SESQUILE/public/index.html','dashboards/predial.html')">
+🏠 Incremento Predial
+</button>
+
+<button onclick="abrirModulo('💰 Oportunidades para incremento del ICA','Análisis territorial del recaudo ICA para gestión fiscal.','https://effectiveactions9017.github.io/MapasWeb/RECAUDO%20IMPUESTOS%20ICA_SESQUILE/public/index.html','dashboards/ica.html')">
+💰 Incremento ICA
+</button>
+
+<button onclick="abrirModulo('👥 Buscador contribuyentes del ICA','Consulta contribuyentes activos y localización territorial.','https://effectiveactions9017.github.io/MapasWeb/CONTRIBUYENTES_ACTIVOS_SESQUILE/public/index.html')">
+👥 Contribuyentes ICA
+</button>
+
+<button onclick="abrirModulo('🚰 Situación Servicios Públicos','Diagnóstico territorial de cobertura de servicios.','https://effectiveactions9017.github.io/MapasWeb/SITUACI%C3%93N%20SERVICIOS%20PUBLICOS/public/index.html','dashboards/servicios.html')">
+🚰 Servicios Públicos
+</button>
+
+<button onclick="abrirModulo('🏛️ Activos Públicos','Inventario georreferenciado de activos públicos.','https://effectiveactions9017.github.io/MapasWeb/ACTIVOS_PUBLICOS_SESQUILE/public/index.html','dashboards/activos.html')">
+🏛️ Activos Públicos
+</button>
+
+<button onclick="abrirModulo('🏗️ Crecimiento Urbano','Seguimiento a expansión urbana y construcciones.','https://effectiveactions9017.github.io/MapasWeb/SESQUILE/mapEvConst/public/index.html','dashboards/construcciones.html')">
+🏗️ Crecimiento Urbano
+</button>
+
+<button onclick="abrirModulo('🧭 Uso del Suelo','Identificación de oportunidades según uso permitido.','https://effectiveactions9017.github.io/MapasWeb/OPORTUNIDADES%20USO%20DLE%20SUELO%20SESQUILE/public/index.html','dashboards/suelo.html')">
+🧭 Uso del Suelo
+</button>
+
+<button onclick="abrirModulo('🌳 Pérdida de Forestación','Monitoreo de pérdida de cobertura boscosa.','https://effectiveactions9017.github.io/MapasWeb/SESQUILE_BOSQUE/public/index.html')">
+🌳 Pérdida Forestación
+</button>
+
+<button onclick="abrirModulo('♻️ Bonos de Carbono','Potencial de conservación y aprovechamiento económico.','https://effectiveactions9017.github.io/MapasWeb/BONOS%20DE%20CARBONO%20SESQUILE/public/index.html','dashboards/bonos.html')">
+♻️ Bonos Carbono
+</button>
+
+<button onclick="abrirModulo('📑 Reporte Impuesto Predial','Consulta análisis del impuesto predial.','https://effectiveactions9017.github.io/MapasWeb/Reporte_Impusto_Predial_2/public/index.html','dashboards/reporte_predial.html')">
+📑 Reporte Predial
+</button>
+
+<button onclick="abrirModulo('📊 Reporte Cartera','Análisis de cartera y recaudo municipal.','https://effectiveactions9017.github.io/MapasWeb/Reporte%20de%20Cartera_Sesquile/public/index.html','dashboards/cartera.html')">
+📊 Reporte Cartera
+</button>
+
+<button onclick="abrirModulo('🛣️ Placa Huellas','Consulta de placas huellas municipales.','https://effectiveactions9017.github.io/MapasWeb/PLACA_HUELLAS/public/index.html')">
+🛣️ Placa Huellas
+</button>
+
+<button onclick="abrirDashboardSolo('👨‍👩‍👧 Caracterización Socioeconómica','Indicadores sociales, educación, salud y ocupación poblacional.','dashboards/caracterizacion_socioeconomica.html')">
+👨‍👩‍👧 Caracterización Socioeconómica
+</button>
+
+<button class="btn-secundario" onclick="limpiarVisor()">⬅️ Inicio</button>
+<button class="btn-secundario" onclick="cerrarSesion()">🔐 Cerrar sesión</button>
+
+</aside>
+
+<main class="visor-contenedor">
+
+<div id="inicio" class="inicio">
+
+  <div class="home-portada">
+
+    <div class="home-encabezado">
+      <p>Geovisor inteligente del Municipio de Sesquilé</p>
+    </div>
+
+    <div class="home-wrapper">
+
+      <div class="home-box home-bienvenida">
+        <h3 class="home-title">Bienvenido a TERRI+</h3>
+
+        <p class="home-text home-text-principal">
+          Sistema de información territorial que permitirá incrementar el recaudo
+          de ingresos territoriales y aportar a la generación de datos para el impacto
+          social, ambiental y económico del municipio de Sesquilé.
+        </p>
+
+        <p class="home-text">
+          Este geovisor integra información territorial estratégica para apoyar la
+          planeación, la gestión pública y la toma de decisiones basadas en datos.
+        </p>
+      </div>
+
+      <div class="home-box home-listado">
+        <h3 class="home-subtitle">En el geovisor podrás encontrar</h3>
+
+        <ul class="home-list">
+          <li>Análisis del crecimiento de las construcciones en el municipio.</li>
+          <li>Oportunidades para incrementar el impuesto del ICA.</li>
+          <li>Nuevas construcciones desde la última actualización catastral.</li>
+          <li>Análisis de deforestación.</li>
+          <li>Cambios en el uso del suelo permitido.</li>
+          <li>Identificación de lugares con posibilidad de cobro de plusvalía.</li>
+          <li>Oportunidades para usar el mercado de bonos de carbono.</li>
+          <li>Identificación de predios vacíos para urbanización.</li>
+          <li>Identificación de suelo público para aprovechamiento del suelo.</li>
+        </ul>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div id="modulo" class="modulo" style="display:none;">
+
+  <div class="visor-head">
+
+    <div>
+      <h3 id="tituloModulo" class="visor-title"></h3>
+      <p id="descripcionModulo" class="visor-sub"></p>
+    </div>
+
+    <div class="visor-head-actions">
+      <button id="btnDashboard" class="visor-full-btn" onclick="verDashboard()">📊 Ir a dashboard</button>
+      <button id="btnMapa" class="visor-full-btn" onclick="verMapa()" style="display:none;">🗺️ Volver al visor</button>
+      <button class="visor-full-btn" onclick="pantallaCompleta()">⛶ Pantalla completa</button>
+    </div>
+
+  </div>
+
+  <iframe id="mapaFrame" class="visor-frame" allowfullscreen loading="lazy"></iframe>
+  <iframe id="dashboardFrame" class="visor-frame" allowfullscreen loading="lazy" style="display:none;"></iframe>
+
+</div>
+
+</main>
+
+</div>
+
+<script src="js/app.js"></script>
+<script src="js/login.js"></script>
+
+</body>
+</html>
