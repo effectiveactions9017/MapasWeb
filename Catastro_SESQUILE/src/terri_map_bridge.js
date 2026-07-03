@@ -11,10 +11,29 @@ let TERRI_AI_POINT_LAYER_ID = "terri_ai_puntos";
 
 
 // ==========================================================
+// Avisar al visor principal que el bridge cargó
+// ==========================================================
+
+window.parent.postMessage({
+    tipo: "TERRI_BRIDGE_CARGADO",
+    mensaje: "Bridge cargado correctamente en el mapa."
+}, "*");
+
+console.log("🌉 TERRI Map Bridge cargado correctamente.");
+
+
+// ==========================================================
 // Escuchar mensajes desde TERRI Copilot
 // ==========================================================
 
 window.addEventListener("message", function(event) {
+
+    console.log("📩 TERRI Bridge recibió mensaje:", event.data);
+
+    window.parent.postMessage({
+        tipo: "TERRI_BRIDGE_RECIBIO",
+        mensaje: event.data
+    }, "*");
 
     const mensaje = event.data;
 
@@ -50,6 +69,12 @@ function obtenerMapaTerri() {
     if (typeof mapa !== "undefined") return mapa;
 
     console.error("❌ No se encontró instancia de mapa Mapbox/MapLibre.");
+
+    window.parent.postMessage({
+        tipo: "TERRI_BRIDGE_ERROR",
+        mensaje: "No se encontró instancia de mapa Mapbox/MapLibre."
+    }, "*");
+
     return null;
 
 }
@@ -104,8 +129,16 @@ function dibujarGeoJSONDesdeTerri(geojson) {
     limpiarResultadoTerri();
 
     if (!geojson.features || geojson.features.length === 0) {
+
         console.warn("GeoJSON vacío recibido desde TERRI.");
+
+        window.parent.postMessage({
+            tipo: "TERRI_BRIDGE_ERROR",
+            mensaje: "GeoJSON vacío recibido desde TERRI."
+        }, "*");
+
         return;
+
     }
 
     mapInstance.addSource(TERRI_AI_SOURCE_ID, {
@@ -164,6 +197,11 @@ function dibujarGeoJSONDesdeTerri(geojson) {
     zoomResultadoTerri();
 
     console.log("✅ TERRI Copilot dibujó GeoJSON en el mapa:", geojson);
+
+    window.parent.postMessage({
+        tipo: "TERRI_BRIDGE_DIBUJO",
+        total: geojson.features.length
+    }, "*");
 
 }
 
