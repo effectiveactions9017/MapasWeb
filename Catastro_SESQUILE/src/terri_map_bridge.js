@@ -1,6 +1,7 @@
 /* ==========================================================
    TERRI MAP BRIDGE
    Permite que TERRI Copilot controle mapas dentro de iframe
+   Compatible con Mapbox GL JS y MapLibre GL JS
 ========================================================== */
 
 let TERRI_AI_SOURCE_ID = "terri_ai_resultado";
@@ -8,6 +9,10 @@ let TERRI_AI_FILL_LAYER_ID = "terri_ai_poligonos";
 let TERRI_AI_LINE_LAYER_ID = "terri_ai_lineas";
 let TERRI_AI_POINT_LAYER_ID = "terri_ai_puntos";
 
+
+// ==========================================================
+// Escuchar mensajes desde TERRI Copilot
+// ==========================================================
 
 window.addEventListener("message", function(event) {
 
@@ -30,21 +35,65 @@ window.addEventListener("message", function(event) {
 });
 
 
+// ==========================================================
+// Obtener instancia del mapa
+// ==========================================================
+
 function obtenerMapaTerri() {
-
-    if (typeof map !== "undefined") return map;
-
-    if (typeof mapa !== "undefined") return mapa;
 
     if (typeof window.map !== "undefined") return window.map;
 
+    if (typeof map !== "undefined") return map;
+
     if (typeof window.mapa !== "undefined") return window.mapa;
 
-    console.error("❌ No se encontró instancia de mapa MapLibre/Mapbox.");
+    if (typeof mapa !== "undefined") return mapa;
+
+    console.error("❌ No se encontró instancia de mapa Mapbox/MapLibre.");
     return null;
 
 }
 
+
+// ==========================================================
+// Obtener clases Mapbox o MapLibre
+// ==========================================================
+
+function obtenerBoundsClass() {
+
+    if (window.mapboxgl && window.mapboxgl.LngLatBounds) {
+        return window.mapboxgl.LngLatBounds;
+    }
+
+    if (window.maplibregl && window.maplibregl.LngLatBounds) {
+        return window.maplibregl.LngLatBounds;
+    }
+
+    console.error("❌ No se encontró LngLatBounds.");
+    return null;
+
+}
+
+
+function obtenerPopupClass() {
+
+    if (window.mapboxgl && window.mapboxgl.Popup) {
+        return window.mapboxgl.Popup;
+    }
+
+    if (window.maplibregl && window.maplibregl.Popup) {
+        return window.maplibregl.Popup;
+    }
+
+    console.error("❌ No se encontró Popup.");
+    return null;
+
+}
+
+
+// ==========================================================
+// Dibujar GeoJSON enviado por TERRI Copilot
+// ==========================================================
 
 function dibujarGeoJSONDesdeTerri(geojson) {
 
@@ -53,6 +102,11 @@ function dibujarGeoJSONDesdeTerri(geojson) {
     if (!mapInstance || !geojson) return;
 
     limpiarResultadoTerri();
+
+    if (!geojson.features || geojson.features.length === 0) {
+        console.warn("GeoJSON vacío recibido desde TERRI.");
+        return;
+    }
 
     mapInstance.addSource(TERRI_AI_SOURCE_ID, {
         type: "geojson",
@@ -109,8 +163,14 @@ function dibujarGeoJSONDesdeTerri(geojson) {
     activarPopupTerri(mapInstance);
     zoomResultadoTerri();
 
+    console.log("✅ TERRI Copilot dibujó GeoJSON en el mapa:", geojson);
+
 }
 
+
+// ==========================================================
+// Detectar tipo de geometría
+// ==========================================================
 
 function detectarTipoGeometria(geojson) {
 
@@ -120,6 +180,10 @@ function detectarTipoGeometria(geojson) {
 
 }
 
+
+// ==========================================================
+// Limpiar resultado TERRI
+// ==========================================================
 
 function limpiarResultadoTerri() {
 
@@ -134,9 +198,11 @@ function limpiarResultadoTerri() {
     ];
 
     layers.forEach(layerId => {
+
         if (mapInstance.getLayer(layerId)) {
             mapInstance.removeLayer(layerId);
         }
+
     });
 
     if (mapInstance.getSource(TERRI_AI_SOURCE_ID)) {
@@ -145,6 +211,10 @@ function limpiarResultadoTerri() {
 
 }
 
+
+// ==========================================================
+// Zoom al resultado
+// ==========================================================
 
 function zoomResultadoTerri() {
 
@@ -156,7 +226,11 @@ function zoomResultadoTerri() {
 
     if (!source || !source._data || !source._data.features.length) return;
 
-    const bounds = new mapboxgl.LngLatBounds();
+    const BoundsClass = obtenerBoundsClass();
+
+    if (!BoundsClass) return;
+
+    const bounds = new BoundsClass();
 
     source._data.features.forEach(feature => {
         expandirBoundsTerri(bounds, feature.geometry);
@@ -169,6 +243,10 @@ function zoomResultadoTerri() {
 
 }
 
+
+// ==========================================================
+// Expandir bounds según geometría
+// ==========================================================
 
 function expandirBoundsTerri(bounds, geometry) {
 
@@ -199,7 +277,15 @@ function expandirBoundsTerri(bounds, geometry) {
 }
 
 
+// ==========================================================
+// Popups del resultado TERRI
+// ==========================================================
+
 function activarPopupTerri(mapInstance) {
+
+    const PopupClass = obtenerPopupClass();
+
+    if (!PopupClass) return;
 
     const capas = [
         TERRI_AI_FILL_LAYER_ID,
@@ -213,22 +299,32 @@ function activarPopupTerri(mapInstance) {
 
         mapInstance.on("click", layerId, function(e) {
 
-            const props = e.features[0].properties;
+            const props = e.features[0].properties || {};
 
-            let html = "<div style='font-size:12px;max-height:220px;overflow:auto;'><table>";
+            let html = `
+                <div style="font-size:12px;max-height:220px;overflow:auto;">
+                <strong>Resultado TERRI+</strong>
+                <hr>
+                <table>
+            `;
 
             Object.keys(props).forEach(campo => {
+
                 html += `
                     <tr>
                         <td><b>${campo}</b></td>
                         <td>${props[campo]}</td>
                     </tr>
                 `;
+
             });
 
-            html += "</table></div>";
+            html += `
+                </table>
+                </div>
+            `;
 
-            new mapboxgl.Popup()
+            new PopupClass()
                 .setLngLat(e.lngLat)
                 .setHTML(html)
                 .addTo(mapInstance);
@@ -238,3 +334,12 @@ function activarPopupTerri(mapInstance) {
     });
 
 }
+
+
+// ==========================================================
+// Exponer funciones globales
+// ==========================================================
+
+window.dibujarGeoJSONDesdeTerri = dibujarGeoJSONDesdeTerri;
+window.limpiarResultadoTerri = limpiarResultadoTerri;
+window.zoomResultadoTerri = zoomResultadoTerri;
