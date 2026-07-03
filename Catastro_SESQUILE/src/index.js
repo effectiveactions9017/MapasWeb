@@ -23,6 +23,9 @@ const map = new mapboxgl.Map({
   antialias: true
 });
 
+// ✅ Exponer mapa para TERRI Copilot / Bridge
+window.map = map;
+
 let popup = new mapboxgl.Popup({
   closeButton: true,
   closeOnClick: true,
