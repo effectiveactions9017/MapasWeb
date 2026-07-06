@@ -9,6 +9,12 @@ let TERRI_AI_FILL_LAYER_ID = "terri_ai_poligonos";
 let TERRI_AI_LINE_LAYER_ID = "terri_ai_lineas";
 let TERRI_AI_POINT_LAYER_ID = "terri_ai_puntos";
 
+let TERRI_AI_LAST_GEOJSON = null;
+
+let TERRI_BASE_LAYERS_ATENUADAS = [
+    "predios_ssk_layer"
+];
+
 
 // ==========================================================
 // Avisar al visor principal que el bridge cargó
@@ -30,14 +36,14 @@ window.addEventListener("message", function(event) {
 
     console.log("📩 TERRI Bridge recibió mensaje:", event.data);
 
-    window.parent.postMessage({
-        tipo: "TERRI_BRIDGE_RECIBIO",
-        mensaje: event.data
-    }, "*");
-
     const mensaje = event.data;
 
     if (!mensaje || !mensaje.tipo) return;
+
+    window.parent.postMessage({
+        tipo: "TERRI_BRIDGE_RECIBIO",
+        mensaje: mensaje.tipo
+    }, "*");
 
     if (mensaje.tipo === "TERRI_DIBUJAR_GEOJSON") {
         dibujarGeoJSONDesdeTerri(mensaje.geojson);
@@ -141,6 +147,8 @@ function dibujarGeoJSONDesdeTerri(geojson) {
 
     }
 
+    TERRI_AI_LAST_GEOJSON = geojson;
+
     mapInstance.addSource(TERRI_AI_SOURCE_ID, {
         type: "geojson",
         data: geojson
@@ -156,7 +164,7 @@ function dibujarGeoJSONDesdeTerri(geojson) {
             source: TERRI_AI_SOURCE_ID,
             paint: {
                 "fill-color": "#00AEEF",
-                "fill-opacity": 0.55,
+                "fill-opacity": 0.60,
                 "fill-outline-color": "#003B5C"
             }
         });
@@ -193,6 +201,7 @@ function dibujarGeoJSONDesdeTerri(geojson) {
 
     }
 
+    atenuarCapasBaseTerri(mapInstance);
     activarPopupTerri(mapInstance);
     zoomResultadoTerri();
 
@@ -214,7 +223,11 @@ function detectarTipoGeometria(geojson) {
 
     if (!geojson.features || geojson.features.length === 0) return null;
 
-    return geojson.features[0].geometry.type;
+    const featureConGeom = geojson.features.find(
+        f => f.geometry && f.geometry.type
+    );
+
+    return featureConGeom ? featureConGeom.geometry.type : null;
 
 }
 
@@ -247,6 +260,52 @@ function limpiarResultadoTerri() {
         mapInstance.removeSource(TERRI_AI_SOURCE_ID);
     }
 
+    restaurarCapasBaseTerri(mapInstance);
+
+    TERRI_AI_LAST_GEOJSON = null;
+
+}
+
+
+// ==========================================================
+// Atenuar / restaurar capas base
+// ==========================================================
+
+function atenuarCapasBaseTerri(mapInstance) {
+
+    TERRI_BASE_LAYERS_ATENUADAS.forEach(layerId => {
+
+        if (mapInstance.getLayer(layerId)) {
+
+            try {
+                mapInstance.setPaintProperty(layerId, "fill-opacity", 0.10);
+            } catch (e) {
+                console.warn("⚠️ No se pudo atenuar la capa:", layerId);
+            }
+
+        }
+
+    });
+
+}
+
+
+function restaurarCapasBaseTerri(mapInstance) {
+
+    TERRI_BASE_LAYERS_ATENUADAS.forEach(layerId => {
+
+        if (mapInstance.getLayer(layerId)) {
+
+            try {
+                mapInstance.setPaintProperty(layerId, "fill-opacity", 0.75);
+            } catch (e) {
+                console.warn("⚠️ No se pudo restaurar la capa:", layerId);
+            }
+
+        }
+
+    });
+
 }
 
 
@@ -260,9 +319,11 @@ function zoomResultadoTerri() {
 
     if (!mapInstance) return;
 
-    const source = mapInstance.getSource(TERRI_AI_SOURCE_ID);
-
-    if (!source || !source._data || !source._data.features.length) return;
+    if (
+        !TERRI_AI_LAST_GEOJSON ||
+        !TERRI_AI_LAST_GEOJSON.features ||
+        !TERRI_AI_LAST_GEOJSON.features.length
+    ) return;
 
     const BoundsClass = obtenerBoundsClass();
 
@@ -270,9 +331,11 @@ function zoomResultadoTerri() {
 
     const bounds = new BoundsClass();
 
-    source._data.features.forEach(feature => {
+    TERRI_AI_LAST_GEOJSON.features.forEach(feature => {
         expandirBoundsTerri(bounds, feature.geometry);
     });
+
+    if (bounds.isEmpty && bounds.isEmpty()) return;
 
     mapInstance.fitBounds(bounds, {
         padding: 50,
@@ -335,41 +398,99 @@ function activarPopupTerri(mapInstance) {
 
         if (!mapInstance.getLayer(layerId)) return;
 
-        mapInstance.on("click", layerId, function(e) {
+        try {
+            mapInstance.off("click", layerId, popupTerriHandler);
+            mapInstance.off("mouseenter", layerId, mouseEnterTerriHandler);
+            mapInstance.off("mouseleave", layerId, mouseLeaveTerriHandler);
+        } catch (e) {}
 
-            const props = e.features[0].properties || {};
-
-            let html = `
-                <div style="font-size:12px;max-height:220px;overflow:auto;">
-                <strong>Resultado TERRI+</strong>
-                <hr>
-                <table>
-            `;
-
-            Object.keys(props).forEach(campo => {
-
-                html += `
-                    <tr>
-                        <td><b>${campo}</b></td>
-                        <td>${props[campo]}</td>
-                    </tr>
-                `;
-
-            });
-
-            html += `
-                </table>
-                </div>
-            `;
-
-            new PopupClass()
-                .setLngLat(e.lngLat)
-                .setHTML(html)
-                .addTo(mapInstance);
-
-        });
+        mapInstance.on("click", layerId, popupTerriHandler);
+        mapInstance.on("mouseenter", layerId, mouseEnterTerriHandler);
+        mapInstance.on("mouseleave", layerId, mouseLeaveTerriHandler);
 
     });
+
+}
+
+
+function popupTerriHandler(e) {
+
+    const mapInstance = obtenerMapaTerri();
+    const PopupClass = obtenerPopupClass();
+
+    if (!mapInstance || !PopupClass) return;
+
+    const feature = e.features && e.features[0];
+
+    if (!feature) return;
+
+    const props = feature.properties || {};
+    const lngLat = [e.lngLat.lng, e.lngLat.lat];
+
+    if (typeof buildPopupHTML === "function") {
+
+        new PopupClass({
+            closeButton: true,
+            closeOnClick: true,
+            className: "custom-popup"
+        })
+            .setLngLat(e.lngLat)
+            .setHTML(buildPopupHTML(props, lngLat))
+            .addTo(mapInstance);
+
+        return;
+
+    }
+
+    let html = `
+        <div style="font-size:12px;max-height:220px;overflow:auto;">
+        <strong>Resultado TERRI+</strong>
+        <hr>
+        <table>
+    `;
+
+    Object.keys(props).forEach(campo => {
+
+        html += `
+            <tr>
+                <td><b>${campo}</b></td>
+                <td>${props[campo]}</td>
+            </tr>
+        `;
+
+    });
+
+    html += `
+        </table>
+        </div>
+    `;
+
+    new PopupClass()
+        .setLngLat(e.lngLat)
+        .setHTML(html)
+        .addTo(mapInstance);
+
+}
+
+
+function mouseEnterTerriHandler() {
+
+    const mapInstance = obtenerMapaTerri();
+
+    if (mapInstance) {
+        mapInstance.getCanvas().style.cursor = "pointer";
+    }
+
+}
+
+
+function mouseLeaveTerriHandler() {
+
+    const mapInstance = obtenerMapaTerri();
+
+    if (mapInstance) {
+        mapInstance.getCanvas().style.cursor = "";
+    }
 
 }
 
