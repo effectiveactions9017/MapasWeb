@@ -1,13 +1,9 @@
 // =====================================================
 // ✅ Visor Predial Sesquilé - Mapbox GL JS
 // ✅ Búsqueda local por: codigo, NOMBRE, NUMERO_DOCUMENTO
-// ✅ Resalta 1 o varios predios (mismo codigo o documento)
-// ✅ Predios SIN NOMBRE en naranja
-// ✅ Usa PREDIOS_DATA para búsqueda completa (sin querySourceFeatures)
-// ✅ Evita errores "source/layer already exists"
-// ✅ POPUP SOLO POR CLICK (no hover)
-// ✅ + BOTÓN STREET VIEW EN POPUP (también para predios/polígonos)
-//    (Google ajusta al panorama/vía más cercana)
+// ✅ Compatible con TERRI+ Copilot / PostGIS / GeoJSON IA
+// ✅ POPUP completo: código, destino, nombre, documento, avalúo, área
+// ✅ + BOTÓN STREET VIEW EN POPUP
 // =====================================================
 
 mapboxgl.accessToken =
@@ -35,17 +31,21 @@ let popup = new mapboxgl.Popup({
 // ✅ Dataset completo para búsquedas
 let PREDIOS_DATA = null;
 
+
 // =====================================================
 // Helpers
 // =====================================================
+
 function formatAvaluo(value) {
   if (value === null || value === undefined || value === '') return 'N/A';
+
   const n = Number(value);
   return isNaN(n) ? String(value) : n.toLocaleString('es-CO');
 }
 
 function formatArea(value) {
   if (value === null || value === undefined || value === '') return 'N/A';
+
   const n = Number(value);
   return isNaN(n) ? String(value) : String(Math.round(n));
 }
@@ -58,9 +58,13 @@ function norm(v) {
     .trim();
 }
 
-// ✅ Punto representativo del feature (para polígonos/puntos) + fallback
+
+// =====================================================
+// Punto representativo para Street View
+// =====================================================
+
 function getFeatureLngLat(feature, fallbackLngLat = null) {
-  // 1) si viene del click (e.lngLat)
+
   if (
     fallbackLngLat &&
     typeof fallbackLngLat.lng === 'number' &&
@@ -69,19 +73,17 @@ function getFeatureLngLat(feature, fallbackLngLat = null) {
     return [fallbackLngLat.lng, fallbackLngLat.lat];
   }
 
-  // 2) si es punto
   const c = feature?.geometry?.coordinates;
+
   if (Array.isArray(c) && c.length >= 2 && c[0] != null && c[1] != null) {
     return [Number(c[0]), Number(c[1])];
   }
 
-  // 3) si es polígono: punto dentro del polígono (mejor que centroide)
   try {
     const pt = turf.pointOnFeature(feature).geometry.coordinates;
     return [Number(pt[0]), Number(pt[1])];
   } catch (e) {}
 
-  // 4) fallback
   return [-73.79724, 5.04463];
 }
 
@@ -89,10 +91,62 @@ function streetViewUrl([lng, lat]) {
   return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 }
 
+
+// =====================================================
+// ✅ Popup compatible con GitHub + GeoJSON IA/PostGIS
+// =====================================================
+
 function buildPopupHTML(props, lngLat = null, extraHTML = '') {
   props = props || {};
-  const avaluoTxt = formatAvaluo(props['AVALUO 2026']);
-  const areaTxt = formatArea(props.Shape_Area);
+
+  const codigo =
+    props.codigo ??
+    props.CODIGO ??
+    props.numero_predial ??
+    props.NUMERO_PREDIAL ??
+    'N/A';
+
+  const destino =
+    props.DESTINO ??
+    props.destino ??
+    props.uso ??
+    props.USO ??
+    'N/A';
+
+  const nombre =
+    props.NOMBRE ??
+    props.nombre ??
+    props.propietario ??
+    props.PROPIETARIO ??
+    'N/A';
+
+  const documento =
+    props.NUMERO_DOCUMENTO ??
+    props.documento ??
+    props.DOCUMENTO ??
+    props.identificacion ??
+    props.IDENTIFICACION ??
+    'N/A';
+
+  const avaluo =
+    props['AVALUO 2026'] ??
+    props.avaluo_2026 ??
+    props.AVALUO_2026 ??
+    props.avaluo ??
+    props.AVALUO ??
+    null;
+
+  const area =
+    props.Shape_Area ??
+    props['AREA DE TERRENO'] ??
+    props.area_terreno ??
+    props.AREA_TERRENO ??
+    props.area ??
+    props.AREA ??
+    null;
+
+  const avaluoTxt = formatAvaluo(avaluo);
+  const areaTxt = formatArea(area);
 
   const svBtn = lngLat
     ? `
@@ -107,10 +161,10 @@ function buildPopupHTML(props, lngLat = null, extraHTML = '') {
     : '';
 
   return `
-    <strong>Código:</strong> ${props.codigo ?? 'N/A'}<br>
-    <strong>Destino:</strong> ${props.DESTINO ?? 'N/A'}<br>
-    <strong>Nombre:</strong> ${props.NOMBRE ?? 'N/A'}<br>
-    <strong>Documento:</strong> ${props.NUMERO_DOCUMENTO ?? 'N/A'}<br>
+    <strong>Código:</strong> ${codigo}<br>
+    <strong>Destino:</strong> ${destino}<br>
+    <strong>Nombre:</strong> ${nombre}<br>
+    <strong>Documento:</strong> ${documento}<br>
     <strong>Avalúo 2026:</strong> ${avaluoTxt}<br>
     <strong>Área (㎡):</strong> ${areaTxt}<br>
     ${extraHTML}
@@ -119,17 +173,18 @@ function buildPopupHTML(props, lngLat = null, extraHTML = '') {
   `;
 }
 
+
 // =====================================================
 // Función para agregar capa GeoJSON
 // =====================================================
+
 function addLayer(geojsonFile, sourceId, layerId, baseColor) {
   fetch(`../src/data/${geojsonFile}`)
     .then((response) => response.json())
     .then((data) => {
-      // Guardar dataset completo
+
       if (sourceId === 'predios_ssk') PREDIOS_DATA = data;
 
-      // ✅ Source seguro
       if (map.getSource(sourceId)) {
         map.getSource(sourceId).setData(data);
       } else {
@@ -139,7 +194,6 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
         });
       }
 
-      // ✅ Layer seguro
       if (!map.getLayer(layerId)) {
         map.addLayer({
           id: layerId,
@@ -147,7 +201,6 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
           type: 'fill',
           minzoom: 12,
           paint: {
-            // ✅ Sin NOMBRE = naranja, Con NOMBRE = baseColor
             'fill-color': [
               'case',
               ['==', ['coalesce', ['get', 'NOMBRE'], ''], ''],
@@ -160,10 +213,6 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
         });
       }
 
-      // =====================================================
-      // ✅ POPUP SOLO POR CLICK (se quita hover)
-      // =====================================================
-      // Evitar duplicar handler si recargas el estilo
       try { map.off('click', layerId); } catch (e) {}
       try { map.off('mouseenter', layerId); } catch (e) {}
       try { map.off('mouseleave', layerId); } catch (e) {}
@@ -175,19 +224,16 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
         const props = feature.properties || {};
         const lngLatClick = e.lngLat;
 
-        // (Opcional) si quieres que al click también resalte el grupo:
         highlightGroupFromFeature(feature);
 
-        // ✅ coords para Street View (click o punto representativo)
         const svLngLat = getFeatureLngLat(feature, lngLatClick);
 
         popup
-          .setLngLat(lngLatClick) // el popup se abre donde clickeaste
-          .setHTML(buildPopupHTML(props, svLngLat)) // el botón usa svLngLat
+          .setLngLat(lngLatClick)
+          .setHTML(buildPopupHTML(props, svLngLat))
           .addTo(map);
       });
 
-      // Cursor pointer (esto NO es popup, solo cursor)
       map.on('mouseenter', layerId, () => {
         map.getCanvas().style.cursor = 'pointer';
       });
@@ -199,9 +245,11 @@ function addLayer(geojsonFile, sourceId, layerId, baseColor) {
     .catch((err) => console.error('Error cargando GeoJSON:', err));
 }
 
+
 // =====================================================
 // Fuente + capas de resaltado
 // =====================================================
+
 function ensureHighlightLayers() {
   if (!map.getSource('predios_highlight')) {
     map.addSource('predios_highlight', {
@@ -240,15 +288,19 @@ function setHighlight(featuresArr) {
     type: 'FeatureCollection',
     features: featuresArr || []
   };
+
   const hlSource = map.getSource('predios_highlight');
+
   if (hlSource) hlSource.setData(fc);
 }
 
 function highlightGroupFromFeature(feature) {
-  // resalta por codigo o NUMERO_DOCUMENTO si existen
   const props = feature.properties || {};
+
   const features =
-    PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
+    PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features)
+      ? PREDIOS_DATA.features
+      : [];
 
   if (!features.length) {
     setHighlight([feature]);
@@ -256,12 +308,15 @@ function highlightGroupFromFeature(feature) {
   }
 
   const codigo = norm(props.codigo);
-  const doc = norm(props.NUMERO_DOCUMENTO);
+  const doc = norm(props.NUMERO_DOCUMENTO ?? props.documento);
 
   let group = [];
 
   if (doc) {
-    group = features.filter((f) => norm(f.properties?.NUMERO_DOCUMENTO) === doc);
+    group = features.filter((f) => {
+      const p = f.properties || {};
+      return norm(p.NUMERO_DOCUMENTO ?? p.documento) === doc;
+    });
   } else if (codigo) {
     group = features.filter((f) => norm(f.properties?.codigo) === codigo);
   }
@@ -270,14 +325,19 @@ function highlightGroupFromFeature(feature) {
 
   setHighlight(group);
 
-  // Zoom al conjunto
-  const bounds = turf.bbox({ type: 'FeatureCollection', features: group });
+  const bounds = turf.bbox({
+    type: 'FeatureCollection',
+    features: group
+  });
+
   map.fitBounds(bounds, { padding: 40 });
 }
+
 
 // =====================================================
 // Cargar capa predial + resaltado
 // =====================================================
+
 map.on('style.load', () => {
   addLayer(
     'PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson',
@@ -290,30 +350,37 @@ map.on('style.load', () => {
   map.addControl(new mapboxgl.NavigationControl());
 });
 
+
 // =====================================================
-// Geocoder local: busca por codigo, NOMBRE, NUMERO_DOCUMENTO
-// (usando PREDIOS_DATA completo)
+// Geocoder local
 // =====================================================
+
 const geocoder = new MapboxGeocoder({
   accessToken: mapboxgl.accessToken,
   mapboxgl: mapboxgl,
   marker: false,
   localGeocoderOnly: true,
   placeholder: 'Buscar por código, nombre o documento',
+
   localGeocoder: function (query) {
     const matchingFeatures = [];
     const q = (query || '').toString().toLowerCase().trim();
+
     if (!q) return matchingFeatures;
 
     const features =
-      PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
+      PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features)
+        ? PREDIOS_DATA.features
+        : [];
+
     if (!features.length) return matchingFeatures;
 
     for (const feature of features) {
       const props = feature.properties || {};
+
       const codigo = (props.codigo ?? '').toString().toLowerCase();
-      const nombre = (props.NOMBRE ?? '').toString().toLowerCase();
-      const documento = (props.NUMERO_DOCUMENTO ?? '').toString().toLowerCase();
+      const nombre = (props.NOMBRE ?? props.nombre ?? '').toString().toLowerCase();
+      const documento = (props.NUMERO_DOCUMENTO ?? props.documento ?? '').toString().toLowerCase();
 
       const match =
         (codigo && codigo.includes(q)) ||
@@ -325,8 +392,8 @@ const geocoder = new MapboxGeocoder({
       const centro = turf.centroid(feature).geometry.coordinates;
 
       const codTxt = (props.codigo ?? '').toString().trim();
-      const nomTxt = (props.NOMBRE ?? '').toString().trim();
-      const docTxt = (props.NUMERO_DOCUMENTO ?? '').toString().trim();
+      const nomTxt = (props.NOMBRE ?? props.nombre ?? '').toString().trim();
+      const docTxt = (props.NUMERO_DOCUMENTO ?? props.documento ?? '').toString().trim();
 
       let matchField = null;
       let matchValue = null;
@@ -342,15 +409,17 @@ const geocoder = new MapboxGeocoder({
         matchValue = nomTxt;
       }
 
-      const props2 = { ...props, __matchField: matchField, __matchValue: matchValue };
+      const props2 = {
+        ...props,
+        __matchField: matchField,
+        __matchValue: matchValue
+      };
 
       matchingFeatures.push({
         type: 'Feature',
         geometry: feature.geometry,
         properties: props2,
-        place_name: `Código: ${codTxt || 'N/A'} | Nombre: ${nomTxt || 'N/A'} | Doc: ${
-          docTxt || 'N/A'
-        }`,
+        place_name: `Código: ${codTxt || 'N/A'} | Nombre: ${nomTxt || 'N/A'} | Doc: ${docTxt || 'N/A'}`,
         text: codTxt || nomTxt || docTxt || 'Resultado',
         center: centro,
         place_type: ['place']
@@ -365,34 +434,40 @@ const geocoder = new MapboxGeocoder({
 
 map.addControl(geocoder, 'top-left');
 
+
 // =====================================================
-// Al seleccionar resultado: zoom + resaltar 1 o varios predios vinculados
-// + popup SOLO cuando selecciona (no hover)
+// Selección desde geocoder
 // =====================================================
+
 geocoder.on('result', (e) => {
   const result = e.result;
+
   if (!result || !result.geometry) return;
 
   const properties = result.properties || {};
-  const matchField = properties.__matchField; // 'codigo' | 'NUMERO_DOCUMENTO' | 'NOMBRE'
+  const matchField = properties.__matchField;
   const matchValue = (properties.__matchValue ?? '').toString().trim();
 
   const features =
-    PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features) ? PREDIOS_DATA.features : [];
+    PREDIOS_DATA && Array.isArray(PREDIOS_DATA.features)
+      ? PREDIOS_DATA.features
+      : [];
 
   let toHighlight = [];
 
-  // ✅ Agrupar y resaltar todos los que compartan el mismo codigo o NUMERO_DOCUMENTO
   if ((matchField === 'NUMERO_DOCUMENTO' || matchField === 'codigo') && matchValue) {
     const mv = norm(matchValue);
+
     toHighlight = features.filter((f) => {
       const p = f.properties || {};
-      const v = matchField === 'NUMERO_DOCUMENTO' ? p.NUMERO_DOCUMENTO : p.codigo;
+      const v = matchField === 'NUMERO_DOCUMENTO'
+        ? p.NUMERO_DOCUMENTO ?? p.documento
+        : p.codigo;
+
       return norm(v) === mv;
     });
   }
 
-  // Fallback: si no encontró grupo, resalta el seleccionado
   if (!toHighlight.length) {
     toHighlight = [
       {
@@ -405,12 +480,14 @@ geocoder.on('result', (e) => {
 
   setHighlight(toHighlight);
 
-  // Zoom al conjunto
-  const fc = { type: 'FeatureCollection', features: toHighlight };
+  const fc = {
+    type: 'FeatureCollection',
+    features: toHighlight
+  };
+
   const bounds = turf.bbox(fc);
   map.fitBounds(bounds, { padding: 40 });
 
-  // Lista de códigos (para saber cuáles son)
   const codigos = toHighlight
     .map((f) => (f.properties?.codigo ?? '').toString().trim())
     .filter(Boolean);
@@ -421,11 +498,9 @@ geocoder.on('result', (e) => {
         .join('<br>')}${codigos.length > 10 ? '<br>…' : ''}`
     : '';
 
-  // ✅ coords para Street View desde el centro del bbox del grupo (más representativo)
   const b = turf.bbox(fc);
-  const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]; // [lng, lat]
+  const center = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
 
-  // Popup SOLO por selección (geocoder)
   popup
     .setLngLat(result.center || turf.centroid(result).geometry.coordinates)
     .setHTML(buildPopupHTML(properties, center, listaCodigos))
