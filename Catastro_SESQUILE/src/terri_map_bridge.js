@@ -67,11 +67,8 @@ window.addEventListener("message", function(event) {
 function obtenerMapaTerri() {
 
     if (typeof window.map !== "undefined") return window.map;
-
     if (typeof map !== "undefined") return map;
-
     if (typeof window.mapa !== "undefined") return window.mapa;
-
     if (typeof mapa !== "undefined") return mapa;
 
     console.error("❌ No se encontró instancia de mapa Mapbox/MapLibre.");
@@ -82,7 +79,6 @@ function obtenerMapaTerri() {
     }, "*");
 
     return null;
-
 }
 
 
@@ -102,7 +98,6 @@ function obtenerBoundsClass() {
 
     console.error("❌ No se encontró LngLatBounds.");
     return null;
-
 }
 
 
@@ -118,7 +113,108 @@ function obtenerPopupClass() {
 
     console.error("❌ No se encontró Popup.");
     return null;
+}
 
+
+// ==========================================================
+// Normalizar propiedades del GeoJSON IA
+// Esto evita que el popup muestre N/A por diferencias de nombres
+// ==========================================================
+
+function normalizarPropiedadesTerri(props) {
+
+    props = props || {};
+
+    const normalizadas = {
+        CODIGO:
+            props.CODIGO ||
+            props.codigo ||
+            props.NUMERO_PREDIAL ||
+            props.numero_predial ||
+            props.num_predial ||
+            props.Numero_Predial ||
+            props.npn ||
+            props.NPN ||
+            "N/A",
+
+        DESTINO:
+            props.DESTINO ||
+            props.destino ||
+            props.USO ||
+            props.uso ||
+            props.USOACTUAL ||
+            props.usoactual ||
+            props.clase ||
+            props.CLASE ||
+            "N/A",
+
+        NOMBRE:
+            props.NOMBRE ||
+            props.nombre ||
+            props.PROPIETARIO ||
+            props.propietario ||
+            props.TITULAR ||
+            props.titular ||
+            "N/A",
+
+        DOCUMENTO:
+            props.DOCUMENTO ||
+            props.documento ||
+            props.IDENTIFICACION ||
+            props.identificacion ||
+            props.CEDULA ||
+            props.cedula ||
+            "N/A",
+
+        AVALUO:
+            props.AVALUO ||
+            props.avaluo ||
+            props.AVALUO_2026 ||
+            props.avaluo_2026 ||
+            props.avaluo_catastral ||
+            props.AVALUO_CATASTRAL ||
+            "N/A",
+
+        AREA:
+            props.AREA ||
+            props.area ||
+            props.AREA_TERRENO ||
+            props.area_terreno ||
+            props.area_m2 ||
+            props.AREA_M2 ||
+            "N/A",
+
+        DIRECCION:
+            props.DIRECCION ||
+            props.direccion ||
+            props.dir ||
+            props.DIR ||
+            "N/A"
+    };
+
+    return {
+        ...props,
+        ...normalizadas
+    };
+}
+
+
+// ==========================================================
+// Normalizar GeoJSON completo
+// ==========================================================
+
+function normalizarGeoJSONTerri(geojson) {
+
+    if (!geojson || !geojson.features) return geojson;
+
+    geojson.features = geojson.features.map(feature => {
+        return {
+            ...feature,
+            properties: normalizarPropiedadesTerri(feature.properties)
+        };
+    });
+
+    return geojson;
 }
 
 
@@ -144,8 +240,9 @@ function dibujarGeoJSONDesdeTerri(geojson) {
         }, "*");
 
         return;
-
     }
+
+    geojson = normalizarGeoJSONTerri(geojson);
 
     TERRI_AI_LAST_GEOJSON = geojson;
 
@@ -168,7 +265,6 @@ function dibujarGeoJSONDesdeTerri(geojson) {
                 "fill-outline-color": "#003B5C"
             }
         });
-
     }
 
     if (tipoGeom === "LineString" || tipoGeom === "MultiLineString") {
@@ -182,7 +278,6 @@ function dibujarGeoJSONDesdeTerri(geojson) {
                 "line-width": 4
             }
         });
-
     }
 
     if (tipoGeom === "Point" || tipoGeom === "MultiPoint") {
@@ -198,7 +293,6 @@ function dibujarGeoJSONDesdeTerri(geojson) {
                 "circle-stroke-width": 2
             }
         });
-
     }
 
     atenuarCapasBaseTerri(mapInstance);
@@ -211,7 +305,6 @@ function dibujarGeoJSONDesdeTerri(geojson) {
         tipo: "TERRI_BRIDGE_DIBUJO",
         total: geojson.features.length
     }, "*");
-
 }
 
 
@@ -228,7 +321,6 @@ function detectarTipoGeometria(geojson) {
     );
 
     return featureConGeom ? featureConGeom.geometry.type : null;
-
 }
 
 
@@ -250,8 +342,15 @@ function limpiarResultadoTerri() {
 
     layers.forEach(layerId => {
 
-        if (mapInstance.getLayer(layerId)) {
-            mapInstance.removeLayer(layerId);
+        try {
+            if (mapInstance.getLayer(layerId)) {
+                mapInstance.off("click", layerId, popupTerriHandler);
+                mapInstance.off("mouseenter", layerId, mouseEnterTerriHandler);
+                mapInstance.off("mouseleave", layerId, mouseLeaveTerriHandler);
+                mapInstance.removeLayer(layerId);
+            }
+        } catch (e) {
+            console.warn("⚠️ No se pudo limpiar evento/capa:", layerId);
         }
 
     });
@@ -263,7 +362,6 @@ function limpiarResultadoTerri() {
     restaurarCapasBaseTerri(mapInstance);
 
     TERRI_AI_LAST_GEOJSON = null;
-
 }
 
 
@@ -424,7 +522,7 @@ function popupTerriHandler(e) {
 
     if (!feature) return;
 
-    const props = feature.properties || {};
+    const props = normalizarPropiedadesTerri(feature.properties || {});
     const lngLat = [e.lngLat.lng, e.lngLat.lat];
 
     if (typeof buildPopupHTML === "function") {
@@ -439,37 +537,32 @@ function popupTerriHandler(e) {
             .addTo(mapInstance);
 
         return;
-
     }
 
     let html = `
-        <div style="font-size:12px;max-height:220px;overflow:auto;">
-        <strong>Resultado TERRI+</strong>
-        <hr>
-        <table>
-    `;
-
-    Object.keys(props).forEach(campo => {
-
-        html += `
-            <tr>
-                <td><b>${campo}</b></td>
-                <td>${props[campo]}</td>
-            </tr>
-        `;
-
-    });
-
-    html += `
-        </table>
+        <div style="font-size:12px;max-height:260px;overflow:auto;">
+            <strong>Resultado TERRI+</strong>
+            <hr>
+            <table>
+                <tr><td><b>Código</b></td><td>${props.CODIGO}</td></tr>
+                <tr><td><b>Destino</b></td><td>${props.DESTINO}</td></tr>
+                <tr><td><b>Nombre</b></td><td>${props.NOMBRE}</td></tr>
+                <tr><td><b>Documento</b></td><td>${props.DOCUMENTO}</td></tr>
+                <tr><td><b>Avalúo</b></td><td>${props.AVALUO}</td></tr>
+                <tr><td><b>Área</b></td><td>${props.AREA}</td></tr>
+                <tr><td><b>Dirección</b></td><td>${props.DIRECCION}</td></tr>
+            </table>
         </div>
     `;
 
-    new PopupClass()
+    new PopupClass({
+        closeButton: true,
+        closeOnClick: true,
+        className: "custom-popup"
+    })
         .setLngLat(e.lngLat)
         .setHTML(html)
         .addTo(mapInstance);
-
 }
 
 
@@ -502,3 +595,4 @@ function mouseLeaveTerriHandler() {
 window.dibujarGeoJSONDesdeTerri = dibujarGeoJSONDesdeTerri;
 window.limpiarResultadoTerri = limpiarResultadoTerri;
 window.zoomResultadoTerri = zoomResultadoTerri;
+window.normalizarPropiedadesTerri = normalizarPropiedadesTerri;
