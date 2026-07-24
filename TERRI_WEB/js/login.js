@@ -2,8 +2,8 @@
 // LOGIN TERRI+
 // ==========================
 
-const USUARIO_VALIDO = "admin";
-const PASSWORD_VALIDO = "terri123";
+
+const PASSWORD_VALIDO = "Sesquile_2026*";
 
 
 // Siempre iniciar mostrando login
