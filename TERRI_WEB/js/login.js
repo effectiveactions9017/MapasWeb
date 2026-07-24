@@ -1,83 +1,90 @@
-// ==========================
+// ==========================================================
 // LOGIN TERRI+
-// ==========================
-
+// ==========================================================
 
 const PASSWORD_VALIDO = "Sesquile_2026*";
 
 
-// Siempre iniciar mostrando login
+// ==========================================================
+// INICIAR PÁGINA
+// ==========================================================
 
-window.onload = function () {
+window.addEventListener("DOMContentLoaded", function () {
 
-  localStorage.removeItem("terri_login");
+    mostrarLogin();
 
-  mostrarLogin();
+    // Permitir ingresar con Enter
+    document.getElementById("password").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            iniciarSesion();
+        }
+    });
 
-};
+});
 
 
-// Validar usuario
+// ==========================================================
+// VALIDAR CONTRASEÑA
+// ==========================================================
 
 function iniciarSesion() {
 
-  const usuario = document.getElementById("usuario").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const error = document.getElementById("loginError");
+    const password = document.getElementById("password").value.trim();
+    const error = document.getElementById("loginError");
 
+    if (password === PASSWORD_VALIDO) {
 
-  if (usuario === USUARIO_VALIDO && password === PASSWORD_VALIDO) {
+        error.textContent = "";
+        mostrarAplicacion();
 
-    error.innerHTML = "";
+    } else {
 
-    mostrarAplicacion();
+        error.textContent = "Contraseña incorrecta.";
+        document.getElementById("password").value = "";
+        document.getElementById("password").focus();
 
-  } else {
-
-    error.innerHTML = "Usuario o contraseña incorrectos";
-
-  }
+    }
 
 }
 
 
-
-// Mostrar plataforma
+// ==========================================================
+// MOSTRAR PLATAFORMA
+// ==========================================================
 
 function mostrarAplicacion() {
 
-  document.getElementById("login").style.display = "none";
-
-  document.querySelector(".header").style.display = "flex";
-
-  document.querySelector(".app").style.display = "flex";
+    document.getElementById("login").style.display = "none";
+    document.querySelector(".header").style.display = "flex";
+    document.querySelector(".app").style.display = "flex";
 
 }
 
 
-
-// Mostrar login
+// ==========================================================
+// MOSTRAR LOGIN
+// ==========================================================
 
 function mostrarLogin() {
 
-  document.getElementById("login").style.display = "flex";
+    document.getElementById("login").style.display = "flex";
+    document.querySelector(".header").style.display = "none";
+    document.querySelector(".app").style.display = "none";
 
-  document.querySelector(".header").style.display = "none";
-
-  document.querySelector(".app").style.display = "none";
+    document.getElementById("password").focus();
 
 }
 
 
-
-// Cerrar sesión
+// ==========================================================
+// CERRAR SESIÓN
+// ==========================================================
 
 function cerrarSesion() {
 
-  document.getElementById("usuario").value = "";
+    document.getElementById("password").value = "";
+    document.getElementById("loginError").textContent = "";
 
-  document.getElementById("password").value = "";
-
-  mostrarLogin();
+    mostrarLogin();
 
 }
