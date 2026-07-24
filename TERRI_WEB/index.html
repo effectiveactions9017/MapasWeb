@@ -10,30 +10,55 @@
 
 <body>
 
+<!-- ==========================================================
+     LOGIN
+========================================================== -->
+
 <div id="login" class="login">
   <div class="login-box">
+
     <h1>TERRI<span>+</span></h1>
+
     <p>Plataforma inteligente de análisis territorial</p>
-    <input id="usuario" placeholder="Usuario">
-    <input id="password" type="password" placeholder="Contraseña">
-    <button onclick="iniciarSesion()">Ingresar</button>
+
+    <input
+      id="password"
+      type="password"
+      placeholder="Ingrese la contraseña">
+
+    <button onclick="iniciarSesion()">
+      Ingresar
+    </button>
+
     <div id="loginError"></div>
+
   </div>
 </div>
 
+<!-- ==========================================================
+     ENCABEZADO
+========================================================== -->
+
 <header class="header">
+
   <div class="header-content">
-    <img 
+
+    <img
       src="https://huggingface.co/spaces/Davideffectiveactions/Geovisor_Sesquile/resolve/main/escudo-municipio.png"
-      class="header-logo"
-    >
+      class="header-logo">
 
     <div>
       <h1>TERRI<span>+</span></h1>
       <p>Geovisor inteligente del territorio</p>
     </div>
+
   </div>
+
 </header>
+
+<!-- ==========================================================
+     APLICACIÓN
+========================================================== -->
 
 <div class="app">
 
@@ -106,6 +131,7 @@
 </button>
 
 <button class="btn-secundario" onclick="limpiarVisor()">⬅️ Inicio</button>
+
 <button class="btn-secundario" onclick="cerrarSesion()">🔐 Cerrar sesión</button>
 
 </aside>
@@ -113,69 +139,86 @@
 <main class="visor-contenedor">
 
 <div id="inicio" class="inicio">
-  <div class="home-portada">
 
-    <div class="home-encabezado">
-      <p>Geovisor inteligente del Municipio de Sesquilé</p>
-    </div>
+<div class="home-portada">
 
-    <div class="home-wrapper">
+<div class="home-encabezado">
+<p>Geovisor inteligente del Municipio de Sesquilé</p>
+</div>
 
-      <div class="home-box home-bienvenida">
-        <h3 class="home-title">Bienvenido a TERRI+</h3>
+<div class="home-wrapper">
 
-        <p class="home-text home-text-principal">
-          Sistema de información territorial que permitirá incrementar el recaudo
-          de ingresos territoriales y aportar a la generación de datos para el impacto
-          social, ambiental y económico del municipio de Sesquilé.
-        </p>
+<div class="home-box home-bienvenida">
 
-        <p class="home-text">
-          Este geovisor integra información territorial estratégica para apoyar la
-          planeación, la gestión pública y la toma de decisiones basadas en datos.
-        </p>
-      </div>
+<h3 class="home-title">Bienvenido a TERRI+</h3>
 
-      <div class="home-box home-listado">
-        <h3 class="home-subtitle">En el geovisor podrás encontrar</h3>
+<p class="home-text home-text-principal">
+Sistema de información territorial que permitirá incrementar el recaudo de ingresos territoriales y aportar a la generación de datos para el impacto social, ambiental y económico del municipio de Sesquilé.
+</p>
 
-        <ul class="home-list">
-          <li>Análisis del crecimiento de las construcciones en el municipio.</li>
-          <li>Oportunidades para incrementar el impuesto del ICA.</li>
-          <li>Nuevas construcciones desde la última actualización catastral.</li>
-          <li>Análisis de deforestación.</li>
-          <li>Cambios en el uso del suelo permitido.</li>
-          <li>Identificación de lugares con posibilidad de cobro de plusvalía.</li>
-          <li>Oportunidades para usar el mercado de bonos de carbono.</li>
-          <li>Identificación de predios vacíos para urbanización.</li>
-          <li>Identificación de suelo público para aprovechamiento del suelo.</li>
-        </ul>
-      </div>
+<p class="home-text">
+Este geovisor integra información territorial estratégica para apoyar la planeación, la gestión pública y la toma de decisiones basadas en datos.
+</p>
 
-    </div>
+</div>
 
-  </div>
+<div class="home-box home-listado">
+
+<h3 class="home-subtitle">En el geovisor podrás encontrar</h3>
+
+<ul class="home-list">
+<li>Análisis del crecimiento de las construcciones en el municipio.</li>
+<li>Oportunidades para incrementar el impuesto del ICA.</li>
+<li>Nuevas construcciones desde la última actualización catastral.</li>
+<li>Análisis de deforestación.</li>
+<li>Cambios en el uso del suelo permitido.</li>
+<li>Identificación de lugares con posibilidad de cobro de plusvalía.</li>
+<li>Oportunidades para usar el mercado de bonos de carbono.</li>
+<li>Identificación de predios vacíos para urbanización.</li>
+<li>Identificación de suelo público para aprovechamiento del suelo.</li>
+</ul>
+
+</div>
+
+</div>
+
+</div>
+
 </div>
 
 <div id="modulo" class="modulo" style="display:none;">
 
-  <div class="visor-head">
+<div class="visor-head">
 
-    <div>
-      <h3 id="tituloModulo" class="visor-title"></h3>
-      <p id="descripcionModulo" class="visor-sub"></p>
-    </div>
+<div>
 
-    <div class="visor-head-actions">
-      <button id="btnDashboard" class="visor-full-btn" onclick="verDashboard()">📊 Ir a dashboard</button>
-      <button id="btnMapa" class="visor-full-btn" onclick="verMapa()" style="display:none;">🗺️ Volver al visor</button>
-      <button class="visor-full-btn" onclick="pantallaCompleta()">⛶ Pantalla completa</button>
-    </div>
+<h3 id="tituloModulo" class="visor-title"></h3>
 
-  </div>
+<p id="descripcionModulo" class="visor-sub"></p>
 
-  <iframe id="mapaFrame" class="visor-frame" allowfullscreen loading="lazy"></iframe>
-  <iframe id="dashboardFrame" class="visor-frame" allowfullscreen loading="lazy" style="display:none;"></iframe>
+</div>
+
+<div class="visor-head-actions">
+
+<button id="btnDashboard" class="visor-full-btn" onclick="verDashboard()">
+📊 Ir a dashboard
+</button>
+
+<button id="btnMapa" class="visor-full-btn" onclick="verMapa()" style="display:none;">
+🗺️ Volver al visor
+</button>
+
+<button class="visor-full-btn" onclick="pantallaCompleta()">
+⛶ Pantalla completa
+</button>
+
+</div>
+
+</div>
+
+<iframe id="mapaFrame" class="visor-frame" allowfullscreen loading="lazy"></iframe>
+
+<iframe id="dashboardFrame" class="visor-frame" allowfullscreen loading="lazy" style="display:none;"></iframe>
 
 </div>
 
