@@ -1,0 +1,29 @@
+# Variables privadas
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Editores
+.vscode/
+.idea/
+
+# Sistema operativo
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Archivos temporales
+*.tmp
+*.log
+*.bak
+~$*
