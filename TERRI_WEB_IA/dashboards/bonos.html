@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dashboard Bonos de Carbono</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  min-height:100%;
+  background:linear-gradient(135deg,#eef7f7,#f7fbfc);
+  font-family:'Inter','Segoe UI',Arial,sans-serif;
+  color:#1f2d3d;
+}
+
+body{padding:20px}
+
+.contenedor{
+  max-width:1180px;
+  margin:0 auto;
+  background:#ffffff;
+  border-radius:22px;
+  padding:26px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.08);
+  border:1px solid rgba(0,77,77,0.08);
+}
+
+.subtitulo{
+  margin:0 0 20px 0;
+  font-size:16px;
+  color:rgba(0,0,0,0.68);
+  line-height:1.5;
+}
+
+.resumen{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.card{
+  background:#f5fbfb;
+  border-radius:14px;
+  padding:14px;
+  border:1px solid rgba(0,147,160,0.15);
+}
+
+.card b{
+  display:block;
+  font-size:14px;
+  margin-bottom:6px;
+  color:#005b61;
+  font-weight:700;
+}
+
+.card span{
+  font-size:20px;
+  font-weight:800;
+  color:#1f2d3d;
+  line-height:1.25;
+}
+
+.card small{
+  display:block;
+  margin-top:6px;
+  font-size:12px;
+  color:rgba(0,0,0,0.60);
+  line-height:1.4;
+  font-weight:500;
+}
+
+.card.oportunidad{
+  background:linear-gradient(135deg,#edf9f4,#f7fcf9);
+  border:1px solid rgba(46,125,50,0.16);
+}
+
+.card.oportunidad b{color:#2e7d32}
+.card.oportunidad span{color:#1b5e20}
+
+.card.perdida{
+  background:linear-gradient(135deg,#fff4f4,#fffafa);
+  border:1px solid rgba(198,40,40,0.14);
+}
+
+.card.perdida b{color:#b71c1c}
+.card.perdida span{color:#8e0000}
+
+.resumen-sec{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin-bottom:22px;
+}
+
+.card-sec{
+  background:#f5fbfb;
+  border-radius:14px;
+  padding:14px;
+  border:1px solid rgba(0,147,160,0.12);
+}
+
+.card-sec b{
+  display:block;
+  font-size:14px;
+  margin-bottom:6px;
+  color:#005b61;
+  font-weight:700;
+}
+
+.card-sec span{
+  font-size:20px;
+  font-weight:800;
+  color:#1f2d3d;
+  line-height:1.25;
+}
+
+.tabla-wrap{overflow-x:auto}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:15px;
+  min-width:760px;
+}
+
+thead th{
+  background:linear-gradient(90deg,#0097a0,#00b7c2);
+  color:#ffffff;
+  padding:12px;
+  text-align:left;
+  border-bottom:2px solid #0da9b4;
+  font-weight:700;
+}
+
+thead th:first-child{border-top-left-radius:12px}
+thead th:last-child{border-top-right-radius:12px}
+
+tbody td{
+  padding:12px;
+  border-bottom:1px solid #e5e7eb;
+  font-weight:500;
+}
+
+tbody tr:nth-child(even){background:#f8fbfb}
+tbody tr:hover{background:#eef8f8}
+
+.nota{
+  margin-top:14px;
+  font-size:13px;
+  color:rgba(0,0,0,0.65);
+  line-height:1.5;
+}
+
+@media(max-width:900px){
+  .resumen{grid-template-columns:1fr 1fr}
+  .resumen-sec{grid-template-columns:1fr}
+}
+
+@media(max-width:640px){
+  .resumen{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+<div class="contenedor">
+
+  <p class="subtitulo">
+    Resumen del potencial de aprovechamiento en mercado de bonos de carbono y de la pérdida estimada de cobertura forestal en el municipio.
+  </p>
+
+  <div class="resumen">
+    <div class="card oportunidad">
+      <b>Oportunidad - Hectáreas</b>
+      <span>11.298,05 ha</span>
+      <small>Área con potencial de aprovechamiento</small>
+    </div>
+
+    <div class="card oportunidad">
+      <b>Oportunidad - Carbono</b>
+      <span>775.410,60 tC</span>
+      <small>Stock total estimado de carbono</small>
+    </div>
+
+    <div class="card perdida">
+      <b>Pérdida - Hectáreas</b>
+      <span>392,40 ha</span>
+      <small>Área afectada por pérdida forestal</small>
+    </div>
+
+    <div class="card perdida">
+      <b>Pérdida - Carbono</b>
+      <span>12.462,71 tC</span>
+      <small>Carbono perdido estimado</small>
+    </div>
+  </div>
+
+  <div class="resumen-sec">
+    <div class="card-sec">
+      <b>Balance neto de carbono</b>
+      <span>762.947,89 tC</span>
+    </div>
+
+    <div class="card-sec">
+      <b>Relación oportunidad / pérdida</b>
+      <span>28,79 veces</span>
+    </div>
+  </div>
+
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Escenario</th>
+          <th>Posibles ingresos para el municipio</th>
+          <th>Costos para el municipio</th>
+          <th>Ingresos netos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Escenario conservador</td>
+          <td>$731M – $1,096M</td>
+          <td>$365M – $548M</td>
+          <td>$365M – $548M</td>
+        </tr>
+
+        <tr>
+          <td>Escenario medio</td>
+          <td>$1,280M – $4,380M</td>
+          <td>$512M – $1,750M</td>
+          <td>$768M – $2,630M</td>
+        </tr>
+
+        <tr>
+          <td>Escenario alto</td>
+          <td>$4,750M</td>
+          <td>$1,420M</td>
+          <td>$3,333M</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="nota">
+    Los valores presentados corresponden a una estimación por escenarios para apoyar la toma de decisiones sobre el aprovechamiento del mercado de bonos de carbono.
+  </div>
+
+</div>
+</body>
+</html>

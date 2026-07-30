@@ -1,0 +1,828 @@
+/* ==========================================================
+   TERRI+ IA TERRITORIAL
+   ========================================================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,
+body{
+    width:100%;
+    height:100%;
+
+    font-family:"Segoe UI", Arial, sans-serif;
+
+    background:#eef4f7;
+    color:#12344d;
+}
+
+body{
+    overflow:hidden;
+}
+
+
+/* ==========================================================
+   APP
+   ========================================================== */
+
+.terri-app{
+    width:100%;
+    height:100%;
+
+    display:flex;
+    flex-direction:column;
+}
+
+
+/* ==========================================================
+   MAIN
+   IZQUIERDA = MAPA
+   DERECHA = CHAT
+   ========================================================== */
+
+.terri-main{
+    flex:1;
+
+    min-width:0;
+    min-height:0;
+
+    display:grid;
+
+    grid-template-columns:
+        minmax(0, 7fr)
+        minmax(320px, 3fr);
+
+    gap:16px;
+
+    padding:16px;
+
+    overflow:hidden;
+}
+
+
+/* ==========================================================
+   COLUMNA DEL ASISTENTE
+   ========================================================== */
+
+.columna-asistente{
+    width:100%;
+    height:100%;
+
+    min-width:0;
+    min-height:0;
+
+    display:flex;
+    flex-direction:column;
+
+    overflow:hidden;
+}
+
+
+/* ==========================================================
+   PANELES
+   ========================================================== */
+
+.panel{
+    min-width:0;
+    min-height:0;
+
+    background:#ffffff;
+
+    border-radius:16px;
+
+    box-shadow:
+        0 8px 22px rgba(0,0,0,.10);
+
+    display:flex;
+    flex-direction:column;
+
+    overflow:hidden;
+}
+
+.panel h2{
+    font-size:18px;
+    color:#12344d;
+}
+
+.panel-title-row{
+    display:flex;
+
+    justify-content:space-between;
+    align-items:flex-start;
+
+    gap:18px;
+
+    padding:14px 16px;
+
+    border-bottom:1px solid #e4edf2;
+
+    flex-shrink:0;
+}
+
+.panel-title-row h2{
+    margin:0;
+
+    font-size:18px;
+
+    line-height:1.2;
+
+    flex:1;
+
+    min-width:0;
+}
+
+.panel-title-row > div{
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    flex-shrink:0;
+}
+
+
+/* ==========================================================
+   CABECERA CHAT
+   ========================================================== */
+
+.chat-header{
+    flex:1;
+
+    display:flex;
+    flex-direction:column;
+
+    align-items:flex-start;
+
+    gap:6px;
+
+    min-width:0;
+}
+
+.chat-header h2{
+    margin:0;
+
+    font-size:20px;
+
+    color:#12344d;
+
+    line-height:1.2;
+}
+
+.chat-header .estado-api{
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    font-size:13px;
+    font-weight:600;
+
+    color:#17486b;
+}
+
+
+/* ==========================================================
+   CONSULTAS SUGERIDAS
+   ========================================================== */
+
+.sugerencias-panel{
+    width:100%;
+    height:100%;
+
+    padding:16px;
+
+    overflow:hidden;
+}
+
+.sugerencias-encabezado{
+    display:flex;
+
+    justify-content:space-between;
+    align-items:center;
+
+    gap:10px;
+}
+
+.sugerencias-encabezado .estado-api{
+    display:flex;
+
+    align-items:center;
+
+    gap:7px;
+
+    font-size:11px;
+    font-weight:700;
+
+    white-space:nowrap;
+}
+
+.sugerencias-encabezado .status-dot{
+    width:10px;
+    height:10px;
+
+    border-radius:50%;
+
+    background:#999;
+
+    box-shadow:
+        0 0 0 3px rgba(23,72,107,.10);
+}
+
+.lista-sugerencias{
+    flex:1;
+
+    margin-top:10px;
+
+    overflow-y:auto;
+
+    padding-right:4px;
+}
+
+.pregunta-btn{
+    width:100%;
+
+    border:none;
+
+    margin-bottom:8px;
+
+    padding:11px 12px;
+
+    text-align:left;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    background:#ecf6fb;
+
+    color:#12344d;
+
+    font-size:13px;
+
+    transition:
+        background .2s ease,
+        transform .2s ease;
+}
+
+.pregunta-btn:hover{
+    background:#d7edf9;
+
+    transform:translateY(-1px);
+}
+
+.panel-info{
+    margin-top:8px;
+
+    border-top:1px solid #e8edf0;
+
+    padding-top:10px;
+
+    display:flex;
+    flex-direction:column;
+
+    gap:4px;
+
+    font-size:12px;
+}
+
+.panel-info small{
+    color:#666;
+
+    line-height:1.35;
+
+    overflow-wrap:anywhere;
+}
+
+
+/* ==========================================================
+   ESTADO API
+   ========================================================== */
+
+.estado-api{
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    font-weight:bold;
+
+    white-space:nowrap;
+}
+
+.status-dot{
+    width:12px;
+    height:12px;
+
+    border-radius:50%;
+
+    background:#999;
+
+    box-shadow:
+        0 0 0 3px rgba(23,72,107,.10);
+}
+
+
+/* ==========================================================
+   CHAT
+   ========================================================== */
+
+.chat-panel{
+    width:100%;
+    height:100%;
+
+    min-width:0;
+    min-height:0;
+
+    padding:0;
+
+    flex:1;
+}
+
+.chat-box{
+    flex:1;
+
+    min-width:0;
+    min-height:0;
+
+    overflow-y:auto;
+
+    padding:16px;
+
+    background:#f8fbfd;
+}
+
+.mensaje{
+    padding:13px;
+
+    border-radius:12px;
+
+    margin-bottom:12px;
+
+    line-height:1.5;
+
+    font-size:14px;
+}
+
+.mensaje p{
+    margin-top:6px;
+}
+
+.mensaje-usuario{
+    background:#d9eef9;
+
+    margin-left:22px;
+}
+
+.mensaje-ia{
+    background:#ffffff;
+
+    border:1px solid #dde8ee;
+
+    margin-right:12px;
+}
+
+.input-area{
+    display:flex;
+
+    gap:8px;
+
+    padding:12px;
+
+    border-top:1px solid #e5edf3;
+
+    background:#ffffff;
+
+    flex-shrink:0;
+}
+
+.input-area input{
+    flex:1;
+
+    min-width:0;
+
+    height:44px;
+
+    border-radius:10px;
+
+    border:1px solid #d6e0e6;
+
+    padding:0 12px;
+
+    font-size:14px;
+
+    outline:none;
+}
+
+.input-area input:focus{
+    border-color:#17486b;
+
+    box-shadow:
+        0 0 0 3px rgba(23,72,107,.10);
+}
+
+.input-area button{
+    min-width:90px;
+
+    height:44px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#17486b;
+
+    color:#ffffff;
+
+    font-weight:bold;
+
+    cursor:pointer;
+
+    padding:0 14px;
+}
+
+.input-area button:hover{
+    background:#0b3c5d;
+}
+
+
+/* ==========================================================
+   MAPA PRINCIPAL
+   ========================================================== */
+
+.mapa-panel{
+    position:relative;
+
+    display:flex;
+    flex-direction:column;
+
+    width:100%;
+    height:100%;
+
+    min-width:0;
+    min-height:0;
+
+    padding:0;
+
+    overflow:hidden;
+}
+
+.map-toolbar{
+    position:absolute;
+
+    top:14px;
+    left:14px;
+    right:auto;
+
+    z-index:20;
+
+    display:flex;
+    align-items:center;
+
+    gap:8px;
+
+    padding:7px;
+
+    border-radius:12px;
+
+    background:rgba(255,255,255,.94);
+
+    box-shadow:
+        0 5px 16px rgba(0,0,0,.16);
+
+    backdrop-filter:blur(5px);
+}
+
+.map{
+    flex:1 1 auto;
+
+    width:100%;
+    height:100%;
+
+    min-width:0;
+    min-height:0;
+}
+
+
+/* MapLibre ocupa todo el panel */
+
+.maplibregl-map{
+    width:100%;
+    height:100%;
+}
+
+.maplibregl-canvas-container{
+    width:100%;
+    height:100%;
+}
+
+.maplibregl-canvas{
+    width:100%;
+    height:100%;
+
+    outline:none;
+}
+
+
+/* ==========================================================
+   TABLA DE RESULTADOS
+   ========================================================== */
+
+.tabla-resultados{
+    max-height:220px;
+
+    overflow:auto;
+
+    border-top:1px solid #e4edf2;
+
+    padding:14px;
+
+    background:#ffffff;
+
+    flex-shrink:0;
+}
+
+
+/* ==========================================================
+   FOOTER TÉCNICO
+   ========================================================== */
+
+.terri-footer{
+    min-height:68px;
+
+    background:#ffffff;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:24px;
+
+    padding:8px 24px;
+
+    border-top:1px solid #dce5ea;
+
+    z-index:10;
+}
+
+.footer-item{
+    display:flex;
+
+    flex-direction:column;
+
+    font-size:12px;
+
+    white-space:nowrap;
+}
+
+.footer-item span{
+    color:#777;
+}
+
+.footer-item strong{
+    margin-top:4px;
+}
+
+.footer-sql{
+    flex:1;
+
+    min-width:0;
+}
+
+.footer-sql code{
+    display:block;
+
+    white-space:nowrap;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    color:#0b3c5d;
+}
+
+
+/* ==========================================================
+   BOTONES PEQUEÑOS
+   ========================================================== */
+
+.mini-btn{
+    border:none;
+
+    background:#edf5fa;
+
+    padding:8px 11px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    color:#12344d;
+
+    font-size:12px;
+
+    font-weight:600;
+
+    white-space:nowrap;
+
+    transition:
+        background .2s ease,
+        transform .2s ease;
+}
+
+.mini-btn:hover{
+    background:#d9ecf7;
+
+    transform:translateY(-1px);
+}
+
+
+/* ==========================================================
+   SCROLL
+   ========================================================== */
+
+.chat-box::-webkit-scrollbar,
+.lista-sugerencias::-webkit-scrollbar,
+.tabla-resultados::-webkit-scrollbar{
+    width:7px;
+}
+
+.chat-box::-webkit-scrollbar-thumb,
+.lista-sugerencias::-webkit-scrollbar-thumb,
+.tabla-resultados::-webkit-scrollbar-thumb{
+    background:#bfd0da;
+
+    border-radius:20px;
+}
+
+.chat-box::-webkit-scrollbar-track,
+.lista-sugerencias::-webkit-scrollbar-track,
+.tabla-resultados::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media (max-width:1100px){
+
+    .terri-main{
+        grid-template-columns:
+            minmax(0, 1fr)
+            320px;
+    }
+
+}
+
+
+@media (max-width:800px){
+
+    body{
+        overflow:auto;
+    }
+
+    .terri-app{
+        min-height:100vh;
+        height:auto;
+    }
+
+    .terri-main{
+        display:flex;
+        flex-direction:column;
+
+        overflow:visible;
+
+        padding:12px;
+    }
+
+    .mapa-panel{
+        min-height:600px;
+    }
+
+    .columna-asistente{
+        min-height:500px;
+        overflow:visible;
+    }
+
+    .chat-panel{
+        min-height:500px;
+    }
+
+    .terri-footer{
+        flex-wrap:wrap;
+
+        min-height:auto;
+
+        padding:12px 16px;
+    }
+
+    .footer-sql{
+        flex-basis:100%;
+    }
+
+    .map-toolbar{
+        top:10px;
+        left:10px;
+        right:10px;
+
+        flex-wrap:wrap;
+    }
+
+}
+
+
+/* ==========================================================
+   MENÚ MAPA BASE
+========================================================== */
+
+.mapa-base-dropdown{
+    position:relative;
+}
+
+.menu-mapa-base{
+    position:absolute;
+
+    top:44px;
+    left:0;
+
+    display:none;
+
+    min-width:220px;
+
+    background:#ffffff;
+
+    border:1px solid rgba(18,52,77,.12);
+    border-radius:12px;
+
+    box-shadow:
+        0 10px 24px rgba(0,0,0,.18);
+
+    overflow:hidden;
+
+    z-index:1000;
+}
+
+.menu-mapa-base.abierto{
+    display:block;
+}
+
+.menu-mapa-base button{
+    width:100%;
+
+    display:flex;
+    align-items:center;
+
+    gap:10px;
+
+    border:none;
+
+    background:#ffffff;
+
+    padding:12px 16px;
+
+    text-align:left;
+
+    cursor:pointer;
+
+    font-family:inherit;
+    font-size:14px;
+
+    color:#12344d;
+
+    transition:
+        background .2s ease,
+        color .2s ease;
+}
+
+.menu-mapa-base button:hover{
+    background:#eef6fb;
+}
+
+.menu-mapa-base button.activo{
+    background:#e2f1f9;
+
+    color:#0b3c5d;
+
+    font-weight:700;
+}
+
+.mapa-base-check{
+    display:inline-flex;
+
+    align-items:center;
+    justify-content:center;
+
+    width:16px;
+    min-width:16px;
+
+    color:#0b6aa2;
+
+    font-weight:800;
+}

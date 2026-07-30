@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <title>Agente IA Territorial</title>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <!-- MapLibre GL -->
+
+  <link
+    href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+    rel="stylesheet"
+  >
+
+  <!-- Estilos propios -->
+
+  <link
+    rel="stylesheet"
+    href="./ia_css/ia_territorial.css"
+  >
+
+</head>
+
+
+<body>
+
+  <div class="terri-app">
+
+
+    <!-- ==================================================
+         CUERPO PRINCIPAL
+    =================================================== -->
+
+    <main class="terri-main">
+
+
+      <!-- ==================================================
+     COLUMNA IZQUIERDA:
+     MAPA
+=================================================== -->
+
+<section class="panel mapa-panel">
+
+    <div class="map-toolbar">
+
+        <!-- ==========================================
+             MAPA BASE
+        =========================================== -->
+
+        <div class="mapa-base-dropdown">
+
+            <button
+                type="button"
+                id="btnMapaBase"
+                class="mini-btn"
+                title="Seleccionar mapa base"
+                aria-haspopup="true"
+                aria-expanded="false"
+            >
+                🗺️ Mapa base ▾
+            </button>
+
+            <div
+                id="menuMapaBase"
+                class="menu-mapa-base"
+            >
+
+                <button
+                    type="button"
+                    data-map="claro"
+                >
+                    <span class="mapa-base-check"></span>
+
+                    <span>
+                        🗺️ Carto Claro
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    data-map="satelite"
+                >
+                    <span class="mapa-base-check"></span>
+
+                    <span>
+                        🛰️ Satelital híbrido
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    data-map="osm"
+                >
+                    <span class="mapa-base-check"></span>
+
+                    <span>
+                        🌍 OpenStreetMap
+                    </span>
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==========================================
+             ZOOM AL RESULTADO
+        =========================================== -->
+
+        <button
+            type="button"
+            id="btnZoomResultado"
+            class="mini-btn"
+            title="Acercar al resultado"
+        >
+            🔍 Zoom resultado
+        </button>
+
+
+        <!-- ==========================================
+             LIMPIAR MAPA
+        =========================================== -->
+
+        <button
+            type="button"
+            id="btnLimpiarMapa"
+            class="mini-btn"
+            title="Eliminar resultados del mapa"
+        >
+            🧹 Limpiar mapa
+        </button>
+
+    </div>
+
+
+    <!-- ==========================================
+         MAPA
+    =========================================== -->
+
+    <div
+        id="map"
+        class="map"
+    ></div>
+
+
+    <!-- ==========================================
+         TABLA DE RESULTADOS
+    =========================================== -->
+
+    <div
+        id="tablaResultados"
+        class="tabla-resultados"
+        style="display:none;"
+    ></div>
+
+</section>
+
+
+
+      <!-- ==================================================
+           COLUMNA DERECHA:
+           AGENTE IA TERRITORIAL
+      =================================================== -->
+
+      <section class="columna-asistente">
+
+        <section class="panel chat-panel">
+
+
+          <!-- ENCABEZADO -->
+
+          <div class="panel-title-row">
+
+            <div class="chat-header">
+
+              <h2>
+                🤖 Agente IA Territorial
+              </h2>
+
+              <div class="estado-api">
+
+                <span
+                  id="apiStatus"
+                  class="status-dot"
+                ></span>
+
+                <span id="apiStatusText">
+                  API sin verificar
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <button
+              type="button"
+              id="btnLimpiarChat"
+              class="mini-btn"
+            >
+              Limpiar
+            </button>
+
+          </div>
+
+
+
+          <!-- MENSAJES -->
+
+          <div
+            id="chatBox"
+            class="chat-box"
+          >
+
+            <div class="mensaje mensaje-ia">
+
+              <strong>
+                🤖 TERRI+ IA
+              </strong>
+
+              <p>
+                Hola. Ya estoy conectado al motor territorial.
+                Pregúntame por predios, avalúos, usos del suelo,
+                estadísticas, análisis espaciales o solicita mapas
+                inteligentes.
+              </p>
+
+            </div>
+
+          </div>
+
+
+
+          <!-- PREGUNTA -->
+
+          <div class="input-area">
+
+            <input
+              id="preguntaInput"
+              type="text"
+              placeholder="Pregúntale al territorio..."
+              autocomplete="off"
+            >
+
+            <button
+              type="button"
+              id="btnEnviar"
+            >
+              Analizar
+            </button>
+
+          </div>
+
+        </section>
+
+      </section>
+
+    </main>
+
+
+
+    <!-- ==================================================
+         INFORMACIÓN TÉCNICA
+    =================================================== -->
+
+    <footer class="terri-footer">
+
+      <div class="footer-item">
+
+        <span>Tipo</span>
+
+        <strong id="metaTipo">
+          -
+        </strong>
+
+      </div>
+
+
+      <div class="footer-item">
+
+        <span>Modo</span>
+
+        <strong id="metaModo">
+          -
+        </strong>
+
+      </div>
+
+
+      <div class="footer-item">
+
+        <span>Registros</span>
+
+        <strong id="metaTotal">
+          -
+        </strong>
+
+      </div>
+
+
+      <div class="footer-item footer-sql">
+
+        <span>SQL generado</span>
+
+        <code id="metaSQL">
+          Sin consulta todavía
+        </code>
+
+      </div>
+
+    </footer>
+
+  </div>
+
+
+
+  <!-- ==================================================
+       MAPLIBRE GL
+  =================================================== -->
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+
+
+  <!-- ==================================================
+     SCRIPTS TERRI+
+     CONSERVAR ESTE ORDEN
+=================================================== -->
+
+<script src="./ia_js/config.js"></script>
+
+<script src="./ia_js/context.js"></script>
+
+<script src="./ia_js/api.js"></script>
+
+<!-- Motor de simbología inteligente TERRI+ -->
+<script src="./ia_js/terri_symbology.js"></script>
+
+<script src="./ia_js/map.js"></script>
+
+<!-- Control de mapas base -->
+<script src="./ia_js/basemaps.js"></script>
+
+<script src="./ia_js/chat.js"></script>
+
+<script src="./ia_js/app.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dashboard Servicios Públicos</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  padding:16px;
+  background:linear-gradient(135deg,#eef7f7,#f7fbfc);
+  font-family:'Segoe UI',Arial,sans-serif;
+  color:#1f2d3d;
+}
+
+.contenedor{
+  width:100%;
+  min-height:calc(100vh - 32px);
+  background:#fff;
+  border-radius:22px;
+  padding:22px;
+  box-shadow:0 12px 32px rgba(0,0,0,.08);
+}
+
+.titulo{
+  margin:0;
+  font-size:32px;
+  font-weight:800;
+  color:#004d4d;
+}
+
+.subtitulo{
+  margin:8px 0 18px;
+  font-size:15px;
+  color:rgba(0,0,0,.68);
+}
+
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:10px;
+  margin-bottom:18px;
+}
+
+.kpi-card{
+  background:#f5fbfb;
+  border-radius:14px;
+  padding:12px;
+  border:1px solid rgba(0,147,160,.15);
+}
+
+.kpi-label{
+  font-size:12px;
+  color:#005b61;
+  margin-bottom:6px;
+}
+
+.kpi-value{
+  font-size:22px;
+  font-weight:800;
+  color:#1f2d3d;
+}
+
+.panel-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+
+.panel{
+  background:#fbfdfd;
+  border-radius:18px;
+  padding:16px;
+  border:1px solid #e5efef;
+}
+
+.panel h2{
+  margin:0 0 10px;
+  color:#005b61;
+  font-size:21px;
+}
+
+.chart-box{
+  height:175px;
+  margin-bottom:12px;
+}
+
+.tabla{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+
+.tabla th{
+  background:#e8f4f4;
+  color:#004d4d;
+  padding:9px;
+  text-align:left;
+}
+
+.tabla td{
+  padding:9px;
+  border-bottom:1px solid #edf2f2;
+}
+
+.badge{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:999px;
+  background:#dff7f7;
+  color:#00666a;
+  font-size:12px;
+  font-weight:700;
+}
+
+@media(max-width:1100px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .panel-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+  <h1 class="titulo">🚰 Dashboard Servicios Públicos</h1>
+
+  <p class="subtitulo">
+    Diagnóstico territorial de cobertura y acceso a servicios públicos en el municipio de Sesquilé.
+  </p>
+
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Predios con Gas</div><div class="kpi-value">1.767</div></div>
+    <div class="kpi-card"><div class="kpi-label">Predios con Acueducto</div><div class="kpi-value">1.669</div></div>
+    <div class="kpi-card"><div class="kpi-label">Predios con Alcantarillado</div><div class="kpi-value">1.134</div></div>
+    <div class="kpi-card"><div class="kpi-label">Predios con Internet</div><div class="kpi-value">1.036</div></div>
+    <div class="kpi-card"><div class="kpi-label">Predios con Basuras</div><div class="kpi-value">1.505</div></div>
+    <div class="kpi-card"><div class="kpi-label">Predios con Energía</div><div class="kpi-value">182</div></div>
+    <div class="kpi-card"><div class="kpi-label">Postes alumbrado público</div><div class="kpi-value">3.665</div></div>
+  </div>
+
+  <div class="panel-grid">
+
+    <div class="panel">
+      <h2>Gas</h2>
+      <div class="chart-box"><canvas id="chartGas"></canvas></div>
+      <table class="tabla">
+        <tr><th>Prestador</th><th>%</th></tr>
+        <tr><td>Vida Gas</td><td><span class="badge">39.8%</span></td></tr>
+        <tr><td>Gas propano</td><td><span class="badge">29.08%</span></td></tr>
+        <tr><td>Sin respuesta</td><td><span class="badge">31.12%</span></td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Acueducto</h2>
+      <div class="chart-box"><canvas id="chartAcueducto"></canvas></div>
+      <table class="tabla">
+        <tr><th>Prestador</th><th>%</th></tr>
+        <tr><td>Acuases</td><td><span class="badge">39.65%</span></td></tr>
+        <tr><td>Acueducto veredal</td><td><span class="badge">24.76%</span></td></tr>
+        <tr><td>Sin respuesta</td><td><span class="badge">35.60%</span></td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Alcantarillado</h2>
+      <div class="chart-box"><canvas id="chartAlcantarillado"></canvas></div>
+      <table class="tabla">
+        <tr><th>Estado</th><th>%</th></tr>
+        <tr><td>Con servicio</td><td><span class="badge">43.73%</span></td></tr>
+        <tr><td>Sin servicio</td><td><span class="badge">30.97%</span></td></tr>
+        <tr><td>Sin respuesta</td><td><span class="badge">25.30%</span></td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Internet</h2>
+      <div class="chart-box"><canvas id="chartInternet"></canvas></div>
+      <table class="tabla">
+        <tr><th>Prestador</th><th>%</th></tr>
+        <tr><td>HV</td><td><span class="badge">15.92%</span></td></tr>
+        <tr><td>Almeidas</td><td><span class="badge">7.21%</span></td></tr>
+        <tr><td>Ultra</td><td><span class="badge">6.36%</span></td></tr>
+        <tr><td>Sin respuesta</td><td><span class="badge">60.47%</span></td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Basuras</h2>
+      <div class="chart-box"><canvas id="chartBasuras"></canvas></div>
+      <table class="tabla">
+        <tr><th>Prestador</th><th>%</th></tr>
+        <tr><td>Acuases</td><td><span class="badge">57.73%</span></td></tr>
+        <tr><td>Sin respuesta</td><td><span class="badge">42.15%</span></td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Energía</h2>
+      <div class="chart-box"><canvas id="chartEnergia"></canvas></div>
+      <table class="tabla">
+        <tr><th>Estado</th><th>Cantidad</th><th>%</th></tr>
+        <tr><td>Con luz</td><td>182</td><td><span class="badge">76.79%</span></td></tr>
+        <tr><td>Sin luz</td><td>55</td><td><span class="badge">23.21%</span></td></tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function crearTorta(id, conServicio, sinServicio, sinRespuesta){
+  new Chart(document.getElementById(id), {
+    type:'pie',
+    data:{
+      labels:['Con servicio','Sin servicio','Sin respuesta'],
+      datasets:[{
+        data:[conServicio, sinServicio, sinRespuesta],
+        backgroundColor:['#0097a7','#ef5350','#b0bec5'],
+        borderWidth:2,
+        borderColor:'#ffffff'
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{
+          position:'bottom',
+          labels:{boxWidth:12,padding:10,font:{size:11}}
+        }
+      }
+    }
+  });
+}
+
+crearTorta("chartGas",68.15,6.32,25.53);
+crearTorta("chartAcueducto",64.37,10.41,25.22);
+crearTorta("chartAlcantarillado",43.73,30.97,25.30);
+crearTorta("chartInternet",39.95,34.63,25.41);
+crearTorta("chartBasuras",58.04,16.62,25.34);
+crearTorta("chartEnergia",76.79,23.21,0);
+</script>
+
+</body>
+</html>
