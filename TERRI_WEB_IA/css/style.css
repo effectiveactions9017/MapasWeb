@@ -256,13 +256,16 @@ body{
 .visor-frame{
     display:block;
 
-    flex:1 1 auto;
+    flex:1 1 0;
 
     width:100%;
-    height:auto;
+
+    /* Clave para que el iframe respete el espacio restante */
+    height:0 !important;
 
     min-width:0;
     min-height:0;
+    max-height:100%;
 
     border:none;
     border-radius:15px;
@@ -273,7 +276,6 @@ body{
 
     overflow:hidden;
 }
-
 
 /* ==========================================================
    PANTALLA COMPLETA
