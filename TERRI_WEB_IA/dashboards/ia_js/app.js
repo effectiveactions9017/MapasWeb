@@ -2,110 +2,307 @@
    TERRI+ APP
 ========================================================== */
 
+
+/* ==========================================================
+   REAJUSTAR MAPA AL TAMAÑO DE LA VENTANA
+========================================================== */
+
+/**
+ * Obliga a MapLibre a recalcular el tamaño del mapa.
+ *
+ * Se utiliza cuando:
+ * - cambia el tamaño del navegador;
+ * - cambia el tamaño del iframe;
+ * - se entra o sale de pantalla completa;
+ * - termina de cargar la interfaz.
+ */
+function reajustarMapaTerri() {
+
+    if (
+        typeof terriMap === "undefined" ||
+        !terriMap
+    ) {
+        return;
+    }
+
+    requestAnimationFrame(() => {
+
+        terriMap.resize();
+
+    });
+
+    setTimeout(() => {
+
+        if (terriMap) {
+            terriMap.resize();
+        }
+
+    }, 150);
+
+}
+
+
+/* ==========================================================
+   INICIALIZAR APLICACIÓN
+========================================================== */
+
 document.addEventListener("DOMContentLoaded", async () => {
 
     console.log("=======================================");
     console.log("🚀 TERRI+ IA Territorial iniciando...");
     console.log("=======================================");
 
+
+    /* ======================================================
+       INICIALIZAR MAPA
+    ====================================================== */
+
     inicializarMapa();
 
-    // ----------------------------------------
-    // Verificar API
-    // ----------------------------------------
+    reajustarMapaTerri();
 
-    const apiDisponible = await verificarAPI();
 
-    const estado = document.getElementById("apiStatus");
-    const texto = document.getElementById("apiStatusText");
+    /* ======================================================
+       VERIFICAR API
+    ====================================================== */
 
-    if(apiDisponible){
+    const apiDisponible =
+        await verificarAPI();
 
-        estado.style.background = "#34c759";
-        texto.textContent = "API conectada";
+    const estado =
+        document.getElementById("apiStatus");
 
-    }else{
+    const texto =
+        document.getElementById("apiStatusText");
 
-        estado.style.background = "#ff3b30";
-        texto.textContent = "API no disponible";
+
+    if (estado && texto) {
+
+        if (apiDisponible) {
+
+            estado.style.background =
+                "#34c759";
+
+            texto.textContent =
+                "API conectada";
+
+        } else {
+
+            estado.style.background =
+                "#ff3b30";
+
+            texto.textContent =
+                "API no disponible";
+
+        }
 
     }
 
-    // ----------------------------------------
-    // Botón Analizar
-    // ----------------------------------------
 
-    document
-        .getElementById("btnEnviar")
-        .addEventListener("click", enviarPregunta);
+    /* ======================================================
+       BOTÓN ANALIZAR
+    ====================================================== */
 
-    // ----------------------------------------
-    // Enter para enviar
-    // ----------------------------------------
+    const botonEnviar =
+        document.getElementById("btnEnviar");
 
-    document
-        .getElementById("preguntaInput")
-        .addEventListener("keydown", function(e){
+    if (botonEnviar) {
 
-            if(e.key==="Enter"){
+        botonEnviar.addEventListener(
+            "click",
+            enviarPregunta
+        );
 
-                enviarPregunta();
+    }
+
+
+    /* ======================================================
+       ENTER PARA ENVIAR
+    ====================================================== */
+
+    const preguntaInput =
+        document.getElementById("preguntaInput");
+
+    if (preguntaInput) {
+
+        preguntaInput.addEventListener(
+            "keydown",
+            function(evento) {
+
+                if (evento.key === "Enter") {
+
+                    evento.preventDefault();
+
+                    enviarPregunta();
+
+                }
 
             }
+        );
 
-        });
+    }
 
-    // ----------------------------------------
-    // Preguntas sugeridas
-    // ----------------------------------------
+
+    /* ======================================================
+       PREGUNTAS SUGERIDAS
+    ====================================================== */
 
     document
         .querySelectorAll(".pregunta-btn")
-        .forEach(boton=>{
+        .forEach(boton => {
 
-            boton.addEventListener("click",()=>{
+            boton.addEventListener(
+                "click",
+                () => {
 
-                document.getElementById("preguntaInput").value =
-                    boton.dataset.pregunta;
+                    const input =
+                        document.getElementById(
+                            "preguntaInput"
+                        );
 
-            });
+                    if (!input) {
+                        return;
+                    }
 
-        });
+                    input.value =
+                        boton.dataset.pregunta || "";
 
-    // ----------------------------------------
-    // Limpiar chat
-    // ----------------------------------------
+                    input.focus();
 
-    document
-        .getElementById("btnLimpiarChat")
-        .addEventListener("click",()=>{
-
-            document.getElementById("chatBox").innerHTML = "";
-
-        });
-
-    // ----------------------------------------
-    // Limpiar mapa
-    // ----------------------------------------
-
-    document
-        .getElementById("btnLimpiarMapa")
-        .addEventListener("click", () => {
-
-            limpiarMapa();
+                }
+            );
 
         });
 
-    // ----------------------------------------
-    // Zoom resultado
-    // ----------------------------------------
 
-    document
-        .getElementById("btnZoomResultado")
-        .addEventListener("click", () => {
+    /* ======================================================
+       LIMPIAR CHAT
+    ====================================================== */
 
-            zoomResultado();
+    const botonLimpiarChat =
+        document.getElementById(
+            "btnLimpiarChat"
+        );
 
-        });
+    if (botonLimpiarChat) {
+
+        botonLimpiarChat.addEventListener(
+            "click",
+            () => {
+
+                const chat =
+                    document.getElementById(
+                        "chatBox"
+                    );
+
+                if (chat) {
+                    chat.innerHTML = "";
+                }
+
+            }
+        );
+
+    }
+
+
+    /* ======================================================
+       LIMPIAR MAPA
+    ====================================================== */
+
+    const botonLimpiarMapa =
+        document.getElementById(
+            "btnLimpiarMapa"
+        );
+
+    if (botonLimpiarMapa) {
+
+        botonLimpiarMapa.addEventListener(
+            "click",
+            () => {
+
+                limpiarMapa();
+
+                reajustarMapaTerri();
+
+            }
+        );
+
+    }
+
+
+    /* ======================================================
+       ZOOM AL RESULTADO
+    ====================================================== */
+
+    const botonZoomResultado =
+        document.getElementById(
+            "btnZoomResultado"
+        );
+
+    if (botonZoomResultado) {
+
+        botonZoomResultado.addEventListener(
+            "click",
+            () => {
+
+                zoomResultado();
+
+            }
+        );
+
+    }
+
+
+    /* ======================================================
+       AJUSTE FINAL DE LA INTERFAZ
+    ====================================================== */
+
+    setTimeout(
+        reajustarMapaTerri,
+        300
+    );
 
 });
+
+
+/* ==========================================================
+   CAMBIO DE TAMAÑO DE VENTANA
+========================================================== */
+
+window.addEventListener(
+    "resize",
+    reajustarMapaTerri
+);
+
+
+/* ==========================================================
+   ENTRAR O SALIR DE PANTALLA COMPLETA
+========================================================== */
+
+document.addEventListener(
+    "fullscreenchange",
+    reajustarMapaTerri
+);
+
+document.addEventListener(
+    "webkitfullscreenchange",
+    reajustarMapaTerri
+);
+
+
+/* ==========================================================
+   CUANDO EL IFRAME VUELVE A SER VISIBLE
+========================================================== */
+
+document.addEventListener(
+    "visibilitychange",
+    () => {
+
+        if (!document.hidden) {
+
+            reajustarMapaTerri();
+
+        }
+
+    }
+);
