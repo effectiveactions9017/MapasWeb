@@ -951,3 +951,23 @@ body{
     }
 
 }
+
+/* ==========================================================
+   BOTÓN MENÚ PRINCIPAL
+========================================================== */
+
+.btn-menu-principal{
+
+    background:#eef5f8 !important;
+
+    color:#0C2D48 !important;
+
+    border:1px solid rgba(12,45,72,.15);
+
+}
+
+.btn-menu-principal:hover{
+
+    background:#dfeef5 !important;
+
+}
