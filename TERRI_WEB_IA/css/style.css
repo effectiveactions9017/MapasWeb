@@ -953,23 +953,167 @@ body{
 }
 
 /* ==========================================================
-   BOTÓN MENÚ PRINCIPAL
+   BOTONES DEL ENCABEZADO DEL VISOR
 ========================================================== */
 
+.visor-head{
+    gap:18px;
+}
+
+.visor-head > div:first-child{
+    flex:1 1 auto;
+    min-width:0;
+}
+
+.visor-head-actions{
+    flex:0 0 auto;
+
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+
+    gap:8px;
+
+    flex-wrap:nowrap;
+}
+
+.visor-head-actions .visor-full-btn{
+    width:auto !important;
+    min-width:0;
+
+    height:34px;
+
+    padding:0 13px;
+
+    border:1px solid #d2dbe4;
+    border-radius:9px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #f2f6f9 100%
+        );
+
+    color:#173b5a;
+
+    font-family:'Segoe UI', Arial, sans-serif;
+    font-size:13px;
+    font-weight:600;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    white-space:nowrap;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 2px 5px rgba(12,45,72,.08);
+
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        box-shadow .18s ease,
+        transform .18s ease;
+}
+
+.visor-head-actions .visor-full-btn:hover{
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #eaf2f7 100%
+        );
+
+    border-color:#b9c9d6;
+
+    box-shadow:
+        0 5px 11px rgba(12,45,72,.13);
+
+    transform:translateY(-1px);
+}
+
+.visor-head-actions .visor-full-btn:active{
+    transform:translateY(0);
+
+    box-shadow:
+        0 2px 4px rgba(12,45,72,.10);
+}
+
+.visor-head-actions .visor-full-btn:focus-visible{
+    outline:2px solid rgba(27,79,114,.35);
+    outline-offset:2px;
+}
+
+
+/* Botón Dashboard */
+
+#btnDashboard{
+    color:#155b91;
+
+    background:
+        linear-gradient(
+            180deg,
+            #f8fcff 0%,
+            #eaf4fb 100%
+        );
+}
+
+#btnDashboard:hover{
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #dfeef8 100%
+        );
+}
+
+
+/* Botón Volver al visor */
+
+#btnMapa{
+    color:#176340;
+
+    background:
+        linear-gradient(
+            180deg,
+            #f8fdfb 0%,
+            #eaf6f0 100%
+        );
+}
+
+#btnMapa:hover{
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #ddf0e6 100%
+        );
+}
+
+
+/* Botón Menú principal */
+
 .btn-menu-principal{
-
-    background:#eef5f8 !important;
-
     color:#0C2D48 !important;
 
-    border:1px solid rgba(12,45,72,.15);
-
+    background:
+        linear-gradient(
+            180deg,
+            #f9fcfd 0%,
+            #eaf2f6 100%
+        ) !important;
 }
 
 .btn-menu-principal:hover{
-
-    background:#dfeef5 !important;
-
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #dfeaf0 100%
+        ) !important;
 }
 /* ==========================================================
    VISOR SIN TERRI COPILOT
