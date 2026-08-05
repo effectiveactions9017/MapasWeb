@@ -530,146 +530,37 @@
 
 
   <!-- ==================================================
-       VISOR + TERRI COPILOT
-  =================================================== -->
+     VISOR
+=================================================== -->
 
-  <div class="visor-inteligente">
+<div class="visor-inteligente">
 
-    <div class="visor-area">
+  <div class="visor-area">
 
-      <iframe
-        id="mapaFrame"
-        class="visor-frame"
-        allowfullscreen
-        loading="lazy"
-      ></iframe>
+    <iframe
+      id="mapaFrame"
+      class="visor-frame"
+      allowfullscreen
+      loading="lazy"
+    ></iframe>
 
-      <iframe
-        id="dashboardFrame"
-        class="visor-frame"
-        allowfullscreen
-        loading="lazy"
-        style="display:none;"
-      ></iframe>
-
-    </div>
-
-
-    <aside
-      id="terriCopilot"
-      class="terri-copilot"
-    >
-
-      <div class="copilot-header">
-
-        <div>
-
-          <h3>
-            🤖 TERRI Copilot
-          </h3>
-
-          <span>
-            Asistente inteligente del visor
-          </span>
-
-        </div>
-
-        <button
-          id="copilotToggle"
-          class="copilot-toggle"
-          onclick="toggleCopilot()"
-        >
-          ⟩
-        </button>
-
-      </div>
-
-
-      <div class="copilot-context-card">
-
-        <span class="context-label">
-          📍 Módulo activo
-        </span>
-
-        <h4 id="copilotModulo">
-          Sin módulo activo
-        </h4>
-
-        <p id="copilotDescripcion">
-          Abre un mapa para que TERRI Copilot pueda analizarlo contigo.
-        </p>
-
-        <div class="context-meta">
-
-          <span id="copilotVista">
-            Vista: inicio
-          </span>
-
-          <span id="copilotMunicipio">
-            Municipio: Sesquilé
-          </span>
-
-        </div>
-
-      </div>
-
-
-      <div class="copilot-suggestions">
-
-        <span class="suggestions-title">
-          💡 Puedes preguntar
-        </span>
-
-        <button onclick="usarPreguntaCopilot('Resume este mapa')">
-          Resume este mapa
-        </button>
-
-        <button onclick="usarPreguntaCopilot('Muéstrame los elementos más importantes')">
-          Muéstrame los elementos más importantes
-        </button>
-
-        <button onclick="usarPreguntaCopilot('¿Qué oportunidades territoriales se observan?')">
-          ¿Qué oportunidades territoriales se observan?
-        </button>
-
-      </div>
-
-
-      <div
-        id="copilotChat"
-        class="copilot-chat"
-      >
-
-        <div class="copilot-msg ia">
-          Hola, soy TERRI Copilot. Estoy listo para ayudarte a interpretar el territorio.
-        </div>
-
-      </div>
-
-
-      <div class="copilot-input">
-
-        <input
-          id="copilotPregunta"
-          placeholder="Pregúntale a este mapa..."
-        >
-
-        <button onclick="enviarCopilot()">
-          Enviar
-        </button>
-
-      </div>
-
-    </aside>
+    <iframe
+      id="dashboardFrame"
+      class="visor-frame"
+      allowfullscreen
+      loading="lazy"
+      style="display:none;"
+    ></iframe>
 
   </div>
+
+</div>
 
 </div>
 
 </main>
 
 </div>
-
 
 <!-- ==================================================
      SCRIPTS
