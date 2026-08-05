@@ -130,7 +130,7 @@
       '🏠 Oportunidades para incremento del predial',
       'Consulta cartografía catastral y referencias territoriales.',
       'https://effectiveactions9017.github.io/MapasWeb/Catastro_SESQUILE/public/index.html',
-      'dashboards/predial.html'
+      './dashboards/predial.html'
     )">
       🏠 Incremento Predial
     </button>
@@ -140,7 +140,7 @@
       '💰 Oportunidades para incremento del ICA',
       'Análisis territorial del recaudo ICA para gestión fiscal.',
       'https://effectiveactions9017.github.io/MapasWeb/RECAUDO%20IMPUESTOS%20ICA_SESQUILE/public/index.html',
-      'dashboards/ica.html'
+      './dashboards/ica.html'
     )">
       💰 Incremento ICA
     </button>
@@ -159,7 +159,7 @@
       '🚰 Situación Servicios Públicos',
       'Diagnóstico territorial de cobertura de servicios.',
       'https://effectiveactions9017.github.io/MapasWeb/SITUACI%C3%93N%20SERVICIOS%20PUBLICOS/public/index.html',
-      'dashboards/servicios.html'
+      './dashboards/servicios.html'
     )">
       🚰 Servicios Públicos
     </button>
@@ -169,7 +169,7 @@
       '🏛️ Activos Públicos',
       'Inventario georreferenciado de activos públicos.',
       'https://effectiveactions9017.github.io/MapasWeb/ACTIVOS_PUBLICOS_SESQUILE/public/index.html',
-      'dashboards/activos.html'
+      './dashboards/activos.html'
     )">
       🏛️ Activos Públicos
     </button>
@@ -179,7 +179,7 @@
       '🏗️ Crecimiento Urbano',
       'Seguimiento a expansión urbana y construcciones.',
       'https://effectiveactions9017.github.io/MapasWeb/SESQUILE/mapEvConst/public/index.html',
-      'dashboards/construcciones.html'
+      './dashboards/construcciones.html'
     )">
       🏗️ Crecimiento Urbano
     </button>
@@ -189,7 +189,7 @@
       '🧭 Uso del Suelo',
       'Identificación de oportunidades según uso permitido.',
       'https://effectiveactions9017.github.io/MapasWeb/OPORTUNIDADES%20USO%20DLE%20SUELO%20SESQUILE/public/index.html',
-      'dashboards/suelo.html'
+      './dashboards/suelo.html'
     )">
       🧭 Uso del Suelo
     </button>
@@ -208,7 +208,7 @@
       '♻️ Bonos de Carbono',
       'Potencial de conservación y aprovechamiento económico.',
       'https://effectiveactions9017.github.io/MapasWeb/BONOS%20DE%20CARBONO%20SESQUILE/public/index.html',
-      'dashboards/bonos.html'
+      './dashboards/bonos.html'
     )">
       ♻️ Bonos Carbono
     </button>
@@ -218,7 +218,7 @@
       '📑 Reporte Impuesto Predial',
       'Consulta análisis del impuesto predial.',
       'https://effectiveactions9017.github.io/MapasWeb/Reporte_Impusto_Predial_2/public/index.html',
-      'dashboards/reporte_predial.html'
+      './dashboards/reporte_predial.html'
     )">
       📑 Reporte Predial
     </button>
@@ -228,7 +228,7 @@
       '📊 Reporte Cartera',
       'Análisis de cartera y recaudo municipal.',
       'https://effectiveactions9017.github.io/MapasWeb/Reporte%20de%20Cartera_Sesquile/public/index.html',
-      'dashboards/cartera.html'
+      './dashboards/cartera.html'
     )">
       📊 Reporte Cartera
     </button>
@@ -246,7 +246,7 @@
     <button onclick="abrirDashboardSolo(
       '👨‍👩‍👧 Caracterización Socioeconómica',
       'Indicadores sociales, educación, salud y ocupación poblacional.',
-      'dashboards/caracterizacion_socioeconomica.html'
+      './dashboards/caracterizacion_socioeconomica.html'
     )">
       👨‍👩‍👧 Caracterización Socioeconómica
     </button>
@@ -502,6 +502,26 @@
     </div>
 
     <div class="visor-head-actions">
+
+      <button
+        id="btnDashboard"
+        type="button"
+        class="visor-full-btn"
+        onclick="verDashboard()"
+        style="display:none;"
+      >
+        📊 Ir a dashboard
+      </button>
+
+      <button
+        id="btnMapa"
+        type="button"
+        class="visor-full-btn"
+        onclick="verMapa()"
+        style="display:none;"
+      >
+        🗺️ Volver al visor
+      </button>
 
       <button
         type="button"
