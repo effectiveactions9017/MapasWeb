@@ -894,14 +894,15 @@ body{
     font-weight:800;
 }
 /* ==========================================================
-   AJUSTE FINAL DE ALTURA EN MODO NORMAL
-   Mantiene visible el campo de escritura del chat
+   AJUSTE DEFINITIVO DE ALTURA
+   MAPA Y CHAT VISIBLES EN MODO NORMAL Y PANTALLA COMPLETA
 ========================================================== */
 
 html,
 body{
     width:100%;
     height:100%;
+
     overflow:hidden;
 }
 
@@ -909,6 +910,7 @@ body{
     width:100%;
     height:100%;
 
+    min-width:0;
     min-height:0;
 
     display:flex;
@@ -920,7 +922,9 @@ body{
 .terri-main{
     flex:1 1 0;
 
-    height:auto;
+    width:100%;
+
+    min-width:0;
     min-height:0;
 
     overflow:hidden;
@@ -929,37 +933,61 @@ body{
 .mapa-panel,
 .columna-asistente,
 .chat-panel{
-    height:100%;
+    width:100%;
+
+    min-width:0;
     min-height:0;
 
     overflow:hidden;
 }
 
+.mapa-panel{
+    height:auto;
+}
+
+.columna-asistente{
+    height:auto;
+}
+
 .chat-panel{
+    height:auto;
+
     display:flex;
     flex-direction:column;
+}
+
+.map{
+    flex:1 1 0;
+
+    width:100%;
+    height:auto;
+
+    min-width:0;
+    min-height:0;
 }
 
 .chat-box{
     flex:1 1 0;
 
+    width:100%;
     height:auto;
+
+    min-width:0;
     min-height:0;
 
     overflow-y:auto;
+    overflow-x:hidden;
 }
 
 .input-area{
     flex:0 0 auto;
 
+    width:100%;
+
     position:relative;
-    bottom:auto;
 
     z-index:5;
 }
-
-
-/* El footer no puede empujar el campo del chat */
 
 .terri-footer{
     height:46px;
@@ -969,33 +997,6 @@ body{
     flex:0 0 46px;
 
     padding:4px 18px;
-}
-/* Mantener siempre visible el campo inferior del chat */
 
-.terri-main{
-    flex:1 1 0;
-    height:auto;
-    min-height:0;
-}
-
-.columna-asistente,
-.chat-panel{
-    min-height:0;
     overflow:hidden;
-}
-
-.chat-panel{
-    display:flex;
-    flex-direction:column;
-}
-
-.chat-box{
-    flex:1 1 0;
-    height:auto;
-    min-height:0;
-    overflow-y:auto;
-}
-
-.input-area{
-    flex:0 0 auto;
 }
