@@ -514,25 +514,43 @@
             📊 Ir a dashboard
           </button>
 
-          <button
-            id="btnMapa"
-            class="visor-full-btn"
-            onclick="verMapa()"
-            style="display:none;"
-          >
-            🗺️ Volver al visor
-          </button>
+          <div class="visor-head-actions">
 
-          <button
-            class="visor-full-btn"
-            onclick="pantallaCompleta()"
-          >
-            ⛶ Pantalla completa
-          </button>
+    <button
+        id="btnDashboard"
+        class="visor-full-btn"
+        onclick="verDashboard()"
+    >
+        📊 Ir a dashboard
+    </button>
 
-        </div>
+    <button
+        id="btnMapa"
+        class="visor-full-btn"
+        onclick="verMapa()"
+        style="display:none;"
+    >
+        🗺️ Volver al visor
+    </button>
 
-      </div>
+    <!-- NUEVO BOTÓN -->
+    <button
+        class="visor-full-btn btn-menu-principal"
+        onclick="volverMenuPrincipalDesdeIA()"
+    >
+        🏠 Menú principal
+    </button>
+
+    <button
+        class="visor-full-btn"
+        onclick="pantallaCompleta()"
+    >
+        ⛶ Pantalla completa
+    </button>
+
+</div>
+
+</div>
 
 
       <!-- ==================================================
