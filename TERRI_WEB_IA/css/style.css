@@ -246,9 +246,6 @@ body{
     margin:5px 0;
 }
 
-.visor-full-btn{
-    width:200px !important;
-}
 
 .visor-frame{
     display:block;
@@ -953,11 +950,19 @@ body{
 }
 
 /* ==========================================================
-   BOTONES DEL ENCABEZADO DEL VISOR
+   BOTONES PROFESIONALES DEL VISOR TERRI+
 ========================================================== */
 
 .visor-head{
     gap:18px;
+    padding:14px 18px;
+
+    background:#ffffff;
+
+    border-radius:14px;
+
+    box-shadow:
+        0 3px 10px rgba(12,45,72,.06);
 }
 
 .visor-head > div:first-child{
@@ -977,25 +982,22 @@ body{
     flex-wrap:nowrap;
 }
 
+
+/* Botones generales */
+
 .visor-head-actions .visor-full-btn{
     width:auto !important;
     min-width:0;
-
     height:34px;
 
     padding:0 13px;
 
-    border:1px solid #d2dbe4;
+    border:1px solid #d8e2ea;
     border-radius:9px;
 
-    background:
-        linear-gradient(
-            180deg,
-            #ffffff 0%,
-            #f2f6f9 100%
-        );
+    background:#ffffff;
 
-    color:#173b5a;
+    color:#23435d;
 
     font-family:'Segoe UI', Arial, sans-serif;
     font-size:13px;
@@ -1010,7 +1012,7 @@ body{
     cursor:pointer;
 
     box-shadow:
-        0 2px 5px rgba(12,45,72,.08);
+        0 2px 7px rgba(12,45,72,.07);
 
     transition:
         background .18s ease,
@@ -1020,30 +1022,25 @@ body{
 }
 
 .visor-head-actions .visor-full-btn:hover{
-    background:
-        linear-gradient(
-            180deg,
-            #ffffff 0%,
-            #eaf2f7 100%
-        );
+    transform:translateY(-1px);
 
-    border-color:#b9c9d6;
+    border-color:#bfd2df;
+
+    background:#fbfdff;
 
     box-shadow:
-        0 5px 11px rgba(12,45,72,.13);
-
-    transform:translateY(-1px);
+        0 6px 14px rgba(12,45,72,.12);
 }
 
 .visor-head-actions .visor-full-btn:active{
     transform:translateY(0);
 
     box-shadow:
-        0 2px 4px rgba(12,45,72,.10);
+        0 2px 5px rgba(12,45,72,.09);
 }
 
 .visor-head-actions .visor-full-btn:focus-visible{
-    outline:2px solid rgba(27,79,114,.35);
+    outline:2px solid rgba(27,79,114,.30);
     outline-offset:2px;
 }
 
@@ -1051,13 +1048,13 @@ body{
 /* Botón Dashboard */
 
 #btnDashboard{
-    color:#155b91;
+    color:#0b5cab;
 
     background:
         linear-gradient(
             180deg,
-            #f8fcff 0%,
-            #eaf4fb 100%
+            #ffffff 0%,
+            #eef6fc 100%
         );
 }
 
@@ -1066,7 +1063,7 @@ body{
         linear-gradient(
             180deg,
             #ffffff 0%,
-            #dfeef8 100%
+            #e2f0f8 100%
         );
 }
 
@@ -1074,13 +1071,13 @@ body{
 /* Botón Volver al visor */
 
 #btnMapa{
-    color:#176340;
+    color:#1c6d42;
 
     background:
         linear-gradient(
             180deg,
-            #f8fdfb 0%,
-            #eaf6f0 100%
+            #ffffff 0%,
+            #eef8f3 100%
         );
 }
 
@@ -1089,7 +1086,7 @@ body{
         linear-gradient(
             180deg,
             #ffffff 0%,
-            #ddf0e6 100%
+            #e2f3e9 100%
         );
 }
 
@@ -1102,8 +1099,8 @@ body{
     background:
         linear-gradient(
             180deg,
-            #f9fcfd 0%,
-            #eaf2f6 100%
+            #ffffff 0%,
+            #f2f5f8 100%
         ) !important;
 }
 
@@ -1112,9 +1109,34 @@ body{
         linear-gradient(
             180deg,
             #ffffff 0%,
-            #dfeaf0 100%
+            #e3edf2 100%
         ) !important;
 }
+
+
+/* Botón Pantalla completa */
+
+.visor-head-actions .visor-full-btn:last-child{
+    color:#4b3c78;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #f3f0fa 100%
+        );
+}
+
+.visor-head-actions .visor-full-btn:last-child:hover{
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #ebe5f6 100%
+        );
+}
+
+
 /* ==========================================================
    VISOR SIN TERRI COPILOT
    EL MAPA OCUPA TODO EL ANCHO DISPONIBLE
