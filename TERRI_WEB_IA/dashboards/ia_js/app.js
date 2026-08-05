@@ -306,3 +306,76 @@ document.addEventListener(
 
     }
 );
+
+
+/* ==========================================================
+   REAJUSTAR MAPA AL CAMBIAR EL TAMAÑO DEL CONTENEDOR
+========================================================== */
+
+function actualizarTamanoMapa() {
+
+    setTimeout(() => {
+
+        if (
+            typeof terriMap !== "undefined" &&
+            terriMap
+        ) {
+
+            terriMap.resize();
+
+        }
+
+    }, 100);
+
+}
+
+
+/* ==========================================================
+   CAMBIO DE TAMAÑO DE LA VENTANA
+========================================================== */
+
+window.addEventListener(
+    "resize",
+    actualizarTamanoMapa
+);
+
+
+/* ==========================================================
+   ENTRAR O SALIR DE PANTALLA COMPLETA
+========================================================== */
+
+document.addEventListener(
+    "fullscreenchange",
+    actualizarTamanoMapa
+);
+
+document.addEventListener(
+    "webkitfullscreenchange",
+    actualizarTamanoMapa
+);
+
+
+/* ==========================================================
+   OBSERVAR CAMBIOS DE TAMAÑO DEL CONTENEDOR DEL MAPA
+========================================================== */
+
+const contenedorMapa =
+    document.getElementById("map");
+
+if (
+    contenedorMapa &&
+    typeof ResizeObserver !== "undefined"
+) {
+
+    const observadorMapa =
+        new ResizeObserver(() => {
+
+            actualizarTamanoMapa();
+
+        });
+
+    observadorMapa.observe(
+        contenedorMapa
+    );
+
+}
