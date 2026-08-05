@@ -476,83 +476,76 @@
 
 
     <!-- ==================================================
-         VISOR DE MÓDULOS
-         OCULTO AL INICIAR
-    =================================================== -->
+     VISOR DE MÓDULOS
+     OCULTO AL INICIAR
+=================================================== -->
 
-    <div
-      id="modulo"
-      class="modulo"
-      style="display:none;"
-    >
+<div
+  id="modulo"
+  class="modulo"
+  style="display:none;"
+>
 
+  <div class="visor-head">
 
-      <div class="visor-head">
+    <div>
 
-        <div>
+      <h3
+        id="tituloModulo"
+        class="visor-title"
+      ></h3>
 
-          <h3
-            id="tituloModulo"
-            class="visor-title"
-          ></h3>
+      <p
+        id="descripcionModulo"
+        class="visor-sub"
+      ></p>
 
-          <p
-            id="descripcionModulo"
-            class="visor-sub"
-          ></p>
+    </div>
 
-        </div>
+    <div class="visor-head-actions">
 
-
-        <div class="visor-head-actions">
-
-          <button
-            id="btnDashboard"
-            class="visor-full-btn"
-            onclick="verDashboard()"
-          >
-            📊 Ir a dashboard
-          </button>
-
-          <div class="visor-head-actions">
-
-    <button
-        id="btnDashboard"
-        class="visor-full-btn"
-        onclick="verDashboard()"
-    >
-        📊 Ir a dashboard
-    </button>
-
-    <button
-        id="btnMapa"
-        class="visor-full-btn"
-        onclick="verMapa()"
-        style="display:none;"
-    >
-        🗺️ Volver al visor
-    </button>
-
-    <!-- NUEVO BOTÓN -->
-    <button
+      <button
         class="visor-full-btn btn-menu-principal"
-        onclick="volverMenuPrincipalDesdeIA()"
-    >
+        onclick="volverMenuPrincipal()"
+      >
         🏠 Menú principal
-    </button>
+      </button>
 
-    <button
+      <button
         class="visor-full-btn"
         onclick="pantallaCompleta()"
-    >
+      >
         ⛶ Pantalla completa
-    </button>
+      </button>
 
-</div>
+    </div>
 
-</div>
+  </div>
 
+  <!-- ==================================================
+       VISOR + TERRI COPILOT
+  =================================================== -->
 
+  <div class="visor-inteligente">
+
+    <div class="visor-area">
+
+      <iframe
+        id="mapaFrame"
+        class="visor-frame"
+        allowfullscreen
+        loading="lazy"
+      ></iframe>
+
+      <iframe
+        id="dashboardFrame"
+        class="visor-frame"
+        allowfullscreen
+        loading="lazy"
+        style="display:none;"
+      ></iframe>
+
+    </div>
       <!-- ==================================================
            VISOR + TERRI COPILOT
       =================================================== -->
