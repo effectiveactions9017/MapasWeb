@@ -621,4 +621,25 @@ document.addEventListener("DOMContentLoaded", () => {
   ocultarCopilotLateral();
 
   console.log("✅ TERRI+ iniciado en el menú principal.");
+  
+  /* ==========================================================
+   VOLVER AL MENÚ PRINCIPAL
+========================================================== */
+
+function volverMenuPrincipalDesdeIA(){
+
+    // Ocultar visor
+    document.getElementById("modulo").style.display = "none";
+
+    // Ocultar menú lateral
+    document.getElementById("sidebarMapas").style.display = "none";
+
+    // Mostrar menú principal
+    document.getElementById("menuPrincipal").style.display = "flex";
+
+    // Limpiar iframes
+    document.getElementById("mapaFrame").src = "";
+    document.getElementById("dashboardFrame").src = "";
+
+}
 });
