@@ -2,25 +2,38 @@
 // 🧠 DETECTAR MÓDULO TERRI+
 // =====================================================
 
-function detectarModuloTerri(titulo, mapaUrl = "", dashboardUrl = "") {
+function detectarModuloTerri(
+  titulo,
+  mapaUrl = "",
+  dashboardUrl = ""
+) {
 
-  const texto = `${titulo} ${mapaUrl} ${dashboardUrl}`.toLowerCase();
+  const texto =
+    `${titulo} ${mapaUrl} ${dashboardUrl}`.toLowerCase();
 
-  if (texto.includes("predial") || texto.includes("catastro")) {
+
+  if (
+    texto.includes("predial") ||
+    texto.includes("catastro")
+  ) {
     return "predial";
   }
+
 
   if (texto.includes("ica")) {
     return "ica";
   }
 
+
   if (texto.includes("servicios")) {
     return "servicios_publicos";
   }
 
+
   if (texto.includes("activos")) {
     return "activos_publicos";
   }
+
 
   if (
     texto.includes("construccion") ||
@@ -30,25 +43,34 @@ function detectarModuloTerri(titulo, mapaUrl = "", dashboardUrl = "") {
     return "crecimiento_urbano";
   }
 
+
   if (texto.includes("suelo")) {
     return "uso_suelo";
   }
 
-  if (texto.includes("bosque") || texto.includes("forest")) {
+
+  if (
+    texto.includes("bosque") ||
+    texto.includes("forest")
+  ) {
     return "bosques";
   }
+
 
   if (texto.includes("carbono")) {
     return "bonos_carbono";
   }
 
+
   if (texto.includes("cartera")) {
     return "cartera";
   }
 
+
   if (texto.includes("placa")) {
     return "placa_huellas";
   }
+
 
   if (
     texto.includes("socioeconomica") ||
@@ -56,6 +78,7 @@ function detectarModuloTerri(titulo, mapaUrl = "", dashboardUrl = "") {
   ) {
     return "caracterizacion_socioeconomica";
   }
+
 
   return "general";
 }
@@ -73,25 +96,42 @@ function notificarCopilot(
   tipoVista = "mapa"
 ) {
 
-  if (typeof actualizarCopilotContexto !== "function") {
-    console.warn("TERRI Copilot todavía no está cargado.");
+  if (
+    typeof actualizarCopilotContexto !== "function"
+  ) {
+
+    console.warn(
+      "TERRI Copilot todavía no está cargado."
+    );
+
     return;
   }
 
-  const moduloDetectado = detectarModuloTerri(
-    titulo,
-    mapaUrl,
-    dashboardUrl
-  );
+
+  const moduloDetectado =
+    detectarModuloTerri(
+      titulo,
+      mapaUrl,
+      dashboardUrl
+    );
+
 
   actualizarCopilotContexto({
+
     modulo: moduloDetectado,
+
     titulo,
+
     descripcion,
+
     mapaUrl,
+
     dashboardUrl,
+
     tipoVista,
+
     municipio: "Sesquilé"
+
   });
 }
 
@@ -103,13 +143,42 @@ function notificarCopilot(
 function obtenerElementosPrincipales() {
 
   return {
-    menuPrincipal: document.getElementById("menuPrincipal"),
-    sidebarMapas: document.getElementById("sidebarMapas"),
-    inicio: document.getElementById("inicio"),
-    modulo: document.getElementById("modulo"),
-    mapaFrame: document.getElementById("mapaFrame"),
-    dashboardFrame: document.getElementById("dashboardFrame"),
-    terriCopilot: document.getElementById("terriCopilot")
+
+    menuPrincipal:
+      document.getElementById(
+        "menuPrincipal"
+      ),
+
+    sidebarMapas:
+      document.getElementById(
+        "sidebarMapas"
+      ),
+
+    inicio:
+      document.getElementById(
+        "inicio"
+      ),
+
+    modulo:
+      document.getElementById(
+        "modulo"
+      ),
+
+    mapaFrame:
+      document.getElementById(
+        "mapaFrame"
+      ),
+
+    dashboardFrame:
+      document.getElementById(
+        "dashboardFrame"
+      ),
+
+    terriCopilot:
+      document.getElementById(
+        "terriCopilot"
+      )
+
   };
 }
 
@@ -125,100 +194,177 @@ function limpiarIframes() {
     dashboardFrame
   } = obtenerElementosPrincipales();
 
+
   if (mapaFrame) {
+
     mapaFrame.src = "";
-    mapaFrame.style.display = "none";
+
+    mapaFrame.style.display =
+      "none";
+
   }
 
+
   if (dashboardFrame) {
+
     dashboardFrame.src = "";
-    dashboardFrame.style.display = "none";
+
+    dashboardFrame.style.display =
+      "none";
+
   }
 }
 
 
 // =====================================================
-// 🤖 MOSTRAR / OCULTAR COPILOT LATERAL
+// 🤖 OCULTAR COPILOT LATERAL
 // =====================================================
 
 function ocultarCopilotLateral() {
 
-  const copilot = document.getElementById("terriCopilot");
+  const copilot =
+    document.getElementById(
+      "terriCopilot"
+    );
+
 
   if (!copilot) {
-    console.warn("⚠️ No se encontró el Copilot lateral.");
+
+    console.warn(
+      "⚠️ No se encontró el Copilot lateral."
+    );
+
     return;
   }
 
-  copilot.style.display = "none";
+
+  copilot.style.display =
+    "none";
+
 
   setTimeout(() => {
-    window.dispatchEvent(new Event("resize"));
-  }, 250);
-}
 
+    window.dispatchEvent(
+      new Event("resize")
+    );
 
-function mostrarCopilotLateral() {
-
-  const copilot = document.getElementById("terriCopilot");
-
-  if (!copilot) {
-    return;
-  }
-
-  copilot.style.display = "";
-
-  setTimeout(() => {
-    window.dispatchEvent(new Event("resize"));
   }, 250);
 }
 
 
 // =====================================================
-// 🏠 MOSTRAR MENÚ PRINCIPAL
+// 🤖 MOSTRAR COPILOT LATERAL
+// =====================================================
+
+function mostrarCopilotLateral() {
+
+  const copilot =
+    document.getElementById(
+      "terriCopilot"
+    );
+
+
+  if (!copilot) {
+    return;
+  }
+
+
+  copilot.style.display = "";
+
+
+  setTimeout(() => {
+
+    window.dispatchEvent(
+      new Event("resize")
+    );
+
+  }, 250);
+}
+
+
+// =====================================================
+// 🏠 VOLVER AL MENÚ PRINCIPAL
 // =====================================================
 
 function volverMenuPrincipal() {
 
   const {
+
     menuPrincipal,
+
     sidebarMapas,
+
     inicio,
+
     modulo
+
   } = obtenerElementosPrincipales();
+
 
   limpiarIframes();
 
+
   if (menuPrincipal) {
-    menuPrincipal.style.display = "flex";
+
+    menuPrincipal.style.display =
+      "flex";
+
   }
+
 
   if (sidebarMapas) {
-    sidebarMapas.style.display = "none";
+
+    sidebarMapas.style.display =
+      "none";
+
   }
+
 
   if (inicio) {
-    inicio.style.display = "none";
+
+    inicio.style.display =
+      "none";
+
   }
 
+
   if (modulo) {
-    modulo.style.display = "none";
+
+    modulo.style.display =
+      "none";
+
   }
+
 
   ocultarCopilotLateral();
 
-  if (typeof actualizarCopilotContexto === "function") {
+
+  if (
+    typeof actualizarCopilotContexto ===
+    "function"
+  ) {
+
     actualizarCopilotContexto({
+
       modulo: null,
+
       titulo: null,
+
       descripcion: null,
+
       mapaUrl: null,
+
       dashboardUrl: null,
+
       tipoVista: "inicio"
+
     });
   }
 
-  console.log("🏠 Menú principal TERRI+ visible.");
+
+  console.log(
+    "🏠 Menú principal TERRI+ visible."
+  );
 }
 
 
@@ -229,44 +375,82 @@ function volverMenuPrincipal() {
 function entrarGeovisores() {
 
   const {
+
     menuPrincipal,
+
     sidebarMapas,
+
     inicio,
+
     modulo
+
   } = obtenerElementosPrincipales();
+
 
   limpiarIframes();
 
+
   if (menuPrincipal) {
-    menuPrincipal.style.display = "none";
+
+    menuPrincipal.style.display =
+      "none";
+
   }
+
 
   if (sidebarMapas) {
-    sidebarMapas.style.display = "block";
+
+    sidebarMapas.style.display =
+      "block";
+
   }
+
 
   if (inicio) {
-    inicio.style.display = "flex";
+
+    inicio.style.display =
+      "flex";
+
   }
 
+
   if (modulo) {
-    modulo.style.display = "none";
+
+    modulo.style.display =
+      "none";
+
   }
+
 
   mostrarCopilotLateral();
 
-  if (typeof actualizarCopilotContexto === "function") {
+
+  if (
+    typeof actualizarCopilotContexto ===
+    "function"
+  ) {
+
     actualizarCopilotContexto({
+
       modulo: null,
+
       titulo: null,
+
       descripcion: null,
+
       mapaUrl: null,
+
       dashboardUrl: null,
+
       tipoVista: "inicio"
+
     });
   }
 
-  console.log("🗺️ Geovisores TERRI+ abiertos.");
+
+  console.log(
+    "🗺️ Geovisores TERRI+ abiertos."
+  );
 }
 
 
@@ -277,31 +461,49 @@ function entrarGeovisores() {
 function abrirIATerritorial() {
 
   const {
+
     menuPrincipal,
+
     sidebarMapas
+
   } = obtenerElementosPrincipales();
 
+
   if (menuPrincipal) {
-    menuPrincipal.style.display = "none";
+
+    menuPrincipal.style.display =
+      "none";
+
   }
 
+
   if (sidebarMapas) {
-    sidebarMapas.style.display = "none";
+
+    sidebarMapas.style.display =
+      "none";
+
   }
+
 
   ocultarCopilotLateral();
 
+
   abrirDashboardSolo(
+
     "🤖 Agente IA Territorial TERRI+",
+
     "Consulta inteligente para analizar capas, mapas y datos territoriales.",
+
     "./dashboards/ia_territorial.html",
+
     false
+
   );
 }
 
 
 // =====================================================
-// 🗺️ ABRIR MÓDULO MAPA + DASHBOARD OPCIONAL
+// 🗺️ ABRIR MÓDULO DE MAPA
 // =====================================================
 
 function abrirModulo(
@@ -312,18 +514,33 @@ function abrirModulo(
 ) {
 
   const {
+
     menuPrincipal,
+
     sidebarMapas,
+
     inicio,
+
     modulo,
+
     mapaFrame,
+
     dashboardFrame
+
   } = obtenerElementosPrincipales();
 
-  const tituloModulo = document.getElementById("tituloModulo");
-  const descripcionModulo = document.getElementById("descripcionModulo");
-  const btnDashboard = document.getElementById("btnDashboard");
-  const btnMapa = document.getElementById("btnMapa");
+
+  const tituloModulo =
+    document.getElementById(
+      "tituloModulo"
+    );
+
+
+  const descripcionModulo =
+    document.getElementById(
+      "descripcionModulo"
+    );
+
 
   if (
     !inicio ||
@@ -331,127 +548,87 @@ function abrirModulo(
     !tituloModulo ||
     !descripcionModulo ||
     !mapaFrame ||
-    !dashboardFrame ||
-    !btnDashboard ||
-    !btnMapa
+    !dashboardFrame
   ) {
-    alert("❌ Falta un elemento del visor. Revisa los ID del HTML.");
+
+    alert(
+      "❌ Falta un elemento del visor. Revisa los ID del HTML."
+    );
+
     return;
   }
 
+
   if (menuPrincipal) {
-    menuPrincipal.style.display = "none";
+
+    menuPrincipal.style.display =
+      "none";
+
   }
 
+
   if (sidebarMapas) {
-    sidebarMapas.style.display = "block";
+
+    sidebarMapas.style.display =
+      "block";
+
   }
+
 
   mostrarCopilotLateral();
 
-  inicio.style.display = "none";
-  modulo.style.display = "block";
 
-  tituloModulo.innerText = titulo;
-  descripcionModulo.innerText = descripcion;
+  inicio.style.display =
+    "none";
+
+
+  /*
+   * Se usa flex para conservar el diseño
+   * y la altura correcta del mapa.
+   */
+  modulo.style.display =
+    "flex";
+
+
+  tituloModulo.innerText =
+    titulo;
+
+
+  descripcionModulo.innerText =
+    descripcion;
+
 
   dashboardFrame.src = "";
-  dashboardFrame.style.display = "none";
 
-  mapaFrame.src = mapaUrl;
-  mapaFrame.style.display = "block";
+  dashboardFrame.style.display =
+    "none";
 
-  if (dashboardUrl) {
-    dashboardFrame.src = dashboardUrl;
-    btnDashboard.style.display = "inline-flex";
-  } else {
-    btnDashboard.style.display = "none";
-  }
 
-  btnMapa.style.display = "none";
+  mapaFrame.src =
+    mapaUrl;
+
+  mapaFrame.style.display =
+    "block";
+
 
   notificarCopilot(
+
     titulo,
+
     descripcion,
+
     mapaUrl,
+
     dashboardUrl,
+
     "mapa"
+
   );
 }
 
 
 // =====================================================
-// 📊 CAMBIAR A DASHBOARD
-// =====================================================
-
-function verDashboard() {
-
-  const mapaFrame = document.getElementById("mapaFrame");
-  const dashboardFrame = document.getElementById("dashboardFrame");
-  const btnDashboard = document.getElementById("btnDashboard");
-  const btnMapa = document.getElementById("btnMapa");
-
-  if (
-    !mapaFrame ||
-    !dashboardFrame ||
-    !btnDashboard ||
-    !btnMapa
-  ) {
-    console.warn("⚠️ No se encontraron elementos para cambiar a dashboard.");
-    return;
-  }
-
-  mapaFrame.style.display = "none";
-  dashboardFrame.style.display = "block";
-
-  btnDashboard.style.display = "none";
-  btnMapa.style.display = "inline-flex";
-
-  if (typeof actualizarCopilotContexto === "function") {
-    actualizarCopilotContexto({
-      tipoVista: "dashboard"
-    });
-  }
-}
-
-
-// =====================================================
-// 🗺️ VOLVER AL MAPA
-// =====================================================
-
-function verMapa() {
-
-  const mapaFrame = document.getElementById("mapaFrame");
-  const dashboardFrame = document.getElementById("dashboardFrame");
-  const btnDashboard = document.getElementById("btnDashboard");
-  const btnMapa = document.getElementById("btnMapa");
-
-  if (
-    !mapaFrame ||
-    !dashboardFrame ||
-    !btnDashboard ||
-    !btnMapa
-  ) {
-    console.warn("⚠️ No se encontraron elementos para volver al mapa.");
-    return;
-  }
-
-  mapaFrame.style.display = "block";
-  dashboardFrame.style.display = "none";
-
-  btnDashboard.style.display = "inline-flex";
-  btnMapa.style.display = "none";
-
-  if (typeof actualizarCopilotContexto === "function") {
-    actualizarCopilotContexto({
-      tipoVista: "mapa"
-    });
-  }
-}
-
-
-// =====================================================
-// 📊 ABRIR SOLO DASHBOARD
+// 📊 ABRIR SOLO UN DASHBOARD
 // =====================================================
 
 function abrirDashboardSolo(
@@ -462,17 +639,31 @@ function abrirDashboardSolo(
 ) {
 
   const {
+
     menuPrincipal,
+
     inicio,
+
     modulo,
+
     mapaFrame,
+
     dashboardFrame
+
   } = obtenerElementosPrincipales();
 
-  const tituloModulo = document.getElementById("tituloModulo");
-  const descripcionModulo = document.getElementById("descripcionModulo");
-  const btnDashboard = document.getElementById("btnDashboard");
-  const btnMapa = document.getElementById("btnMapa");
+
+  const tituloModulo =
+    document.getElementById(
+      "tituloModulo"
+    );
+
+
+  const descripcionModulo =
+    document.getElementById(
+      "descripcionModulo"
+    );
+
 
   if (
     !inicio ||
@@ -480,46 +671,95 @@ function abrirDashboardSolo(
     !tituloModulo ||
     !descripcionModulo ||
     !mapaFrame ||
-    !dashboardFrame ||
-    !btnDashboard ||
-    !btnMapa
+    !dashboardFrame
   ) {
-    alert("❌ Falta un elemento del visor. Revisa los ID del HTML.");
+
+    alert(
+      "❌ Falta un elemento del visor. Revisa los ID del HTML."
+    );
+
     return;
   }
 
+
   if (menuPrincipal) {
-    menuPrincipal.style.display = "none";
+
+    menuPrincipal.style.display =
+      "none";
+
   }
+
 
   if (mostrarCopilot) {
+
     mostrarCopilotLateral();
+
   } else {
+
     ocultarCopilotLateral();
+
   }
 
-  inicio.style.display = "none";
-  modulo.style.display = "block";
 
-  tituloModulo.innerText = titulo;
-  descripcionModulo.innerText = descripcion;
+  inicio.style.display =
+    "none";
+
+
+  /*
+   * Flex conserva el mapa/chat ajustados
+   * al espacio disponible.
+   */
+  modulo.style.display =
+    "flex";
+
+
+  tituloModulo.innerText =
+    titulo;
+
+
+  descripcionModulo.innerText =
+    descripcion;
+
 
   mapaFrame.src = "";
-  mapaFrame.style.display = "none";
 
-  dashboardFrame.src = dashboardUrl;
-  dashboardFrame.style.display = "block";
+  mapaFrame.style.display =
+    "none";
 
-  btnDashboard.style.display = "none";
-  btnMapa.style.display = "none";
+
+  dashboardFrame.src =
+    dashboardUrl;
+
+  dashboardFrame.style.display =
+    "block";
+
 
   notificarCopilot(
+
     titulo,
+
     descripcion,
+
     null,
+
     dashboardUrl,
+
     "dashboard"
+
   );
+
+
+  /*
+   * Recalcular el tamaño del iframe
+   * después de mostrarlo.
+   */
+  setTimeout(() => {
+
+    window.dispatchEvent(
+      new Event("resize")
+    );
+
+  }, 200);
 }
 
 
@@ -530,40 +770,75 @@ function abrirDashboardSolo(
 function limpiarVisor() {
 
   const {
+
     menuPrincipal,
+
     sidebarMapas,
+
     inicio,
+
     modulo
+
   } = obtenerElementosPrincipales();
+
 
   limpiarIframes();
 
+
   if (menuPrincipal) {
-    menuPrincipal.style.display = "none";
+
+    menuPrincipal.style.display =
+      "none";
+
   }
+
 
   if (sidebarMapas) {
-    sidebarMapas.style.display = "block";
+
+    sidebarMapas.style.display =
+      "block";
+
   }
+
 
   if (inicio) {
-    inicio.style.display = "flex";
+
+    inicio.style.display =
+      "flex";
+
   }
 
+
   if (modulo) {
-    modulo.style.display = "none";
+
+    modulo.style.display =
+      "none";
+
   }
+
 
   mostrarCopilotLateral();
 
-  if (typeof actualizarCopilotContexto === "function") {
+
+  if (
+    typeof actualizarCopilotContexto ===
+    "function"
+  ) {
+
     actualizarCopilotContexto({
+
       modulo: null,
+
       titulo: null,
+
       descripcion: null,
+
       mapaUrl: null,
+
       dashboardUrl: null,
+
       tipoVista: "inicio"
+
     });
   }
 }
@@ -575,71 +850,179 @@ function limpiarVisor() {
 
 function pantallaCompleta() {
 
-  const visor = document.getElementById("modulo");
+  const visor =
+    document.getElementById(
+      "modulo"
+    );
+
 
   if (!visor) {
     return;
   }
 
+
   if (document.fullscreenElement) {
-    document.exitFullscreen();
+
+    document
+      .exitFullscreen()
+      .catch(error => {
+
+        console.error(
+          "No fue posible salir de pantalla completa:",
+          error
+        );
+
+      });
+
   } else {
-    visor.requestFullscreen();
+
+    visor
+      .requestFullscreen()
+      .catch(error => {
+
+        console.error(
+          "No fue posible activar pantalla completa:",
+          error
+        );
+
+      });
+
   }
 }
+
+
+// =====================================================
+// 📐 REAJUSTAR EL CONTENIDO DEL IFRAME
+// =====================================================
+
+function reajustarIframeActivo() {
+
+  const {
+
+    mapaFrame,
+
+    dashboardFrame
+
+  } = obtenerElementosPrincipales();
+
+
+  const frameActivo =
+
+    dashboardFrame &&
+    dashboardFrame.style.display !== "none"
+
+      ? dashboardFrame
+
+      : mapaFrame;
+
+
+  if (
+    !frameActivo ||
+    !frameActivo.contentWindow
+  ) {
+    return;
+  }
+
+
+  try {
+
+    frameActivo.contentWindow.dispatchEvent(
+      new Event("resize")
+    );
+
+  } catch (error) {
+
+    console.warn(
+      "No se pudo reajustar el iframe:",
+      error
+    );
+
+  }
+}
+
+
+// =====================================================
+// 📐 CAMBIOS DE TAMAÑO
+// =====================================================
+
+window.addEventListener(
+  "resize",
+  reajustarIframeActivo
+);
+
+
+document.addEventListener(
+  "fullscreenchange",
+  () => {
+
+    setTimeout(
+      reajustarIframeActivo,
+      150
+    );
+
+  }
+);
 
 
 // =====================================================
 // 🚀 ESTADO INICIAL
 // =====================================================
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-  const {
-    menuPrincipal,
-    sidebarMapas,
-    inicio,
-    modulo
-  } = obtenerElementosPrincipales();
+    const {
 
-  if (menuPrincipal) {
-    menuPrincipal.style.display = "flex";
+      menuPrincipal,
+
+      sidebarMapas,
+
+      inicio,
+
+      modulo
+
+    } = obtenerElementosPrincipales();
+
+
+    if (menuPrincipal) {
+
+      menuPrincipal.style.display =
+        "flex";
+
+    }
+
+
+    if (sidebarMapas) {
+
+      sidebarMapas.style.display =
+        "none";
+
+    }
+
+
+    if (inicio) {
+
+      inicio.style.display =
+        "none";
+
+    }
+
+
+    if (modulo) {
+
+      modulo.style.display =
+        "none";
+
+    }
+
+
+    ocultarCopilotLateral();
+
+
+    console.log(
+      "✅ TERRI+ iniciado en el menú principal."
+    );
+
   }
-
-  if (sidebarMapas) {
-    sidebarMapas.style.display = "none";
-  }
-
-  if (inicio) {
-    inicio.style.display = "none";
-  }
-
-  if (modulo) {
-    modulo.style.display = "none";
-  }
-
-  ocultarCopilotLateral();
-
-  console.log("✅ TERRI+ iniciado en el menú principal.");
-  
-  /* ==========================================================
-   VOLVER AL MENÚ PRINCIPAL
-========================================================== */
-
-function volverMenuPrincipalDesdeIA(){
-
-    // Ocultar visor
-    document.getElementById("modulo").style.display = "none";
-
-    // Ocultar menú lateral
-    document.getElementById("sidebarMapas").style.display = "none";
-
-    // Mostrar menú principal
-    document.getElementById("menuPrincipal").style.display = "flex";
-
-    // Limpiar iframes
-    document.getElementById("mapaFrame").src = "";
-    document.getElementById("dashboardFrame").src = "";
-
-}
-});
+);
