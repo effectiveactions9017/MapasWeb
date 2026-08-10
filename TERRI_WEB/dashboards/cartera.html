@@ -170,12 +170,143 @@ tbody tr:hover{
   .contenedor{padding:18px}
   .bloque-tabla{padding:16px}
 }
+
+/* ==========================================================
+   PROTECCIÓN DEL DASHBOARD FRENTE A ESTILOS DEL VISOR EXTERNO
+   No modifica el diseño; solo evita que CSS externo lo deforme.
+========================================================== */
+
+#cartera-dashboard{
+  display:block !important;
+  width:100% !important;
+  max-width:1180px !important;
+  float:none !important;
+  clear:both !important;
+  position:relative !important;
+}
+
+#cartera-dashboard .resumen{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  width:100% !important;
+  float:none !important;
+  clear:both !important;
+}
+
+#cartera-dashboard .card{
+  display:block !important;
+  width:auto !important;
+  min-width:0 !important;
+  float:none !important;
+  position:relative !important;
+}
+
+#cartera-dashboard .bloque-tabla{
+  display:block !important;
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  float:none !important;
+  clear:both !important;
+  position:relative !important;
+}
+
+#cartera-dashboard .titulo-tabla{
+  display:block !important;
+  width:100% !important;
+  float:none !important;
+  clear:both !important;
+}
+
+#cartera-dashboard .tabla-wrap{
+  display:block !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  overflow-x:auto !important;
+  float:none !important;
+  clear:both !important;
+}
+
+#cartera-dashboard table,
+#cartera-dashboard .tabla-wrap table,
+#cartera-dashboard table.tabla-dinero{
+  display:table !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  float:none !important;
+  clear:both !important;
+  border-collapse:collapse !important;
+  table-layout:fixed !important;
+}
+
+#cartera-dashboard thead{
+  display:table-header-group !important;
+}
+
+#cartera-dashboard tbody{
+  display:table-row-group !important;
+}
+
+#cartera-dashboard tr{
+  display:table-row !important;
+  float:none !important;
+}
+
+#cartera-dashboard th,
+#cartera-dashboard td{
+  display:table-cell !important;
+  float:none !important;
+  box-sizing:border-box !important;
+  white-space:normal !important;
+  overflow:visible !important;
+}
+
+#cartera-dashboard th:first-child,
+#cartera-dashboard td:first-child{
+  width:30% !important;
+}
+
+#cartera-dashboard th:not(:first-child),
+#cartera-dashboard td:not(:first-child){
+  width:17.5% !important;
+}
+
+#cartera-dashboard .nota{
+  display:block !important;
+  width:100% !important;
+  max-width:none !important;
+  float:none !important;
+  clear:both !important;
+  position:static !important;
+}
+
+@media(max-width:1100px){
+  #cartera-dashboard .resumen{
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+
+@media(max-width:640px){
+  #cartera-dashboard .resumen{
+    grid-template-columns:1fr !important;
+  }
+
+  #cartera-dashboard table,
+  #cartera-dashboard .tabla-wrap table,
+  #cartera-dashboard table.tabla-dinero{
+    table-layout:auto !important;
+    min-width:560px !important;
+  }
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="contenedor">
+<div id="cartera-dashboard" class="contenedor">
 
   <p class="subtitulo">
     Resumen de los predios únicos en mora, el valor total de cartera por recuperar
