@@ -400,12 +400,62 @@ function abrirVisualizadorCapas() {
         sidebarMapas.style.display = "none";
     }
 
+
+    // Abrir visualizador
     abrirDashboardSolo(
-        "🗂️ Visualizador de capas",
+        "Visualizador de capas",
         "Carga, visualiza y consulta capas GeoJSON y JSON sobre el territorio.",
-        "./capas/capas.html"
+        "./capas/capas.html",
+        false
     );
 
+
+    // =====================================================
+    // LOGO DE CAPAS EN EL TÍTULO SUPERIOR
+    // =====================================================
+
+    const tituloModulo =
+        document.getElementById("tituloModulo");
+
+    if (tituloModulo) {
+
+        tituloModulo.innerHTML = `
+            <span class="titulo-capas-logo">
+
+                <svg
+                    viewBox="0 0 64 64"
+                    aria-hidden="true"
+                >
+
+                    <polygon
+                        points="32,6 55,19 32,32 9,19"
+                        fill="#63C990"
+                    ></polygon>
+
+                    <polygon
+                        points="32,20 55,33 32,46 9,33"
+                        fill="#3F8ED0"
+                    ></polygon>
+
+                    <polygon
+                        points="32,34 55,47 32,60 9,47"
+                        fill="#304E7A"
+                    ></polygon>
+
+                </svg>
+
+            </span>
+
+            <span>
+                Visualizador de capas
+            </span>
+        `;
+    }
+
+
+    console.log(
+        "Visualizador de capas TERRI+ abierto."
+    );
 }
 
 
