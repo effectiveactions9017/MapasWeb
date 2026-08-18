@@ -1,0 +1,608 @@
+/* ==========================================================
+   TERRI+ VISUALIZADOR DE CAPAS
+========================================================== */
+
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
+    width:100%;
+    height:100%;
+
+    margin:0;
+    padding:0;
+
+    overflow:hidden;
+}
+
+body{
+    font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+    background:#eef3f6;
+
+    color:#17384e;
+}
+
+
+/* ==========================================================
+   APLICACIÓN
+========================================================== */
+
+.capas-app{
+    width:100%;
+    height:100%;
+
+    display:grid;
+
+    grid-template-columns:
+        310px
+        minmax(0, 1fr);
+
+    overflow:hidden;
+}
+
+
+/* ==========================================================
+   PANEL LATERAL
+========================================================== */
+
+.capas-panel{
+    height:100%;
+
+    padding:18px;
+
+    background:#ffffff;
+
+    border-right:
+        1px solid #dce5eb;
+
+    box-shadow:
+        5px 0 20px
+        rgba(12,45,72,.08);
+
+    display:flex;
+    flex-direction:column;
+
+    gap:14px;
+
+    overflow-y:auto;
+
+    z-index:10;
+}
+
+
+/* ==========================================================
+   ENCABEZADO
+========================================================== */
+
+.panel-header{
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    padding-bottom:15px;
+
+    border-bottom:
+        1px solid #e5ecef;
+}
+
+.panel-icon{
+    width:42px;
+    height:42px;
+
+    flex:0 0 42px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:11px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #e5f3f0,
+            #e9f1f8
+        );
+
+    font-size:22px;
+}
+
+.panel-header h1{
+    margin:0;
+
+    color:#0C2D48;
+
+    font-size:19px;
+
+    font-weight:700;
+}
+
+.panel-header p{
+    margin:3px 0 0;
+
+    color:#70828e;
+
+    font-size:12px;
+}
+
+
+/* ==========================================================
+   SECCIONES
+========================================================== */
+
+.panel-section{
+    padding:14px;
+
+    border:
+        1px solid #e2e9ed;
+
+    border-radius:13px;
+
+    background:#fbfcfd;
+}
+
+.panel-section h2{
+    margin:0 0 11px;
+
+    color:#1D3557;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    letter-spacing:.4px;
+}
+
+.section-title-row{
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+}
+
+.section-help{
+    margin:9px 0 0;
+
+    color:#82919b;
+
+    font-size:11px;
+}
+
+
+/* ==========================================================
+   SUBIR ARCHIVO
+========================================================== */
+
+#archivoCapa{
+    display:none;
+}
+
+.upload-btn{
+    width:100%;
+    height:40px;
+
+    padding:0 14px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:8px;
+
+    border:
+        1px solid #cddce5;
+
+    border-radius:10px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff,
+            #eef5f8
+        );
+
+    color:#0C2D48;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:
+        transform .18s ease,
+        border-color .18s ease,
+        box-shadow .18s ease;
+}
+
+.upload-btn:hover{
+    transform:translateY(-1px);
+
+    border-color:#abc4d3;
+
+    box-shadow:
+        0 5px 12px
+        rgba(12,45,72,.10);
+}
+
+.upload-icon{
+    font-size:20px;
+
+    line-height:1;
+}
+
+
+/* ==========================================================
+   SELECT
+========================================================== */
+
+#selectorMapaBase{
+    width:100%;
+    height:39px;
+
+    padding:0 10px;
+
+    border:
+        1px solid #d3dfe6;
+
+    border-radius:9px;
+
+    background:#ffffff;
+
+    color:#24475e;
+
+    font-family:inherit;
+
+    font-size:13px;
+
+    cursor:pointer;
+}
+
+
+/* ==========================================================
+   CONTADOR
+========================================================== */
+
+.contador{
+    min-width:25px;
+    height:25px;
+
+    padding:0 7px;
+
+    display:grid;
+
+    place-items:center;
+
+    border-radius:20px;
+
+    background:#e7f1f6;
+
+    color:#155b91;
+
+    font-size:11px;
+
+    font-weight:700;
+}
+
+
+/* ==========================================================
+   LISTA DE CAPAS
+========================================================== */
+
+.capas-section{
+    flex:1 1 auto;
+
+    min-height:180px;
+}
+
+.lista-capas{
+    display:flex;
+
+    flex-direction:column;
+
+    gap:8px;
+}
+
+.estado-vacio{
+    min-height:145px;
+
+    padding:16px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
+    color:#83939d;
+}
+
+.estado-vacio-icon{
+    margin-bottom:8px;
+
+    font-size:30px;
+
+    opacity:.45;
+}
+
+.estado-vacio strong{
+    margin-bottom:3px;
+
+    color:#637987;
+
+    font-size:13px;
+}
+
+.estado-vacio span{
+    font-size:11px;
+}
+
+
+/* ==========================================================
+   TARJETA DE CAPA
+========================================================== */
+
+.capa-item{
+    padding:10px;
+
+    border:
+        1px solid #dfe8ed;
+
+    border-radius:10px;
+
+    background:#ffffff;
+}
+
+.capa-superior{
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+}
+
+.capa-check{
+    width:16px;
+    height:16px;
+
+    flex:0 0 auto;
+
+    cursor:pointer;
+}
+
+.capa-color{
+    width:11px;
+    height:11px;
+
+    flex:0 0 11px;
+
+    border-radius:50%;
+}
+
+.capa-nombre{
+    flex:1 1 auto;
+
+    min-width:0;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+
+    color:#23475e;
+
+    font-size:12px;
+
+    font-weight:600;
+}
+
+.capa-acciones{
+    margin-top:9px;
+
+    display:grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap:6px;
+}
+
+.capa-btn{
+    height:29px;
+
+    border:
+        1px solid #d7e2e8;
+
+    border-radius:8px;
+
+    background:#f7fafb;
+
+    color:#496373;
+
+    font-family:inherit;
+
+    font-size:11px;
+
+    cursor:pointer;
+
+    transition:.15s ease;
+}
+
+.capa-btn:hover{
+    background:#edf4f7;
+
+    border-color:#bfcfd8;
+}
+
+.capa-btn.eliminar:hover{
+    background:#fff1f1;
+
+    border-color:#e6baba;
+
+    color:#a33a3a;
+}
+
+
+/* ==========================================================
+   MENSAJE
+========================================================== */
+
+.mensaje-estado{
+    min-height:20px;
+
+    padding:0 3px;
+
+    color:#667b88;
+
+    font-size:11px;
+
+    line-height:1.4;
+}
+
+.mensaje-estado.error{
+    color:#a13d3d;
+}
+
+.mensaje-estado.ok{
+    color:#28734c;
+}
+
+
+/* ==========================================================
+   MAPA
+========================================================== */
+
+.mapa-contenedor{
+    position:relative;
+
+    min-width:0;
+    min-height:0;
+
+    overflow:hidden;
+}
+
+.mapa{
+    position:absolute;
+
+    inset:0;
+
+    width:100%;
+    height:100%;
+}
+
+
+/* ==========================================================
+   ESTADO MAPA
+========================================================== */
+
+.mapa-info{
+    position:absolute;
+
+    left:14px;
+    bottom:14px;
+
+    z-index:5;
+
+    height:32px;
+
+    padding:0 12px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:7px;
+
+    border:
+        1px solid rgba(12,45,72,.12);
+
+    border-radius:9px;
+
+    background:
+        rgba(255,255,255,.94);
+
+    color:#486372;
+
+    font-size:11px;
+
+    box-shadow:
+        0 4px 12px
+        rgba(12,45,72,.10);
+
+    backdrop-filter:blur(8px);
+}
+
+.estado-punto{
+    width:7px;
+    height:7px;
+
+    border-radius:50%;
+
+    background:#3aa76d;
+}
+
+
+/* ==========================================================
+   MAPLIBRE
+========================================================== */
+
+.maplibregl-ctrl-group{
+    border-radius:9px !important;
+
+    overflow:hidden;
+}
+
+.maplibregl-ctrl-group button{
+    width:34px;
+    height:34px;
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:760px){
+
+    html,
+    body{
+        overflow:auto;
+    }
+
+    .capas-app{
+        min-height:100vh;
+
+        grid-template-columns:1fr;
+
+        grid-template-rows:auto 600px;
+
+        overflow:visible;
+    }
+
+    .capas-panel{
+        height:auto;
+
+        border-right:none;
+
+        border-bottom:
+            1px solid #dce5eb;
+    }
+
+}

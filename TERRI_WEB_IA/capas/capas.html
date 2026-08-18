@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Visualizador de Capas TERRI+</title>
+
+
+    <!-- =====================================================
+         MAPLIBRE GL
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
+    >
+
+
+    <!-- =====================================================
+         ESTILOS TERRI+
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="./capas.css"
+    >
+
+</head>
+
+
+<body>
+
+<div class="capas-app">
+
+
+    <!-- =====================================================
+         PANEL LATERAL
+    ====================================================== -->
+
+    <aside class="capas-panel">
+
+
+        <!-- TÍTULO -->
+
+        <div class="panel-header">
+
+            <div class="panel-icon">
+                🗂️
+            </div>
+
+            <div>
+
+                <h1>
+                    Visualizador de capas
+                </h1>
+
+                <p>
+                    Carga y explora información territorial.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CARGAR CAPA
+        ================================================== -->
+
+        <section class="panel-section">
+
+            <h2>
+                Agregar información
+            </h2>
+
+            <label
+                for="archivoCapa"
+                class="upload-btn"
+            >
+
+                <span class="upload-icon">
+                    ＋
+                </span>
+
+                <span>
+                    Subir capa
+                </span>
+
+            </label>
+
+            <input
+                id="archivoCapa"
+                type="file"
+                accept=".geojson,.json,application/geo+json,application/json"
+                multiple
+            >
+
+            <p class="section-help">
+                Formatos iniciales: GeoJSON y JSON.
+            </p>
+
+        </section>
+
+
+        <!-- =================================================
+             MAPA BASE
+        ================================================== -->
+
+        <section class="panel-section">
+
+            <h2>
+                Mapa base
+            </h2>
+
+            <select id="selectorMapaBase">
+
+                <option value="osm">
+                    OpenStreetMap
+                </option>
+
+                <option value="satelite">
+                    Imagen satelital
+                </option>
+
+            </select>
+
+        </section>
+
+
+        <!-- =================================================
+             CAPAS CARGADAS
+        ================================================== -->
+
+        <section class="panel-section capas-section">
+
+            <div class="section-title-row">
+
+                <h2>
+                    Capas cargadas
+                </h2>
+
+                <span
+                    id="contadorCapas"
+                    class="contador"
+                >
+                    0
+                </span>
+
+            </div>
+
+
+            <div
+                id="listaCapas"
+                class="lista-capas"
+            >
+
+                <div
+                    id="estadoVacio"
+                    class="estado-vacio"
+                >
+
+                    <div class="estado-vacio-icon">
+                        ◫
+                    </div>
+
+                    <strong>
+                        No hay capas cargadas
+                    </strong>
+
+                    <span>
+                        Usa “Subir capa” para comenzar.
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             ESTADO
+        ================================================== -->
+
+        <div
+            id="mensajeEstado"
+            class="mensaje-estado"
+            aria-live="polite"
+        ></div>
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAPA
+    ====================================================== -->
+
+    <main class="mapa-contenedor">
+
+        <div
+            id="map"
+            class="mapa"
+        ></div>
+
+
+        <!-- =================================================
+             CONTROLES SUPERIORES
+        ================================================== -->
+
+        <div class="mapa-info">
+
+            <span class="estado-punto"></span>
+
+            <span id="textoEstadoMapa">
+                Visualizador listo
+            </span>
+
+        </div>
+
+    </main>
+
+
+</div>
+
+
+
+<!-- =========================================================
+     MAPLIBRE
+========================================================== -->
+
+<script
+    src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"
+></script>
+
+
+<!-- =========================================================
+     TERRI+ CAPAS
+========================================================== -->
+
+<script src="./capas.js"></script>
+
+</body>
+
+</html>
