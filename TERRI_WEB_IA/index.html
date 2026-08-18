@@ -103,7 +103,6 @@
 
   <!-- ==================================================
        MENÚ LATERAL DE GEOVISORES
-       OCULTO AL INICIAR
   =================================================== -->
 
   <aside
@@ -117,6 +116,8 @@
     </h2>
 
 
+    <!-- BUSCADOR PREDIAL -->
+
     <button onclick="abrirModulo(
       '📄 Buscador Predial',
       'Visualiza información predial para verificación y análisis.',
@@ -125,6 +126,8 @@
       🔎 Buscador Predial
     </button>
 
+
+    <!-- INCREMENTO PREDIAL -->
 
     <button onclick="abrirModulo(
       '🏠 Oportunidades para incremento del predial',
@@ -136,6 +139,8 @@
     </button>
 
 
+    <!-- INCREMENTO ICA -->
+
     <button onclick="abrirModulo(
       '💰 Oportunidades para incremento del ICA',
       'Análisis territorial del recaudo ICA para gestión fiscal.',
@@ -146,6 +151,8 @@
     </button>
 
 
+    <!-- CONTRIBUYENTES ICA -->
+
     <button onclick="abrirModulo(
       '👥 Buscador contribuyentes del ICA',
       'Consulta contribuyentes activos y localización territorial.',
@@ -154,6 +161,8 @@
       👥 Contribuyentes ICA
     </button>
 
+
+    <!-- SERVICIOS PÚBLICOS -->
 
     <button onclick="abrirModulo(
       '🚰 Situación Servicios Públicos',
@@ -165,6 +174,8 @@
     </button>
 
 
+    <!-- ACTIVOS PÚBLICOS -->
+
     <button onclick="abrirModulo(
       '🏛️ Activos Públicos',
       'Inventario georreferenciado de activos públicos.',
@@ -174,6 +185,8 @@
       🏛️ Activos Públicos
     </button>
 
+
+    <!-- CRECIMIENTO URBANO -->
 
     <button onclick="abrirModulo(
       '🏗️ Crecimiento Urbano',
@@ -185,6 +198,8 @@
     </button>
 
 
+    <!-- USO DEL SUELO -->
+
     <button onclick="abrirModulo(
       '🧭 Uso del Suelo',
       'Identificación de oportunidades según uso permitido.',
@@ -195,6 +210,8 @@
     </button>
 
 
+    <!-- FORESTACIÓN -->
+
     <button onclick="abrirModulo(
       '🌳 Pérdida de Forestación',
       'Monitoreo de pérdida de cobertura boscosa.',
@@ -203,6 +220,8 @@
       🌳 Pérdida Forestación
     </button>
 
+
+    <!-- BONOS DE CARBONO -->
 
     <button onclick="abrirModulo(
       '♻️ Bonos de Carbono',
@@ -214,6 +233,8 @@
     </button>
 
 
+    <!-- REPORTE PREDIAL -->
+
     <button onclick="abrirModulo(
       '📑 Reporte Impuesto Predial',
       'Consulta análisis del impuesto predial.',
@@ -223,6 +244,8 @@
       📑 Reporte Predial
     </button>
 
+
+    <!-- CARTERA -->
 
     <button onclick="abrirModulo(
       '📊 Reporte Cartera',
@@ -234,6 +257,8 @@
     </button>
 
 
+    <!-- PLACA HUELLAS -->
+
     <button onclick="abrirModulo(
       '🛣️ Placa Huellas',
       'Consulta de placas huellas municipales.',
@@ -242,6 +267,8 @@
       🛣️ Placa Huellas
     </button>
 
+
+    <!-- CARACTERIZACIÓN -->
 
     <button onclick="abrirDashboardSolo(
       '👨‍👩‍👧 Caracterización Socioeconómica',
@@ -252,6 +279,8 @@
     </button>
 
 
+    <!-- INICIO GEOVISORES -->
+
     <button
       class="btn-secundario"
       onclick="limpiarVisor()"
@@ -260,6 +289,8 @@
     </button>
 
 
+    <!-- MENÚ PRINCIPAL -->
+
     <button
       class="btn-secundario"
       onclick="volverMenuPrincipal()"
@@ -267,6 +298,8 @@
       🏠 Menú principal
     </button>
 
+
+    <!-- CERRAR SESIÓN -->
 
     <button
       class="btn-secundario"
@@ -294,6 +327,9 @@
       class="menu-principal"
     >
 
+
+      <!-- ENCABEZADO -->
+
       <div class="menu-principal-header">
 
         <h2>
@@ -307,6 +343,10 @@
       </div>
 
 
+      <!-- ==================================================
+           TARJETAS PRINCIPALES
+      =================================================== -->
+
       <div class="menu-principal-grid">
 
 
@@ -316,7 +356,7 @@
 
         <article class="menu-card">
 
-          <div class="menu-icon">
+          <div class="menu-icon menu-icon-mapas">
             🗺️
           </div>
 
@@ -345,7 +385,7 @@
 
         <article class="menu-card">
 
-          <div class="menu-icon">
+          <div class="menu-icon menu-icon-ia">
             🤖
           </div>
 
@@ -374,18 +414,53 @@
 
         <article class="menu-card">
 
-          <div class="menu-icon">
-            🗂️
+          <div class="menu-icon menu-icon-capas">
+
+            <!-- ÍCONO PROFESIONAL DE CAPAS -->
+
+            <svg
+              viewBox="0 0 64 64"
+              aria-hidden="true"
+            >
+
+              <!-- CAPA SUPERIOR -->
+
+              <polygon
+                points="32,6 55,19 32,32 9,19"
+                fill="#63C990"
+              />
+
+
+              <!-- CAPA CENTRAL -->
+
+              <polygon
+                points="32,20 55,33 32,46 9,33"
+                fill="#3F8ED0"
+              />
+
+
+              <!-- CAPA INFERIOR -->
+
+              <polygon
+                points="32,34 55,47 32,60 9,47"
+                fill="#304E7A"
+              />
+
+            </svg>
+
           </div>
+
 
           <h3>
             Visualizador de capas
           </h3>
 
+
           <p>
             Carga y visualiza capas GeoJSON y JSON, consulta sus
             atributos y explora información territorial sobre el mapa.
           </p>
+
 
           <button
             type="button"
@@ -404,7 +479,6 @@
 
     <!-- ==================================================
          PORTADA DE GEOVISORES
-         OCULTA AL INICIAR
     =================================================== -->
 
     <div
@@ -414,6 +488,7 @@
     >
 
       <div class="home-portada">
+
 
         <div class="home-encabezado">
 
@@ -427,6 +502,8 @@
         <div class="home-wrapper">
 
 
+          <!-- BIENVENIDA -->
+
           <div class="home-box home-bienvenida">
 
             <h3 class="home-title">
@@ -434,20 +511,26 @@
             </h3>
 
             <p class="home-text home-text-principal">
+
               Sistema de información territorial que permitirá incrementar
               el recaudo de ingresos territoriales y aportar a la generación
               de datos para el impacto social, ambiental y económico del
               municipio de Sesquilé.
+
             </p>
 
             <p class="home-text">
+
               Este geovisor integra información territorial estratégica
               para apoyar la planeación, la gestión pública y la toma de
               decisiones basadas en datos.
+
             </p>
 
           </div>
 
+
+          <!-- LISTADO -->
 
           <div class="home-box home-listado">
 
@@ -497,6 +580,7 @@
 
           </div>
 
+
         </div>
 
       </div>
@@ -506,7 +590,6 @@
 
     <!-- ==================================================
          VISOR DE MÓDULOS
-         OCULTO AL INICIAR
     =================================================== -->
 
     <div
@@ -521,6 +604,9 @@
       =================================================== -->
 
       <div class="visor-head">
+
+
+        <!-- TÍTULO -->
 
         <div>
 
@@ -537,7 +623,12 @@
         </div>
 
 
+        <!-- BOTONES -->
+
         <div class="visor-head-actions">
+
+
+          <!-- DASHBOARD -->
 
           <button
             id="btnDashboard"
@@ -549,6 +640,9 @@
             📊 Ir a dashboard
           </button>
 
+
+          <!-- VOLVER AL MAPA -->
+
           <button
             id="btnMapa"
             type="button"
@@ -559,6 +653,9 @@
             🗺️ Volver al visor
           </button>
 
+
+          <!-- MENÚ PRINCIPAL -->
+
           <button
             type="button"
             class="visor-full-btn btn-menu-principal"
@@ -567,6 +664,9 @@
             🏠 Menú principal
           </button>
 
+
+          <!-- PANTALLA COMPLETA -->
+
           <button
             type="button"
             class="visor-full-btn"
@@ -574,6 +674,7 @@
           >
             ⛶ Pantalla completa
           </button>
+
 
         </div>
 
@@ -588,12 +689,18 @@
 
         <div class="visor-area">
 
+
+          <!-- MAPA -->
+
           <iframe
             id="mapaFrame"
             class="visor-frame"
             allowfullscreen
             loading="lazy"
           ></iframe>
+
+
+          <!-- DASHBOARD / IA / VISUALIZADOR -->
 
           <iframe
             id="dashboardFrame"
@@ -603,11 +710,14 @@
             style="display:none;"
           ></iframe>
 
+
         </div>
 
       </div>
 
+
     </div>
+
 
   </main>
 
@@ -621,6 +731,7 @@
 <script src="js/app.js"></script>
 
 <script src="js/login.js"></script>
+
 
 </body>
 
