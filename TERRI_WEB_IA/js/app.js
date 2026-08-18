@@ -381,6 +381,33 @@ function abrirIATerritorial() {
 
 }
 
+/* ==========================================================
+   ABRIR VISUALIZADOR DE CAPAS
+========================================================== */
+
+function abrirVisualizadorCapas() {
+
+    const {
+        menuPrincipal,
+        sidebarMapas
+    } = obtenerElementosPrincipales();
+
+    if (menuPrincipal) {
+        menuPrincipal.style.display = "none";
+    }
+
+    if (sidebarMapas) {
+        sidebarMapas.style.display = "none";
+    }
+
+    abrirDashboardSolo(
+        "🗂️ Visualizador de capas",
+        "Carga, visualiza y consulta capas GeoJSON y JSON sobre el territorio.",
+        "./capas/capas.html"
+    );
+
+}
+
 
 /* ==========================================================
    ABRIR MAPA CON DASHBOARD OPCIONAL
