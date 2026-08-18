@@ -310,7 +310,9 @@
       <div class="menu-principal-grid">
 
 
-        <!-- GEOVISORES -->
+        <!-- ==================================================
+             GEOVISORES
+        =================================================== -->
 
         <article class="menu-card">
 
@@ -337,31 +339,63 @@
         </article>
 
 
-        <!-- AGENTE IA TERRITORIAL -->
+        <!-- ==================================================
+             AGENTE IA TERRITORIAL
+        =================================================== -->
 
-<article class="menu-card">
+        <article class="menu-card">
 
-  <div class="menu-icon">
-    🤖
-  </div>
+          <div class="menu-icon">
+            🤖
+          </div>
 
-  <h3>
-    Agente IA Territorial
-  </h3>
+          <h3>
+            Agente IA Territorial
+          </h3>
 
-  <p>
-    Consulta el territorio mediante lenguaje natural y obtén
-    mapas inteligentes generados automáticamente.
-  </p>
+          <p>
+            Consulta el territorio mediante lenguaje natural y obtén
+            mapas inteligentes generados automáticamente.
+          </p>
 
-  <button
-    type="button"
-    onclick="abrirIATerritorial()"
-  >
-    Entrar
-  </button>
+          <button
+            type="button"
+            onclick="abrirIATerritorial()"
+          >
+            Entrar
+          </button>
 
-</article>
+        </article>
+
+
+        <!-- ==================================================
+             VISUALIZADOR DE CAPAS
+        =================================================== -->
+
+        <article class="menu-card">
+
+          <div class="menu-icon">
+            🗂️
+          </div>
+
+          <h3>
+            Visualizador de capas
+          </h3>
+
+          <p>
+            Carga y visualiza capas GeoJSON y JSON, consulta sus
+            atributos y explora información territorial sobre el mapa.
+          </p>
+
+          <button
+            type="button"
+            onclick="abrirVisualizadorCapas()"
+          >
+            Abrir visualizador
+          </button>
+
+        </article>
+
 
       </div>
 
@@ -471,111 +505,114 @@
 
 
     <!-- ==================================================
-     VISOR DE MÓDULOS
-     OCULTO AL INICIAR
-=================================================== -->
+         VISOR DE MÓDULOS
+         OCULTO AL INICIAR
+    =================================================== -->
 
-<div
-  id="modulo"
-  class="modulo"
-  style="display:none;"
->
-
-  <!-- ==================================================
-       ENCABEZADO DEL MÓDULO
-  =================================================== -->
-
-  <div class="visor-head">
-
-    <div>
-
-      <h3
-        id="tituloModulo"
-        class="visor-title"
-      ></h3>
-
-      <p
-        id="descripcionModulo"
-        class="visor-sub"
-      ></p>
-
-    </div>
-
-    <div class="visor-head-actions">
-
-      <button
-        id="btnDashboard"
-        type="button"
-        class="visor-full-btn"
-        onclick="verDashboard()"
-        style="display:none;"
-      >
-        📊 Ir a dashboard
-      </button>
-
-      <button
-        id="btnMapa"
-        type="button"
-        class="visor-full-btn"
-        onclick="verMapa()"
-        style="display:none;"
-      >
-        🗺️ Volver al visor
-      </button>
-
-      <button
-        type="button"
-        class="visor-full-btn btn-menu-principal"
-        onclick="volverMenuPrincipal()"
-      >
-        🏠 Menú principal
-      </button>
-
-      <button
-        type="button"
-        class="visor-full-btn"
-        onclick="pantallaCompleta()"
-      >
-        ⛶ Pantalla completa
-      </button>
-
-    </div>
-
-  </div>
-
-
-  <!-- ==================================================
-     VISOR
-=================================================== -->
-
-<div class="visor-inteligente">
-
-  <div class="visor-area">
-
-    <iframe
-      id="mapaFrame"
-      class="visor-frame"
-      allowfullscreen
-      loading="lazy"
-    ></iframe>
-
-    <iframe
-      id="dashboardFrame"
-      class="visor-frame"
-      allowfullscreen
-      loading="lazy"
+    <div
+      id="modulo"
+      class="modulo"
       style="display:none;"
-    ></iframe>
+    >
 
-  </div>
+
+      <!-- ==================================================
+           ENCABEZADO DEL MÓDULO
+      =================================================== -->
+
+      <div class="visor-head">
+
+        <div>
+
+          <h3
+            id="tituloModulo"
+            class="visor-title"
+          ></h3>
+
+          <p
+            id="descripcionModulo"
+            class="visor-sub"
+          ></p>
+
+        </div>
+
+
+        <div class="visor-head-actions">
+
+          <button
+            id="btnDashboard"
+            type="button"
+            class="visor-full-btn"
+            onclick="verDashboard()"
+            style="display:none;"
+          >
+            📊 Ir a dashboard
+          </button>
+
+          <button
+            id="btnMapa"
+            type="button"
+            class="visor-full-btn"
+            onclick="verMapa()"
+            style="display:none;"
+          >
+            🗺️ Volver al visor
+          </button>
+
+          <button
+            type="button"
+            class="visor-full-btn btn-menu-principal"
+            onclick="volverMenuPrincipal()"
+          >
+            🏠 Menú principal
+          </button>
+
+          <button
+            type="button"
+            class="visor-full-btn"
+            onclick="pantallaCompleta()"
+          >
+            ⛶ Pantalla completa
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- ==================================================
+           VISOR
+      =================================================== -->
+
+      <div class="visor-inteligente">
+
+        <div class="visor-area">
+
+          <iframe
+            id="mapaFrame"
+            class="visor-frame"
+            allowfullscreen
+            loading="lazy"
+          ></iframe>
+
+          <iframe
+            id="dashboardFrame"
+            class="visor-frame"
+            allowfullscreen
+            loading="lazy"
+            style="display:none;"
+          ></iframe>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
 
 </div>
 
-</div>
-
-</main>
-
-</div>
 
 <!-- ==================================================
      SCRIPTS
