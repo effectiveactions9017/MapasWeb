@@ -1,5 +1,6 @@
 /* ==========================================================
    TERRI+ VISUALIZADOR DE CAPAS
+   GeoJSON / JSON + Popup dinámico
 ========================================================== */
 
 
@@ -20,23 +21,14 @@ const TERRI_CAPAS_ZOOM = 12;
 ========================================================== */
 
 const PALETA_CAPAS = [
-
     "#1B4F72",
-
     "#28734C",
-
     "#C77D24",
-
     "#7A5195",
-
     "#2A9D8F",
-
     "#A23B72",
-
     "#567568",
-
     "#457B9D"
-
 ];
 
 
@@ -55,43 +47,42 @@ let contadorColor = 0;
 
 const map = new maplibregl.Map({
 
-    container:"map",
+    container: "map",
 
-    center:TERRI_CAPAS_CENTER,
+    center: TERRI_CAPAS_CENTER,
 
-    zoom:TERRI_CAPAS_ZOOM,
+    zoom: TERRI_CAPAS_ZOOM,
 
-    style:{
+    style: {
 
-        version:8,
+        version: 8,
 
-        sources:{
+        sources: {
 
-            osm:{
+            osm: {
 
-                type:"raster",
+                type: "raster",
 
-                tiles:[
+                tiles: [
                     "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
                 ],
 
-                tileSize:256,
+                tileSize: 256,
 
                 attribution:
                     "© OpenStreetMap contributors"
 
             },
 
+            satelite: {
 
-            satelite:{
+                type: "raster",
 
-                type:"raster",
-
-                tiles:[
+                tiles: [
                     "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                 ],
 
-                tileSize:256,
+                tileSize: 256,
 
                 attribution:
                     "Esri World Imagery"
@@ -100,34 +91,32 @@ const map = new maplibregl.Map({
 
         },
 
-
-        layers:[
+        layers: [
 
             {
 
-                id:"basemap-osm",
+                id: "basemap-osm",
 
-                type:"raster",
+                type: "raster",
 
-                source:"osm",
+                source: "osm",
 
-                layout:{
-                    visibility:"visible"
+                layout: {
+                    visibility: "visible"
                 }
 
             },
 
-
             {
 
-                id:"basemap-satelite",
+                id: "basemap-satelite",
 
-                type:"raster",
+                type: "raster",
 
-                source:"satelite",
+                source: "satelite",
 
-                layout:{
-                    visibility:"none"
+                layout: {
+                    visibility: "none"
                 }
 
             }
@@ -156,9 +145,9 @@ map.addControl(
 
     new maplibregl.ScaleControl({
 
-        maxWidth:120,
+        maxWidth: 120,
 
-        unit:"metric"
+        unit: "metric"
 
     }),
 
@@ -191,11 +180,6 @@ const contadorCapas =
         "contadorCapas"
     );
 
-const estadoVacio =
-    document.getElementById(
-        "estadoVacio"
-    );
-
 const mensajeEstado =
     document.getElementById(
         "mensajeEstado"
@@ -214,7 +198,7 @@ const textoEstadoMapa =
 function mostrarMensaje(
     texto,
     tipo = ""
-){
+) {
 
     mensajeEstado.textContent =
         texto;
@@ -222,8 +206,7 @@ function mostrarMensaje(
     mensajeEstado.className =
         "mensaje-estado";
 
-
-    if(tipo){
+    if (tipo) {
 
         mensajeEstado.classList.add(
             tipo
@@ -238,7 +221,7 @@ function mostrarMensaje(
    NOMBRE SEGURO
 ========================================================== */
 
-function crearIdSeguro(nombre){
+function crearIdSeguro(nombre) {
 
     return nombre
 
@@ -268,7 +251,7 @@ function crearIdSeguro(nombre){
    ID ÚNICO
 ========================================================== */
 
-function obtenerIdUnico(nombre){
+function obtenerIdUnico(nombre) {
 
     let base =
         crearIdSeguro(nombre) ||
@@ -278,10 +261,9 @@ function obtenerIdUnico(nombre){
 
     let numero = 2;
 
-
-    while(
+    while (
         capasCargadas.has(id)
-    ){
+    ) {
 
         id =
             `${base}-${numero}`;
@@ -289,7 +271,6 @@ function obtenerIdUnico(nombre){
         numero++;
 
     }
-
 
     return id;
 
@@ -300,9 +281,9 @@ function obtenerIdUnico(nombre){
    NORMALIZAR GEOJSON
 ========================================================== */
 
-function normalizarGeoJSON(data){
+function normalizarGeoJSON(data) {
 
-    if(!data){
+    if (!data) {
 
         throw new Error(
             "El archivo está vacío."
@@ -310,28 +291,26 @@ function normalizarGeoJSON(data){
 
     }
 
-
-    if(
+    if (
         data.type ===
         "FeatureCollection"
-    ){
+    ) {
 
         return data;
 
     }
 
-
-    if(
+    if (
         data.type ===
         "Feature"
-    ){
+    ) {
 
         return {
 
             type:
                 "FeatureCollection",
 
-            features:[
+            features: [
                 data
             ]
 
@@ -339,46 +318,40 @@ function normalizarGeoJSON(data){
 
     }
 
-
     const geometriaTipos = [
 
         "Point",
-
         "MultiPoint",
-
         "LineString",
-
         "MultiLineString",
-
         "Polygon",
-
         "MultiPolygon",
-
         "GeometryCollection"
 
     ];
 
-
-    if(
+    if (
         geometriaTipos.includes(
             data.type
         )
-    ){
+    ) {
 
         return {
 
             type:
                 "FeatureCollection",
 
-            features:[
+            features: [
 
                 {
 
-                    type:"Feature",
+                    type:
+                        "Feature",
 
-                    properties:{},
+                    properties: {},
 
-                    geometry:data
+                    geometry:
+                        data
 
                 }
 
@@ -387,7 +360,6 @@ function normalizarGeoJSON(data){
         };
 
     }
-
 
     throw new Error(
         "El archivo no contiene un GeoJSON válido."
@@ -403,20 +375,21 @@ function normalizarGeoJSON(data){
 function recolectarCoordenadas(
     valor,
     resultado
-){
+) {
 
-    if(!Array.isArray(valor)){
+    if (
+        !Array.isArray(valor)
+    ) {
 
         return;
 
     }
 
-
-    if(
+    if (
         valor.length >= 2 &&
         typeof valor[0] === "number" &&
         typeof valor[1] === "number"
-    ){
+    ) {
 
         resultado.push([
             valor[0],
@@ -427,54 +400,61 @@ function recolectarCoordenadas(
 
     }
 
+    valor.forEach(
+        item => {
 
-    valor.forEach(item => {
+            recolectarCoordenadas(
+                item,
+                resultado
+            );
 
-        recolectarCoordenadas(
-            item,
-            resultado
-        );
-
-    });
+        }
+    );
 
 }
 
 
 /* ==========================================================
-   BBOX
+   CALCULAR BBOX
 ========================================================== */
 
 function calcularBBox(
     geojson
-){
+) {
 
     const coords = [];
-
 
     geojson.features.forEach(
         feature => {
 
-            if(
+            if (
                 !feature.geometry
-            ){
+            ) {
+
                 return;
+
             }
 
-
-            if(
+            if (
                 feature.geometry.type ===
                 "GeometryCollection"
-            ){
+            ) {
 
                 feature.geometry
                     .geometries
                     .forEach(
                         geom => {
 
-                            recolectarCoordenadas(
-                                geom.coordinates,
-                                coords
-                            );
+                            if (
+                                geom.coordinates
+                            ) {
+
+                                recolectarCoordenadas(
+                                    geom.coordinates,
+                                    coords
+                                );
+
+                            }
 
                         }
                     );
@@ -482,7 +462,6 @@ function calcularBBox(
                 return;
 
             }
-
 
             recolectarCoordenadas(
 
@@ -495,25 +474,21 @@ function calcularBBox(
         }
     );
 
-
-    if(!coords.length){
+    if (
+        !coords.length
+    ) {
 
         return null;
 
     }
 
-
     let minX = Infinity;
-
     let minY = Infinity;
-
     let maxX = -Infinity;
-
     let maxY = -Infinity;
 
-
     coords.forEach(
-        ([x,y]) => {
+        ([x, y]) => {
 
             minX =
                 Math.min(
@@ -542,18 +517,16 @@ function calcularBBox(
         }
     );
 
-
-    if(
+    if (
         !Number.isFinite(minX) ||
         !Number.isFinite(minY) ||
         !Number.isFinite(maxX) ||
         !Number.isFinite(maxY)
-    ){
+    ) {
 
         return null;
 
     }
-
 
     return [
         minX,
@@ -569,14 +542,17 @@ function calcularBBox(
    VALIDAR COORDENADAS WEB
 ========================================================== */
 
-function validarBBox(bbox){
+function validarBBox(
+    bbox
+) {
 
-    if(!bbox){
+    if (
+        !bbox
+    ) {
 
         return false;
 
     }
-
 
     const [
         minX,
@@ -585,17 +561,409 @@ function validarBBox(bbox){
         maxY
     ] = bbox;
 
-
     return (
 
         minX >= -180 &&
-
         maxX <= 180 &&
-
         minY >= -90 &&
-
         maxY <= 90
 
+    );
+
+}
+
+
+/* ==========================================================
+   ESCAPAR HTML
+========================================================== */
+
+function escaparHTML(valor) {
+
+    if (
+        valor === null ||
+        valor === undefined
+    ) {
+
+        return "";
+
+    }
+
+    return String(valor)
+
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+
+/* ==========================================================
+   FORMATEAR VALOR DEL POPUP
+========================================================== */
+
+function formatearValorPopup(
+    valor
+) {
+
+    if (
+        valor === null ||
+        valor === undefined ||
+        valor === ""
+    ) {
+
+        return "Sin información";
+
+    }
+
+    if (
+        typeof valor === "number"
+    ) {
+
+        return valor.toLocaleString(
+
+            "es-CO",
+
+            {
+
+                maximumFractionDigits:
+                    2
+
+            }
+
+        );
+
+    }
+
+    if (
+        typeof valor === "object"
+    ) {
+
+        try {
+
+            return escaparHTML(
+                JSON.stringify(valor)
+            );
+
+        } catch {
+
+            return "Sin información";
+
+        }
+
+    }
+
+    return escaparHTML(
+        valor
+    );
+
+}
+
+
+/* ==========================================================
+   CREAR CONTENIDO DEL POPUP
+========================================================== */
+
+function crearContenidoPopup(
+    nombreCapa,
+    propiedades,
+    lngLat
+) {
+
+    const propiedadesValidas =
+        Object.entries(
+            propiedades || {}
+        )
+        .filter(
+            ([clave]) => {
+
+                const campo =
+                    clave.toLowerCase();
+
+                return ![
+                    "popup_html",
+                    "lon_street",
+                    "lat_street"
+                ].includes(
+                    campo
+                );
+
+            }
+        );
+
+
+    let filas = "";
+
+
+    propiedadesValidas
+        .slice(
+            0,
+            20
+        )
+        .forEach(
+            ([clave, valor]) => {
+
+                filas += `
+
+                    <div style="
+                        display:grid;
+                        grid-template-columns:minmax(90px,0.8fr) minmax(120px,1.2fr);
+                        gap:8px;
+                        padding:6px 0;
+                        border-bottom:1px solid #edf1f3;
+                    ">
+
+                        <strong style="
+                            color:#25465d;
+                            font-size:12px;
+                            overflow-wrap:anywhere;
+                        ">
+                            ${escaparHTML(clave)}
+                        </strong>
+
+                        <span style="
+                            color:#566d7b;
+                            font-size:12px;
+                            overflow-wrap:anywhere;
+                        ">
+                            ${formatearValorPopup(valor)}
+                        </span>
+
+                    </div>
+
+                `;
+
+            }
+        );
+
+
+    if (
+        !filas
+    ) {
+
+        filas = `
+
+            <div style="
+                padding:10px 0;
+                color:#71838d;
+                font-size:12px;
+            ">
+
+                Este elemento no contiene atributos.
+
+            </div>
+
+        `;
+
+    }
+
+
+    const longitud =
+        Number(
+            lngLat.lng
+        );
+
+    const latitud =
+        Number(
+            lngLat.lat
+        );
+
+
+    const streetViewUrl =
+        `https://www.google.com/maps?q=&layer=c&cbll=${latitud},${longitud}`;
+
+
+    return `
+
+        <div style="
+            width:310px;
+            max-width:82vw;
+            font-family:'Segoe UI',Arial,sans-serif;
+        ">
+
+            <div style="
+                margin:-2px -2px 8px;
+                padding:10px 12px;
+                border-radius:8px 8px 0 0;
+                background:#0C2D48;
+                color:white;
+            ">
+
+                <div style="
+                    font-size:11px;
+                    opacity:.75;
+                    margin-bottom:2px;
+                ">
+                    TERRI+ · Información de capa
+                </div>
+
+                <strong style="
+                    font-size:14px;
+                    line-height:1.25;
+                ">
+                    ${escaparHTML(nombreCapa)}
+                </strong>
+
+            </div>
+
+
+            <div style="
+                max-height:310px;
+                overflow-y:auto;
+                padding:0 4px;
+            ">
+
+                ${filas}
+
+            </div>
+
+
+            <div style="
+                margin-top:10px;
+                padding-top:9px;
+                border-top:1px solid #e7ecef;
+            ">
+
+                <a
+                    href="${streetViewUrl}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style="
+                        display:block;
+                        padding:8px 10px;
+                        border-radius:8px;
+                        background:#edf5f7;
+                        color:#0C5265;
+                        text-align:center;
+                        text-decoration:none;
+                        font-size:12px;
+                        font-weight:600;
+                    "
+                >
+                    📍 Abrir ubicación / Street View
+                </a>
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* ==========================================================
+   ACTIVAR POPUP EN CAPA
+========================================================== */
+
+function activarPopupCapa(
+    nombreCapa,
+    layerIds
+) {
+
+    layerIds.forEach(
+        layerId => {
+
+            map.on(
+                "click",
+                layerId,
+                evento => {
+
+                    if (
+                        !evento.features ||
+                        !evento.features.length
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    const feature =
+                        evento.features[0];
+
+
+                    const contenido =
+                        crearContenidoPopup(
+
+                            nombreCapa,
+
+                            feature.properties || {},
+
+                            evento.lngLat
+
+                        );
+
+
+                    new maplibregl.Popup({
+
+                        closeButton: true,
+
+                        closeOnClick: true,
+
+                        maxWidth: "350px"
+
+                    })
+                    .setLngLat(
+                        evento.lngLat
+                    )
+                    .setHTML(
+                        contenido
+                    )
+                    .addTo(
+                        map
+                    );
+
+                }
+            );
+
+
+            map.on(
+                "mouseenter",
+                layerId,
+                () => {
+
+                    map.getCanvas()
+                        .style.cursor =
+                        "pointer";
+
+                }
+            );
+
+
+            map.on(
+                "mouseleave",
+                layerId,
+                () => {
+
+                    map.getCanvas()
+                        .style.cursor =
+                        "";
+
+                }
+            );
+
+        }
     );
 
 }
@@ -607,9 +975,10 @@ function validarBBox(bbox){
 
 function agregarCapaMapa(
     id,
+    nombreCapa,
     geojson,
     color
-){
+) {
 
     const sourceId =
         `source-${id}`;
@@ -619,9 +988,11 @@ function agregarCapaMapa(
         sourceId,
         {
 
-            type:"geojson",
+            type:
+                "geojson",
 
-            data:geojson
+            data:
+                geojson
 
         }
     );
@@ -630,7 +1001,9 @@ function agregarCapaMapa(
     const layerIds = [];
 
 
-    /* POLÍGONOS */
+/* ----------------------------------------------------------
+   POLÍGONOS
+---------------------------------------------------------- */
 
     const fillId =
         `${id}-fill`;
@@ -638,26 +1011,32 @@ function agregarCapaMapa(
 
     map.addLayer({
 
-        id:fillId,
+        id:
+            fillId,
 
-        type:"fill",
+        type:
+            "fill",
 
-        source:sourceId,
+        source:
+            sourceId,
 
-        filter:[
+        filter: [
 
             "in",
 
             ["geometry-type"],
 
-            ["literal",[
-                "Polygon",
-                "MultiPolygon"
-            ]]
+            [
+                "literal",
+                [
+                    "Polygon",
+                    "MultiPolygon"
+                ]
+            ]
 
         ],
 
-        paint:{
+        paint: {
 
             "fill-color":
                 color,
@@ -675,32 +1054,42 @@ function agregarCapaMapa(
     );
 
 
+/* ----------------------------------------------------------
+   CONTORNO DE POLÍGONOS
+---------------------------------------------------------- */
+
     const outlineId =
         `${id}-outline`;
 
 
     map.addLayer({
 
-        id:outlineId,
+        id:
+            outlineId,
 
-        type:"line",
+        type:
+            "line",
 
-        source:sourceId,
+        source:
+            sourceId,
 
-        filter:[
+        filter: [
 
             "in",
 
             ["geometry-type"],
 
-            ["literal",[
-                "Polygon",
-                "MultiPolygon"
-            ]]
+            [
+                "literal",
+                [
+                    "Polygon",
+                    "MultiPolygon"
+                ]
+            ]
 
         ],
 
-        paint:{
+        paint: {
 
             "line-color":
                 color,
@@ -718,7 +1107,9 @@ function agregarCapaMapa(
     );
 
 
-    /* LÍNEAS */
+/* ----------------------------------------------------------
+   LÍNEAS
+---------------------------------------------------------- */
 
     const lineId =
         `${id}-line`;
@@ -726,26 +1117,32 @@ function agregarCapaMapa(
 
     map.addLayer({
 
-        id:lineId,
+        id:
+            lineId,
 
-        type:"line",
+        type:
+            "line",
 
-        source:sourceId,
+        source:
+            sourceId,
 
-        filter:[
+        filter: [
 
             "in",
 
             ["geometry-type"],
 
-            ["literal",[
-                "LineString",
-                "MultiLineString"
-            ]]
+            [
+                "literal",
+                [
+                    "LineString",
+                    "MultiLineString"
+                ]
+            ]
 
         ],
 
-        paint:{
+        paint: {
 
             "line-color":
                 color,
@@ -763,7 +1160,9 @@ function agregarCapaMapa(
     );
 
 
-    /* PUNTOS */
+/* ----------------------------------------------------------
+   PUNTOS
+---------------------------------------------------------- */
 
     const pointId =
         `${id}-point`;
@@ -771,26 +1170,32 @@ function agregarCapaMapa(
 
     map.addLayer({
 
-        id:pointId,
+        id:
+            pointId,
 
-        type:"circle",
+        type:
+            "circle",
 
-        source:sourceId,
+        source:
+            sourceId,
 
-        filter:[
+        filter: [
 
             "in",
 
             ["geometry-type"],
 
-            ["literal",[
-                "Point",
-                "MultiPoint"
-            ]]
+            [
+                "literal",
+                [
+                    "Point",
+                    "MultiPoint"
+                ]
+            ]
 
         ],
 
-        paint:{
+        paint: {
 
             "circle-color":
                 color,
@@ -814,6 +1219,16 @@ function agregarCapaMapa(
     );
 
 
+/* ----------------------------------------------------------
+   POPUPS
+---------------------------------------------------------- */
+
+    activarPopupCapa(
+        nombreCapa,
+        layerIds
+    );
+
+
     return {
 
         sourceId,
@@ -826,19 +1241,23 @@ function agregarCapaMapa(
 
 
 /* ==========================================================
-   MOSTRAR / OCULTAR
+   MOSTRAR / OCULTAR CAPA
 ========================================================== */
 
 function cambiarVisibilidad(
     id,
     visible
-){
+) {
 
     const capa =
-        capasCargadas.get(id);
+        capasCargadas.get(
+            id
+        );
 
 
-    if(!capa){
+    if (
+        !capa
+    ) {
 
         return;
 
@@ -848,12 +1267,14 @@ function cambiarVisibilidad(
     capa.layerIds.forEach(
         layerId => {
 
-            if(
+            if (
                 !map.getLayer(
                     layerId
                 )
-            ){
+            ) {
+
                 return;
+
             }
 
 
@@ -883,16 +1304,20 @@ function cambiarVisibilidad(
    ZOOM A CAPA
 ========================================================== */
 
-function zoomACapa(id){
+function zoomACapa(
+    id
+) {
 
     const capa =
-        capasCargadas.get(id);
+        capasCargadas.get(
+            id
+        );
 
 
-    if(
+    if (
         !capa ||
         !capa.bbox
-    ){
+    ) {
 
         mostrarMensaje(
             "No fue posible calcular la extensión de la capa.",
@@ -912,19 +1337,19 @@ function zoomACapa(id){
     ] = capa.bbox;
 
 
-    if(
+    if (
         minX === maxX &&
         minY === maxY
-    ){
+    ) {
 
         map.flyTo({
 
-            center:[
+            center: [
                 minX,
                 minY
             ],
 
-            zoom:17
+            zoom: 17
 
         });
 
@@ -936,17 +1361,26 @@ function zoomACapa(id){
     map.fitBounds(
 
         [
-            [minX,minY],
-            [maxX,maxY]
+            [
+                minX,
+                minY
+            ],
+            [
+                maxX,
+                maxY
+            ]
         ],
 
         {
 
-            padding:60,
+            padding:
+                60,
 
-            duration:800,
+            duration:
+                800,
 
-            maxZoom:18
+            maxZoom:
+                18
 
         }
 
@@ -959,13 +1393,19 @@ function zoomACapa(id){
    ELIMINAR CAPA
 ========================================================== */
 
-function eliminarCapa(id){
+function eliminarCapa(
+    id
+) {
 
     const capa =
-        capasCargadas.get(id);
+        capasCargadas.get(
+            id
+        );
 
 
-    if(!capa){
+    if (
+        !capa
+    ) {
 
         return;
 
@@ -975,11 +1415,11 @@ function eliminarCapa(id){
     capa.layerIds.forEach(
         layerId => {
 
-            if(
+            if (
                 map.getLayer(
                     layerId
                 )
-            ){
+            ) {
 
                 map.removeLayer(
                     layerId
@@ -991,11 +1431,11 @@ function eliminarCapa(id){
     );
 
 
-    if(
+    if (
         map.getSource(
             capa.sourceId
         )
-    ){
+    ) {
 
         map.removeSource(
             capa.sourceId
@@ -1004,7 +1444,9 @@ function eliminarCapa(id){
     }
 
 
-    capasCargadas.delete(id);
+    capasCargadas.delete(
+        id
+    );
 
 
     renderizarListaCapas();
@@ -1022,18 +1464,19 @@ function eliminarCapa(id){
    RENDERIZAR LISTADO
 ========================================================== */
 
-function renderizarListaCapas(){
+function renderizarListaCapas() {
 
-    listaCapas.innerHTML = "";
+    listaCapas.innerHTML =
+        "";
 
 
     contadorCapas.textContent =
         capasCargadas.size;
 
 
-    if(
+    if (
         capasCargadas.size === 0
-    ){
+    ) {
 
         listaCapas.innerHTML = `
 
@@ -1066,7 +1509,7 @@ function renderizarListaCapas(){
 
 
     capasCargadas.forEach(
-        (capa,id) => {
+        (capa, id) => {
 
             const item =
                 document.createElement(
@@ -1096,9 +1539,9 @@ function renderizarListaCapas(){
 
                     <span
                         class="capa-nombre"
-                        title="${capa.nombre}"
+                        title="${escaparHTML(capa.nombre)}"
                     >
-                        ${capa.nombre}
+                        ${escaparHTML(capa.nombre)}
                     </span>
 
                 </div>
@@ -1160,7 +1603,9 @@ function renderizarListaCapas(){
                 "click",
                 () => {
 
-                    zoomACapa(id);
+                    zoomACapa(
+                        id
+                    );
 
                 }
             );
@@ -1170,7 +1615,9 @@ function renderizarListaCapas(){
                 "click",
                 () => {
 
-                    eliminarCapa(id);
+                    eliminarCapa(
+                        id
+                    );
 
                 }
             );
@@ -1196,23 +1643,26 @@ function renderizarListaCapas(){
 
 async function procesarArchivo(
     archivo
-){
+) {
 
     const extension =
         archivo.name
+
             .split(".")
+
             .pop()
+
             .toLowerCase();
 
 
-    if(
+    if (
         ![
             "json",
             "geojson"
         ].includes(
             extension
         )
-    ){
+    ) {
 
         throw new Error(
             `Formato no soportado: ${archivo.name}`
@@ -1228,12 +1678,14 @@ async function procesarArchivo(
     let data;
 
 
-    try{
+    try {
 
         data =
-            JSON.parse(texto);
+            JSON.parse(
+                texto
+            );
 
-    }catch(error){
+    } catch {
 
         throw new Error(
             `El archivo ${archivo.name} no contiene JSON válido.`
@@ -1243,12 +1695,14 @@ async function procesarArchivo(
 
 
     const geojson =
-        normalizarGeoJSON(data);
+        normalizarGeoJSON(
+            data
+        );
 
 
-    if(
+    if (
         !geojson.features.length
-    ){
+    ) {
 
         throw new Error(
             `La capa ${archivo.name} no contiene elementos.`
@@ -1263,9 +1717,11 @@ async function procesarArchivo(
         );
 
 
-    if(
-        !validarBBox(bbox)
-    ){
+    if (
+        !validarBBox(
+            bbox
+        )
+    ) {
 
         throw new Error(
             `La capa ${archivo.name} no parece estar en EPSG:4326.`
@@ -1300,6 +1756,7 @@ async function procesarArchivo(
     const resultado =
         agregarCapaMapa(
             id,
+            nombre,
             geojson,
             color
         );
@@ -1319,7 +1776,8 @@ async function procesarArchivo(
 
             color,
 
-            visible:true,
+            visible:
+                true,
 
             sourceId:
                 resultado.sourceId,
@@ -1334,7 +1792,9 @@ async function procesarArchivo(
     renderizarListaCapas();
 
 
-    zoomACapa(id);
+    zoomACapa(
+        id
+    );
 
 
     return nombre;
@@ -1357,7 +1817,9 @@ inputArchivo.addEventListener(
             );
 
 
-        if(!archivos.length){
+        if (
+            !archivos.length
+        ) {
 
             return;
 
@@ -1374,12 +1836,12 @@ inputArchivo.addEventListener(
         const errores = [];
 
 
-        for(
+        for (
             const archivo
             of archivos
-        ){
+        ) {
 
-            try{
+            try {
 
                 const nombre =
                     await procesarArchivo(
@@ -1391,9 +1853,11 @@ inputArchivo.addEventListener(
                     nombre
                 );
 
-            }catch(error){
+            } catch (error) {
 
-                console.error(error);
+                console.error(
+                    error
+                );
 
 
                 errores.push(
@@ -1405,10 +1869,10 @@ inputArchivo.addEventListener(
         }
 
 
-        if(
+        if (
             cargadas.length &&
             !errores.length
-        ){
+        ) {
 
             mostrarMensaje(
 
@@ -1418,13 +1882,15 @@ inputArchivo.addEventListener(
 
             );
 
-        }else if(
+        } else if (
             errores.length
-        ){
+        ) {
 
             mostrarMensaje(
 
-                errores.join(" | "),
+                errores.join(
+                    " | "
+                ),
 
                 "error"
 
@@ -1491,6 +1957,7 @@ map.on(
 
         textoEstadoMapa.textContent =
             "Visualizador listo";
+
 
         mostrarMensaje(
             "Puedes comenzar cargando una capa GeoJSON o JSON."
