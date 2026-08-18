@@ -1,83 +1,172 @@
-// ==========================
-// LOGIN TERRI+
-// ==========================
+// =====================================================
+// 🔐 LOGIN TERRI+
+// =====================================================
 
-const USUARIO_VALIDO = "admin";
-const PASSWORD_VALIDO = "terri123";
-
-
-// Siempre iniciar mostrando login
-
-window.onload = function () {
-
-  localStorage.removeItem("terri_login");
-
-  mostrarLogin();
-
-};
+const CLAVE_TERRI = "Sesquile_2026*";
 
 
-// Validar usuario
+// =====================================================
+// 🔓 INICIAR SESIÓN
+// =====================================================
 
 function iniciarSesion() {
 
-  const usuario = document.getElementById("usuario").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const error = document.getElementById("loginError");
+    const passwordInput =
+        document.getElementById("password");
+
+    const login =
+        document.getElementById("login");
+
+    const loginError =
+        document.getElementById("loginError");
 
 
-  if (usuario === USUARIO_VALIDO && password === PASSWORD_VALIDO) {
+    // Verificar elementos
+    if (!passwordInput || !login) {
 
-    error.innerHTML = "";
+        console.error(
+            "❌ No se encontraron los elementos del login."
+        );
 
-    mostrarAplicacion();
+        return;
+    }
 
-  } else {
 
-    error.innerHTML = "Usuario o contraseña incorrectos";
+    // Obtener contraseña
+    const password =
+        passwordInput.value;
 
-  }
+
+    // Limpiar mensaje anterior
+    if (loginError) {
+        loginError.textContent = "";
+    }
+
+
+    // =================================================
+    // VALIDAR CONTRASEÑA
+    // =================================================
+
+    if (password === CLAVE_TERRI) {
+
+        // Ocultar login
+        login.style.display = "none";
+
+
+        // Guardar sesión durante esta pestaña
+        sessionStorage.setItem(
+            "terriSesion",
+            "activa"
+        );
+
+
+        // Limpiar contraseña
+        passwordInput.value = "";
+
+
+        console.log(
+            "✅ Sesión TERRI+ iniciada."
+        );
+
+    } else {
+
+        // Contraseña incorrecta
+        if (loginError) {
+
+            loginError.textContent =
+                "Contraseña incorrecta.";
+
+        }
+
+
+        // Limpiar campo
+        passwordInput.value = "";
+
+
+        // Volver a enfocar
+        passwordInput.focus();
+
+    }
 
 }
 
 
-
-// Mostrar plataforma
-
-function mostrarAplicacion() {
-
-  document.getElementById("login").style.display = "none";
-
-  document.querySelector(".header").style.display = "flex";
-
-  document.querySelector(".app").style.display = "flex";
-
-}
-
-
-
-// Mostrar login
-
-function mostrarLogin() {
-
-  document.getElementById("login").style.display = "flex";
-
-  document.querySelector(".header").style.display = "none";
-
-  document.querySelector(".app").style.display = "none";
-
-}
-
-
-
-// Cerrar sesión
+// =====================================================
+// 🔒 CERRAR SESIÓN
+// =====================================================
 
 function cerrarSesion() {
 
-  document.getElementById("usuario").value = "";
+    sessionStorage.removeItem(
+        "terriSesion"
+    );
 
-  document.getElementById("password").value = "";
 
-  mostrarLogin();
+    const login =
+        document.getElementById("login");
+
+    const passwordInput =
+        document.getElementById("password");
+
+
+    if (login) {
+        login.style.display = "flex";
+    }
+
+
+    if (passwordInput) {
+
+        passwordInput.value = "";
+
+        setTimeout(() => {
+            passwordInput.focus();
+        }, 100);
+
+    }
 
 }
+
+
+// =====================================================
+// 🚀 COMPROBAR SESIÓN AL CARGAR
+// =====================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
+
+        const login =
+            document.getElementById("login");
+
+        const passwordInput =
+            document.getElementById("password");
+
+
+        // Si ya inició sesión en esta pestaña
+        if (
+            sessionStorage.getItem("terriSesion") === "activa"
+        ) {
+
+            if (login) {
+                login.style.display = "none";
+            }
+
+        } else {
+
+            if (login) {
+                login.style.display = "flex";
+            }
+
+
+            if (passwordInput) {
+
+                setTimeout(() => {
+                    passwordInput.focus();
+                }, 100);
+
+            }
+
+        }
+
+    }
+);
