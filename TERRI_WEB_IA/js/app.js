@@ -392,72 +392,166 @@ function abrirVisualizadorCapas() {
         sidebarMapas
     } = obtenerElementosPrincipales();
 
+
+    /* Ocultar menú principal */
+
     if (menuPrincipal) {
         menuPrincipal.style.display = "none";
     }
+
+
+    /* Ocultar menú lateral */
 
     if (sidebarMapas) {
         sidebarMapas.style.display = "none";
     }
 
 
-    // Abrir visualizador
+    /* Abrir visualizador */
+
     abrirDashboardSolo(
         "Visualizador de capas",
         "Carga, visualiza y consulta capas GeoJSON y JSON sobre el territorio.",
-        "./capas/capas.html",
-        false
+        "./capas/capas.html"
     );
 
 
-    // =====================================================
-    // LOGO DE CAPAS EN EL TÍTULO SUPERIOR
-    // =====================================================
+    /* ======================================================
+       TÍTULO SUPERIOR CON LOGO DE CAPAS
+    ====================================================== */
 
     const tituloModulo =
         document.getElementById("tituloModulo");
 
+
     if (tituloModulo) {
 
         tituloModulo.innerHTML = `
-            <span class="titulo-capas-logo">
 
-                <svg
-                    viewBox="0 0 64 64"
-                    aria-hidden="true"
+            <span
+                style="
+                    display:inline-flex;
+                    align-items:center;
+                    gap:10px;
+                    white-space:nowrap;
+                "
+            >
+
+                <span
+                    style="
+                        width:38px;
+                        height:38px;
+
+                        min-width:38px;
+                        max-width:38px;
+
+                        min-height:38px;
+                        max-height:38px;
+
+                        flex:0 0 38px;
+
+                        display:inline-flex;
+                        align-items:center;
+                        justify-content:center;
+
+                        border-radius:10px;
+
+                        background:
+                            linear-gradient(
+                                135deg,
+                                #e5f6ed,
+                                #dceff0
+                            );
+
+                        box-shadow:
+                            inset 0 0 0 1px rgba(12,45,72,.08);
+
+                        overflow:hidden;
+                    "
                 >
 
-                    <polygon
-                        points="32,6 55,19 32,32 9,19"
-                        fill="#63C990"
-                    ></polygon>
+                    <svg
+                        viewBox="0 0 64 64"
+                        width="30"
+                        height="30"
 
-                    <polygon
-                        points="32,20 55,33 32,46 9,33"
-                        fill="#3F8ED0"
-                    ></polygon>
+                        style="
+                            width:30px !important;
+                            height:30px !important;
 
-                    <polygon
-                        points="32,34 55,47 32,60 9,47"
-                        fill="#304E7A"
-                    ></polygon>
+                            min-width:30px !important;
+                            max-width:30px !important;
 
-                </svg>
+                            min-height:30px !important;
+                            max-height:30px !important;
+
+                            display:block;
+
+                            flex:0 0 30px;
+                        "
+
+                        aria-hidden="true"
+                    >
+
+                        <!-- CAPA SUPERIOR -->
+
+                        <polygon
+                            points="32,6 55,19 32,32 9,19"
+                            fill="#63C990"
+                        ></polygon>
+
+
+                        <!-- CAPA CENTRAL -->
+
+                        <polygon
+                            points="32,20 55,33 32,46 9,33"
+                            fill="#3F8ED0"
+                        ></polygon>
+
+
+                        <!-- CAPA INFERIOR -->
+
+                        <polygon
+                            points="32,34 55,47 32,60 9,47"
+                            fill="#304E7A"
+                        ></polygon>
+
+                    </svg>
+
+                </span>
+
+
+                <span
+                    style="
+                        display:inline-block;
+
+                        color:#1D3557;
+
+                        font-family:'Segoe UI', Arial, sans-serif;
+
+                        font-size:25px;
+                        font-weight:800;
+
+                        line-height:1.2;
+
+                        white-space:nowrap;
+                    "
+                >
+                    Visualizador de capas
+                </span>
 
             </span>
 
-            <span>
-                Visualizador de capas
-            </span>
         `;
+
     }
 
 
     console.log(
-        "Visualizador de capas TERRI+ abierto."
+        "✅ Visualizador de capas TERRI+ abierto."
     );
-}
 
+}
 
 /* ==========================================================
    ABRIR MAPA CON DASHBOARD OPCIONAL
