@@ -41,18 +41,24 @@
       Plataforma inteligente de análisis territorial
     </p>
 
-    <input
-      id="usuario"
-      placeholder="Usuario"
-    >
+    <!-- SOLO CONTRASEÑA -->
 
     <input
       id="password"
       type="password"
       placeholder="Contraseña"
+      autocomplete="current-password"
+      onkeydown="
+        if(event.key === 'Enter'){
+          iniciarSesion();
+        }
+      "
     >
 
-    <button onclick="iniciarSesion()">
+    <button
+      type="button"
+      onclick="iniciarSesion()"
+    >
       Ingresar
     </button>
 
@@ -61,7 +67,6 @@
   </div>
 
 </div>
-
 
 <!-- ==================================================
      HEADER TERRI+
