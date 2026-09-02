@@ -1741,3 +1741,315 @@ function cambiarVisibilidadCapa(layerId, visible) {
 function obtenerCapasActivas() {
     return TERRI_LAYERS;
 }
+/* ==========================================================
+   TERRI+ FUENTES EXTERNAS
+   Integración de GeoJSON proveniente de IGAC y otras fuentes
+========================================================== */
+
+
+/**
+ * Dibuja en TERRI+ un resultado proveniente de una
+ * fuente geográfica externa.
+ *
+ * Actualmente compatible con:
+ *
+ * - IGAC
+ * - ArcGIS REST convertido a GeoJSON
+ * - cualquier servicio que entregue FeatureCollection
+ *
+ * @param {Object} respuesta
+ * @returns {boolean}
+ */
+function dibujarFuenteExternaTerri(respuesta) {
+
+    if (!respuesta || typeof respuesta !== "object") {
+
+        console.warn(
+            "⚠️ Respuesta externa inválida:",
+            respuesta
+        );
+
+        return false;
+    }
+
+
+    /* ======================================================
+       IDENTIFICAR GEOJSON
+    ====================================================== */
+
+    const geojson =
+        respuesta.resultado ||
+        respuesta.geojson ||
+        respuesta.data ||
+        null;
+
+
+    if (
+        !geojson ||
+        geojson.type !== "FeatureCollection" ||
+        !Array.isArray(geojson.features)
+    ) {
+
+        console.warn(
+            "⚠️ La fuente externa no contiene un FeatureCollection válido.",
+            respuesta
+        );
+
+        return false;
+    }
+
+
+    if (geojson.features.length === 0) {
+
+        console.warn(
+            "⚠️ La fuente externa devolvió cero entidades."
+        );
+
+        return false;
+    }
+
+
+    /* ======================================================
+       FUENTE
+    ====================================================== */
+
+    const fuente =
+        String(
+            respuesta.fuente ||
+            "Fuente externa"
+        ).trim();
+
+
+    /* ======================================================
+       IDENTIFICADOR ÚNICO
+    ====================================================== */
+
+    const codigo =
+        respuesta.codigo ||
+        respuesta.id ||
+        Date.now();
+
+
+    const fuenteNormalizada =
+        normalizarCampoMapaTerri(fuente) ||
+        "externa";
+
+
+    const layerId =
+        respuesta.layer_id ||
+        `terri_${fuenteNormalizada}_${codigo}`;
+
+
+    const sourceId =
+        `${layerId}_source`;
+
+
+    /* ======================================================
+       NOMBRE DE LA CAPA
+    ====================================================== */
+
+    let nombre =
+        respuesta.nombre ||
+        respuesta.municipio ||
+        respuesta.departamento ||
+        "Resultado externo";
+
+
+    if (
+        respuesta.municipio &&
+        fuente.toUpperCase() === "IGAC"
+    ) {
+
+        nombre =
+            `Límite oficial de ${respuesta.municipio}`;
+
+    }
+
+
+    /* ======================================================
+       VISUALIZACIÓN
+    ====================================================== */
+
+    const visualizacion =
+        respuesta.visualizacion || {
+            modo: "simple",
+            mostrar_leyenda: false,
+            titulo_leyenda: fuente
+        };
+
+
+    /* ======================================================
+       COLOR SEGÚN FUENTE
+    ====================================================== */
+
+    let color = "#2b8cbe";
+
+
+    if (fuente.toUpperCase() === "IGAC") {
+
+        color = "#7c3aed";
+
+    }
+
+
+    /* ======================================================
+       DIBUJAR
+    ====================================================== */
+
+    dibujarGeoJSON(
+        geojson,
+        {
+            layerId,
+            sourceId,
+            nombre,
+            color,
+            opacity: 0.22,
+            visualizacion
+        }
+    );
+
+
+    console.log(
+        "🌎 Fuente externa dibujada correctamente:",
+        {
+            fuente,
+            nombre,
+            codigo,
+            layerId,
+            sourceId,
+            total: geojson.features.length
+        }
+    );
+
+
+    return true;
+}
+
+
+
+/* ==========================================================
+   DIBUJAR RESULTADO IGAC
+========================================================== */
+
+
+/**
+ * Función especializada para resultados provenientes
+ * del Instituto Geográfico Agustín Codazzi.
+ *
+ * @param {Object} respuesta
+ * @returns {boolean}
+ */
+function dibujarResultadoIGAC(respuesta) {
+
+    if (!respuesta) {
+        return false;
+    }
+
+
+    const fuente =
+        String(
+            respuesta.fuente || ""
+        )
+            .trim()
+            .toUpperCase();
+
+
+    if (fuente !== "IGAC") {
+
+        console.warn(
+            "⚠️ El resultado recibido no corresponde al IGAC."
+        );
+
+        return false;
+    }
+
+
+    return dibujarFuenteExternaTerri(
+        respuesta
+    );
+}
+
+
+
+/* ==========================================================
+   DETECTAR Y DIBUJAR RESULTADO TERRITORIAL
+========================================================== */
+
+
+/**
+ * Punto de entrada universal para resultados cartográficos.
+ *
+ * Permite que el frontend no necesite conocer si el
+ * GeoJSON proviene de PostGIS, IGAC u otra fuente.
+ *
+ * @param {Object} respuesta
+ * @returns {boolean}
+ */
+function dibujarResultadoTerritorial(respuesta) {
+
+    if (!respuesta || typeof respuesta !== "object") {
+        return false;
+    }
+
+
+    /* ======================================================
+       FUENTE EXTERNA
+    ====================================================== */
+
+    if (
+        respuesta.fuente &&
+        String(respuesta.fuente)
+            .trim()
+            .toUpperCase() === "IGAC"
+    ) {
+
+        return dibujarResultadoIGAC(
+            respuesta
+        );
+    }
+
+
+    /* ======================================================
+       GEOJSON TERRI+ / POSTGIS
+    ====================================================== */
+
+    const geojson =
+        respuesta.resultado ||
+        respuesta.geojson ||
+        null;
+
+
+    if (
+        geojson &&
+        geojson.type === "FeatureCollection" &&
+        Array.isArray(geojson.features)
+    ) {
+
+        dibujarGeoJSON(
+            geojson,
+            {
+                layerId:
+                    respuesta.layer_id ||
+                    TERRI_CONFIG.MAP_LAYER,
+
+                sourceId:
+                    respuesta.source_id ||
+                    TERRI_CONFIG.MAP_SOURCE,
+
+                nombre:
+                    respuesta.nombre ||
+                    "Resultado TERRI+",
+
+                visualizacion:
+                    respuesta.visualizacion ||
+                    {}
+            }
+        );
+
+
+        return true;
+    }
+
+
+    return false;
+}
