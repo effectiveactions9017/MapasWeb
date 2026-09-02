@@ -12,14 +12,18 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <!-- MapLibre GL -->
+  <!-- ==================================================
+       MAPLIBRE GL
+  =================================================== -->
 
   <link
     href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"
     rel="stylesheet"
   >
 
-  <!-- Estilos propios -->
+  <!-- ==================================================
+       ESTILOS TERRI+
+  =================================================== -->
 
   <link
     rel="stylesheet"
@@ -42,125 +46,140 @@
 
 
       <!-- ==================================================
-     COLUMNA IZQUIERDA:
-     MAPA
-=================================================== -->
+           COLUMNA IZQUIERDA:
+           MAPA
+      =================================================== -->
 
-<section class="panel mapa-panel">
+      <section class="panel mapa-panel">
 
-    <div class="map-toolbar">
 
-        <!-- ==========================================
-             MAPA BASE
-        =========================================== -->
+        <!-- ==================================================
+             BARRA DE HERRAMIENTAS DEL MAPA
+        =================================================== -->
 
-        <div class="mapa-base-dropdown">
+        <div class="map-toolbar">
+
+
+          <!-- ==========================================
+               MAPA BASE
+          =========================================== -->
+
+          <div class="mapa-base-dropdown">
 
             <button
-                type="button"
-                id="btnMapaBase"
-                class="mini-btn"
-                title="Seleccionar mapa base"
-                aria-haspopup="true"
-                aria-expanded="false"
+              type="button"
+              id="btnMapaBase"
+              class="mini-btn"
+              title="Seleccionar mapa base"
+              aria-haspopup="true"
+              aria-expanded="false"
             >
-                🗺️ Mapa base ▾
+              🗺️ Mapa base ▾
             </button>
 
+
             <div
-                id="menuMapaBase"
-                class="menu-mapa-base"
+              id="menuMapaBase"
+              class="menu-mapa-base"
             >
 
-                <button
-                    type="button"
-                    data-map="claro"
-                >
-                    <span class="mapa-base-check"></span>
+              <button
+                type="button"
+                data-map="claro"
+              >
 
-                    <span>
-                        🗺️ Carto Claro
-                    </span>
-                </button>
+                <span class="mapa-base-check"></span>
 
-                <button
-                    type="button"
-                    data-map="satelite"
-                >
-                    <span class="mapa-base-check"></span>
+                <span>
+                  🗺️ Carto Claro
+                </span>
 
-                    <span>
-                        🛰️ Satelital híbrido
-                    </span>
-                </button>
+              </button>
 
-                <button
-                    type="button"
-                    data-map="osm"
-                >
-                    <span class="mapa-base-check"></span>
 
-                    <span>
-                        🌍 OpenStreetMap
-                    </span>
-                </button>
+              <button
+                type="button"
+                data-map="satelite"
+              >
+
+                <span class="mapa-base-check"></span>
+
+                <span>
+                  🛰️ Satelital híbrido
+                </span>
+
+              </button>
+
+
+              <button
+                type="button"
+                data-map="osm"
+              >
+
+                <span class="mapa-base-check"></span>
+
+                <span>
+                  🌍 OpenStreetMap
+                </span>
+
+              </button>
 
             </div>
 
-        </div>
+          </div>
 
 
-        <!-- ==========================================
-             ZOOM AL RESULTADO
-        =========================================== -->
+          <!-- ==========================================
+               ZOOM AL RESULTADO
+          =========================================== -->
 
-        <button
+          <button
             type="button"
             id="btnZoomResultado"
             class="mini-btn"
             title="Acercar al resultado"
-        >
+          >
             🔍 Zoom resultado
-        </button>
+          </button>
 
 
-        <!-- ==========================================
-             LIMPIAR MAPA
-        =========================================== -->
+          <!-- ==========================================
+               LIMPIAR MAPA
+          =========================================== -->
 
-        <button
+          <button
             type="button"
             id="btnLimpiarMapa"
             class="mini-btn"
             title="Eliminar resultados del mapa"
-        >
+          >
             🧹 Limpiar mapa
-        </button>
+          </button>
 
-    </div>
-
-
-    <!-- ==========================================
-         MAPA
-    =========================================== -->
-
-    <div
-        id="map"
-        class="map"
-    ></div>
+        </div>
 
 
-    <!-- ==========================================
-         TABLA DE RESULTADOS
-    =========================================== -->
+        <!-- ==================================================
+             MAPA
+        =================================================== -->
 
-    <div
-        id="tablaResultados"
-        class="tabla-resultados"
-        style="display:none;"
-    ></div>
+        <div
+          id="map"
+          class="map"
+        ></div>
 
-</section>
+
+        <!-- ==================================================
+             TABLA DE RESULTADOS
+        =================================================== -->
+
+        <div
+          id="tablaResultados"
+          class="tabla-resultados"
+          style="display:none;"
+        ></div>
+
+      </section>
 
 
 
@@ -174,15 +193,19 @@
         <section class="panel chat-panel">
 
 
-          <!-- ENCABEZADO -->
+          <!-- ==================================================
+               ENCABEZADO DEL CHAT
+          =================================================== -->
 
           <div class="panel-title-row">
+
 
             <div class="chat-header">
 
               <h2>
                 🤖 Agente IA Territorial
               </h2>
+
 
               <div class="estado-api">
 
@@ -212,7 +235,9 @@
 
 
 
-          <!-- MENSAJES -->
+          <!-- ==================================================
+               MENSAJES
+          =================================================== -->
 
           <div
             id="chatBox"
@@ -226,10 +251,23 @@
               </strong>
 
               <p>
-                Hola. Ya estoy conectado al motor territorial.
-                Pregúntame por predios, avalúos, usos del suelo,
-                estadísticas, análisis espaciales o solicita mapas
-                inteligentes.
+                Hola. Estoy conectado al motor territorial de TERRI+.
+                Puedes consultarme información de las bases territoriales
+                del municipio y también información geográfica oficial
+                disponible mediante servicios externos como el IGAC.
+              </p>
+
+              <p>
+                Puedes preguntarme por predios, avalúos, construcciones,
+                actividades económicas, análisis espaciales o solicitar
+                límites administrativos oficiales.
+              </p>
+
+              <p>
+                Por ejemplo:
+                <strong>
+                  “Muéstrame el límite de Sesquilé según el IGAC”.
+                </strong>
               </p>
 
             </div>
@@ -238,7 +276,9 @@
 
 
 
-          <!-- PREGUNTA -->
+          <!-- ==================================================
+               ÁREA DE PREGUNTA
+          =================================================== -->
 
           <div class="input-area">
 
@@ -272,9 +312,14 @@
 
     <footer class="terri-footer">
 
+
+      <!-- TIPO -->
+
       <div class="footer-item">
 
-        <span>Tipo</span>
+        <span>
+          Tipo
+        </span>
 
         <strong id="metaTipo">
           -
@@ -283,9 +328,13 @@
       </div>
 
 
+      <!-- MODO -->
+
       <div class="footer-item">
 
-        <span>Modo</span>
+        <span>
+          Modo
+        </span>
 
         <strong id="metaModo">
           -
@@ -294,9 +343,28 @@
       </div>
 
 
+      <!-- FUENTE -->
+
       <div class="footer-item">
 
-        <span>Registros</span>
+        <span>
+          Fuente
+        </span>
+
+        <strong id="metaFuente">
+          -
+        </strong>
+
+      </div>
+
+
+      <!-- REGISTROS -->
+
+      <div class="footer-item">
+
+        <span>
+          Registros
+        </span>
 
         <strong id="metaTotal">
           -
@@ -305,9 +373,13 @@
       </div>
 
 
+      <!-- SQL / ORIGEN -->
+
       <div class="footer-item footer-sql">
 
-        <span>SQL generado</span>
+        <span>
+          Consulta
+        </span>
 
         <code id="metaSQL">
           Sin consulta todavía
@@ -325,32 +397,36 @@
        MAPLIBRE GL
   =================================================== -->
 
-  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script
+    src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"
+  ></script>
 
 
 
   <!-- ==================================================
-     SCRIPTS TERRI+
-     CONSERVAR ESTE ORDEN
-=================================================== -->
+       SCRIPTS TERRI+
+       CONSERVAR ESTE ORDEN
+  =================================================== -->
 
-<script src="./ia_js/config.js"></script>
+  <script src="./ia_js/config.js"></script>
 
-<script src="./ia_js/context.js"></script>
+  <script src="./ia_js/context.js"></script>
 
-<script src="./ia_js/api.js"></script>
+  <script src="./ia_js/api.js"></script>
 
-<!-- Motor de simbología inteligente TERRI+ -->
-<script src="./ia_js/terri_symbology.js"></script>
+  <!-- Motor de simbología inteligente TERRI+ -->
 
-<script src="./ia_js/map.js"></script>
+  <script src="./ia_js/terri_symbology.js"></script>
 
-<!-- Control de mapas base -->
-<script src="./ia_js/basemaps.js"></script>
+  <script src="./ia_js/map.js"></script>
 
-<script src="./ia_js/chat.js"></script>
+  <!-- Control de mapas base -->
 
-<script src="./ia_js/app.js"></script>
+  <script src="./ia_js/basemaps.js"></script>
+
+  <script src="./ia_js/chat.js"></script>
+
+  <script src="./ia_js/app.js"></script>
 
 </body>
 
