@@ -396,79 +396,42 @@ function abrirVisualizadorCapas() {
     /* Ocultar menú principal */
 
     if (menuPrincipal) {
+
         menuPrincipal.style.display = "none";
+
     }
 
 
     /* Ocultar menú lateral */
 
     if (sidebarMapas) {
+
         sidebarMapas.style.display = "none";
+
     }
 
 
     /* Abrir visualizador */
 
     abrirDashboardSolo(
+
         "Visualizador de capas",
+
         "Carga, visualiza y consulta capas GeoJSON y JSON sobre el territorio.",
+
         "./capas/capas.html"
-    );
-/* ==========================================================
-   ABRIR ACTUALIZACIÓN TRIBUTARIA
-========================================================== */
-
-function abrirActualizacionTributaria() {
-
-    const {
-        menuPrincipal,
-        sidebarMapas
-    } = obtenerElementosPrincipales();
-
-
-    /* Ocultar menú principal */
-
-    if (menuPrincipal) {
-
-        menuPrincipal.style.display = "none";
-
-    }
-
-
-    /* Ocultar menú lateral */
-
-    if (sidebarMapas) {
-
-        sidebarMapas.style.display = "none";
-
-    }
-
-
-    /* Abrir módulo de actualización tributaria */
-
-    abrirDashboardSolo(
-
-        "📤 Actualización tributaria",
-
-        "Carga, valida y actualiza los reportes oficiales de impuesto predial y cartera del municipio.",
-
-        "./tributario/actualizacion_tributaria.html"
 
     );
 
-
-    console.log(
-        "📤 Módulo de actualización tributaria TERRI+ abierto."
-    );
-
-}
 
     /* ======================================================
        TÍTULO SUPERIOR CON LOGO DE CAPAS
     ====================================================== */
 
     const tituloModulo =
-        document.getElementById("tituloModulo");
+        document.getElementById(
+            "tituloModulo"
+        );
 
 
     if (tituloModulo) {
@@ -540,23 +503,15 @@ function abrirActualizacionTributaria() {
                         aria-hidden="true"
                     >
 
-                        <!-- CAPA SUPERIOR -->
-
                         <polygon
                             points="32,6 55,19 32,32 9,19"
                             fill="#63C990"
                         ></polygon>
 
-
-                        <!-- CAPA CENTRAL -->
-
                         <polygon
                             points="32,20 55,33 32,46 9,33"
                             fill="#3F8ED0"
                         ></polygon>
-
-
-                        <!-- CAPA INFERIOR -->
 
                         <polygon
                             points="32,34 55,47 32,60 9,47"
@@ -596,6 +551,52 @@ function abrirActualizacionTributaria() {
 
     console.log(
         "✅ Visualizador de capas TERRI+ abierto."
+    );
+
+}
+
+
+/* ==========================================================
+   ABRIR ACTUALIZACIÓN TRIBUTARIA
+========================================================== */
+
+function abrirActualizacionTributaria() {
+
+    const {
+        menuPrincipal,
+        sidebarMapas
+    } = obtenerElementosPrincipales();
+
+
+    if (menuPrincipal) {
+
+        menuPrincipal.style.display =
+            "none";
+
+    }
+
+
+    if (sidebarMapas) {
+
+        sidebarMapas.style.display =
+            "none";
+
+    }
+
+
+    abrirDashboardSolo(
+
+        "📤 Actualización tributaria",
+
+        "Carga, valida y actualiza los reportes oficiales de impuesto predial y cartera del municipio.",
+
+        "./tributario/actualizacion_tributaria.html"
+
+    );
+
+
+    console.log(
+        "📤 Módulo de actualización tributaria TERRI+ abierto."
     );
 
 }
