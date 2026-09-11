@@ -1,770 +1,1546 @@
-<script>
+<!DOCTYPE html>
+<html lang="es">
 
-const API_TERRI =
-  "https://terri-api.onrender.com";
+<head>
 
+  <meta charset="UTF-8">
 
-let resultadoAnalisis = null;
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-let analisisId = null;
+  <title>Actualización tributaria TERRI+</title>
 
+  <style>
 
-/* ======================================================
-   AL CARGAR LA PÁGINA
-====================================================== */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    consultarEstadoBase();
-
-  }
-);
-
-
-/* ======================================================
-   CONSULTAR ESTADO DE POSTGRESQL
-====================================================== */
-
-async function consultarEstadoBase() {
-
-  const estadoBase =
-    document.getElementById(
-      "estadoBase"
-    );
-
-  try {
-
-    const respuesta =
-      await fetch(
-        `${API_TERRI}/tributario/estado`
-      );
-
-
-    if (!respuesta.ok) {
-
-      throw new Error(
-        "No fue posible consultar la base maestra."
-      );
-
+    * {
+      box-sizing: border-box;
     }
 
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+    }
 
-    const datos =
-      await respuesta.json();
+    body {
+      font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
 
+      background:
+        linear-gradient(
+          135deg,
+          #f7fbfc,
+          #eaf2f5
+        );
 
-    estadoBase.textContent =
-      `Base maestra: ${formatearNumero(
-        datos.predios_maestro
-      )} predios`;
+      color: #17324d;
+    }
 
+    .tributario-app {
+      width: 100%;
+      min-height: 100vh;
 
-  } catch (error) {
+      padding: 24px;
 
-    console.error(
-      "Error consultando base maestra:",
-      error
-    );
+      display: flex;
+      flex-direction: column;
 
+      gap: 18px;
+    }
 
-    estadoBase.textContent =
-      "Base maestra no disponible";
+    .tributario-header {
+      width: 100%;
 
-  }
+      background: white;
 
-}
+      border-radius: 18px;
 
+      padding: 22px 24px;
 
-/* ======================================================
-   ANALIZAR ARCHIVO REAL
-====================================================== */
+      box-shadow:
+        0 10px 28px
+        rgba(12, 45, 72, 0.10);
 
-async function analizarArchivoTributario() {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
 
-  const archivoInput =
-    document.getElementById(
-      "archivoTributario"
-    );
+      gap: 20px;
+    }
 
+    .tributario-header-left {
+      display: flex;
+      align-items: center;
 
-  const archivo =
-    archivoInput.files[0];
+      gap: 14px;
+    }
 
+    .tributario-icon {
+      width: 58px;
+      height: 58px;
 
-  const fechaCorte =
-    document.getElementById(
-      "fechaCorte"
-    ).value;
+      border-radius: 16px;
 
+      display: grid;
+      place-items: center;
 
-  const tipo =
-    document.getElementById(
-      "tipoActualizacion"
-    ).value;
+      background:
+        linear-gradient(
+          135deg,
+          #edf5ef,
+          #e8f0f6
+        );
 
+      font-size: 30px;
 
-  const btnAnalizar =
-    document.getElementById(
-      "btnAnalizar"
-    );
+      box-shadow:
+        inset 0 0 0 1px
+        rgba(12, 45, 72, 0.08);
+    }
 
+    .tributario-header h1 {
+      margin: 0;
 
-  if (!archivo) {
+      font-size: 27px;
 
-    mostrarEstado(
-      "Selecciona primero un archivo Excel.",
-      "error"
-    );
+      color: #0C2D48;
+    }
 
-    return;
+    .tributario-header p {
+      margin: 5px 0 0;
 
-  }
+      color: #60798a;
 
+      font-size: 14px;
+    }
 
-  if (!fechaCorte) {
+    .estado-base {
+      padding: 9px 13px;
 
-    mostrarEstado(
-      "Selecciona la fecha de corte.",
-      "error"
-    );
+      border-radius: 10px;
 
-    return;
+      background: #edf8f1;
 
-  }
+      color: #1c6d42;
 
+      font-size: 13px;
+      font-weight: 700;
 
-  if (
-    !archivo.name
-      .toLowerCase()
-      .endsWith(".xlsx")
-    &&
-    !archivo.name
-      .toLowerCase()
-      .endsWith(".xls")
-  ) {
+      white-space: nowrap;
+    }
 
-    mostrarEstado(
-      "El archivo debe ser Excel (.xlsx o .xls).",
-      "error"
-    );
+    .tributario-grid {
+      width: 100%;
 
-    return;
+      display: grid;
 
-  }
+      grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
 
+      gap: 18px;
+    }
 
-  /* ----------------------------------------------
-     BLOQUEAR BOTÓN
-  ---------------------------------------------- */
+    .panel {
+      background: white;
 
-  btnAnalizar.disabled =
-    true;
+      border-radius: 18px;
 
+      padding: 22px;
 
-  btnAnalizar.textContent =
-    "⏳ Analizando...";
+      box-shadow:
+        0 10px 28px
+        rgba(12, 45, 72, 0.10);
+    }
 
+    .panel h2 {
+      margin:
+        0
+        0
+        16px;
 
-  mostrarEstado(
-    "TERRI+ está leyendo el archivo y cruzando los códigos prediales con la base maestra...",
-    "info"
-  );
+      color: #0C2D48;
 
+      font-size: 19px;
+    }
 
-  /* ----------------------------------------------
-     CREAR FORM DATA
-  ---------------------------------------------- */
+    .panel-sub {
+      margin:
+        -8px
+        0
+        18px;
 
-  const formData =
-    new FormData();
+      color: #6b8190;
 
+      font-size: 13px;
+    }
 
-  formData.append(
-    "tipo",
-    tipo
-  );
+    .campo {
+      margin-bottom: 16px;
+    }
 
+    .campo label {
+      display: block;
 
-  formData.append(
-    "fecha_corte",
-    fechaCorte
-  );
+      margin-bottom: 7px;
 
+      color: #2f5068;
 
-  formData.append(
-    "archivo",
-    archivo
-  );
+      font-size: 13px;
+      font-weight: 700;
+    }
 
+    .campo select,
+    .campo input {
+      width: 100%;
 
-  try {
+      height: 46px;
 
-    /* --------------------------------------------
-       ENVIAR AL BACKEND
-    -------------------------------------------- */
+      padding:
+        0
+        13px;
 
-    const respuesta =
-      await fetch(
-        `${API_TERRI}/tributario/analizar`,
-        {
-          method: "POST",
-          body: formData
-        }
-      );
+      border:
+        1px solid
+        #cfdce5;
 
+      border-radius: 11px;
 
-    const datos =
-      await respuesta.json();
+      background: white;
 
+      color: #17324d;
 
-    if (!respuesta.ok) {
+      font-size: 14px;
 
-      let mensaje =
-        "No fue posible analizar el archivo.";
+      outline: none;
+    }
 
+    .campo input[type="file"] {
+      height: auto;
 
-      if (datos.detail) {
+      padding: 11px;
+    }
 
-        mensaje =
-          typeof datos.detail === "string"
-            ? datos.detail
-            : JSON.stringify(
-                datos.detail
-              );
+    .campo select:focus,
+    .campo input:focus {
+      border-color: #3F8ED0;
 
+      box-shadow:
+        0 0 0 3px
+        rgba(63, 142, 208, 0.12);
+    }
+
+    .acciones {
+      display: flex;
+
+      gap: 10px;
+
+      flex-wrap: wrap;
+
+      margin-top: 8px;
+    }
+
+    .btn {
+      border: none;
+
+      border-radius: 11px;
+
+      padding:
+        11px
+        17px;
+
+      font-size: 13px;
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-principal {
+      background:
+        linear-gradient(
+          135deg,
+          #1B4F72,
+          #0C2D48
+        );
+
+      color: white;
+
+      box-shadow:
+        0 5px 12px
+        rgba(12, 45, 72, 0.16);
+    }
+
+    .btn-secundario {
+      background: #eef4f7;
+
+      color: #244760;
+    }
+
+    .btn-confirmar {
+      background:
+        linear-gradient(
+          135deg,
+          #2f8b57,
+          #1f6b43
+        );
+
+      color: white;
+    }
+
+    .btn:disabled {
+      opacity: .5;
+
+      cursor: not-allowed;
+
+      transform: none;
+    }
+
+    .resumen-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0, 1fr)
+        );
+
+      gap: 12px;
+    }
+
+    .resumen-item {
+      padding: 15px;
+
+      border-radius: 13px;
+
+      background: #f7fafc;
+
+      border:
+        1px solid
+        #e2eaf0;
+    }
+
+    .resumen-item span {
+      display: block;
+
+      color: #708696;
+
+      font-size: 12px;
+    }
+
+    .resumen-item strong {
+      display: block;
+
+      margin-top: 4px;
+
+      color: #0C2D48;
+
+      font-size: 23px;
+    }
+
+    .resumen-item.destacado {
+      background: #edf8f1;
+
+      border-color: #cde7d8;
+    }
+
+    .resumen-item.alerta {
+      background: #fff7e8;
+
+      border-color: #f2ddb3;
+    }
+
+    .estado-proceso {
+      margin-top: 16px;
+
+      padding: 13px;
+
+      border-radius: 11px;
+
+      font-size: 13px;
+
+      display: none;
+    }
+
+    .estado-proceso.info {
+      display: block;
+
+      background: #eef6fc;
+
+      color: #0b5cab;
+    }
+
+    .estado-proceso.ok {
+      display: block;
+
+      background: #edf8f1;
+
+      color: #1f6b43;
+    }
+
+    .estado-proceso.error {
+      display: block;
+
+      background: #fdeeee;
+
+      color: #a83a3a;
+    }
+
+    .tabla-wrapper {
+      width: 100%;
+
+      overflow: auto;
+
+      margin-top: 14px;
+
+      display: none;
+    }
+
+    .tabla-wrapper.visible {
+      display: block;
+    }
+
+    table {
+      width: 100%;
+
+      border-collapse: collapse;
+
+      min-width: 520px;
+    }
+
+    th,
+    td {
+      padding:
+        9px
+        10px;
+
+      border-bottom:
+        1px solid
+        #e5edf2;
+
+      text-align: left;
+
+      font-size: 12px;
+    }
+
+    th {
+      background: #f4f8fa;
+
+      color: #31536f;
+    }
+
+    .tributario-footer {
+      width: 100%;
+
+      padding: 12px 4px;
+
+      text-align: center;
+
+      color: #718695;
+
+      font-size: 11px;
+    }
+
+    @media (max-width: 900px) {
+
+      .tributario-grid {
+        grid-template-columns: 1fr;
       }
 
+    }
 
-      throw new Error(
-        mensaje
-      );
+    @media (max-width: 650px) {
+
+      .tributario-app {
+        padding: 10px;
+      }
+
+      .tributario-header {
+        padding: 15px;
+
+        align-items: flex-start;
+
+        flex-direction: column;
+      }
+
+      .tributario-header-left {
+        align-items: flex-start;
+      }
+
+      .tributario-header h1 {
+        font-size: 20px;
+      }
+
+      .tributario-header p {
+        font-size: 12px;
+      }
+
+      .tributario-icon {
+        width: 46px;
+        height: 46px;
+
+        font-size: 24px;
+      }
+
+      .panel {
+        padding: 15px;
+      }
+
+      .resumen-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .resumen-item strong {
+        font-size: 19px;
+      }
+
+      .acciones {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
 
     }
 
+    @media (max-width: 400px) {
 
-    /* --------------------------------------------
-       GUARDAR RESULTADO REAL
-    -------------------------------------------- */
+      .resumen-grid {
+        grid-template-columns: 1fr;
+      }
 
-    analisisId =
-      datos.analisis_id;
+    }
+
+  </style>
+
+</head>
 
 
-    resultadoAnalisis =
-      datos;
+<body>
+
+  <div class="tributario-app">
+
+    <header class="tributario-header">
+
+      <div class="tributario-header-left">
+
+        <div class="tributario-icon">
+          📤
+        </div>
+
+        <div>
+
+          <h1>
+            Actualización tributaria
+          </h1>
+
+          <p>
+            Carga y valida los reportes oficiales del municipio
+            antes de actualizar la información de TERRI+.
+          </p>
+
+        </div>
+
+      </div>
+
+      <div
+        class="estado-base"
+        id="estadoBase"
+      >
+        Consultando base maestra...
+      </div>
+
+    </header>
 
 
-    mostrarResultadoReal(
-      datos
+    <section class="tributario-grid">
+
+      <div class="panel">
+
+        <h2>
+          1. Cargar archivo
+        </h2>
+
+        <p class="panel-sub">
+          Selecciona el tipo de actualización y el archivo oficial.
+        </p>
+
+
+        <div class="campo">
+
+          <label for="tipoActualizacion">
+            Tipo de actualización
+          </label>
+
+          <select id="tipoActualizacion">
+
+            <option value="predial">
+              Impuesto predial
+            </option>
+
+            <option value="cartera">
+              Cartera predial
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="campo">
+
+          <label for="fechaCorte">
+            Fecha de corte
+          </label>
+
+          <input
+            id="fechaCorte"
+            type="date"
+          >
+
+        </div>
+
+
+        <div class="campo">
+
+          <label for="archivoTributario">
+            Archivo Excel del municipio
+          </label>
+
+          <input
+            id="archivoTributario"
+            type="file"
+            accept=".xlsx,.xls"
+          >
+
+        </div>
+
+
+        <div class="acciones">
+
+          <button
+            id="btnAnalizar"
+            type="button"
+            class="btn btn-principal"
+            onclick="analizarArchivoTributario()"
+          >
+            🔍 Analizar archivo
+          </button>
+
+          <button
+            id="btnLimpiar"
+            type="button"
+            class="btn btn-secundario"
+            onclick="limpiarFormulario()"
+          >
+            🧹 Limpiar
+          </button>
+
+        </div>
+
+
+        <div
+          id="estadoProceso"
+          class="estado-proceso"
+        ></div>
+
+      </div>
+
+
+      <div class="panel">
+
+        <h2>
+          2. Resultado de validación
+        </h2>
+
+        <p class="panel-sub">
+          TERRI+ mostrará aquí el resultado del cruce
+          antes de actualizar PostgreSQL.
+        </p>
+
+
+        <div class="resumen-grid">
+
+          <div class="resumen-item">
+
+            <span>
+              Registros recibidos
+            </span>
+
+            <strong id="resRegistros">
+              -
+            </strong>
+
+          </div>
+
+
+          <div class="resumen-item">
+
+            <span>
+              Predios únicos
+            </span>
+
+            <strong id="resUnicos">
+              -
+            </strong>
+
+          </div>
+
+
+          <div class="resumen-item destacado">
+
+            <span>
+              Predios cruzados
+            </span>
+
+            <strong id="resCruzados">
+              -
+            </strong>
+
+          </div>
+
+
+          <div class="resumen-item alerta">
+
+            <span>
+              Predios no cruzados
+            </span>
+
+            <strong id="resNoCruzados">
+              -
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="acciones">
+
+          <button
+            id="btnVerNoCruzados"
+            type="button"
+            class="btn btn-secundario"
+            onclick="alternarNoCruzados()"
+            disabled
+          >
+            Ver no cruzados
+          </button>
+
+          <button
+            id="btnConfirmar"
+            type="button"
+            class="btn btn-confirmar"
+            onclick="confirmarActualizacion()"
+            disabled
+          >
+            ✅ Confirmar actualización
+          </button>
+
+        </div>
+
+
+        <div
+          id="tablaNoCruzados"
+          class="tabla-wrapper"
+        >
+
+          <table>
+
+            <thead>
+
+              <tr>
+
+                <th>
+                  Número predial
+                </th>
+
+                <th>
+                  Cédula / NIT
+                </th>
+
+                <th>
+                  Vigencia
+                </th>
+
+                <th>
+                  Fecha
+                </th>
+
+              </tr>
+
+            </thead>
+
+            <tbody id="tablaNoCruzadosBody">
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <footer class="tributario-footer">
+
+      TERRI+ · Módulo de actualización tributaria · Municipio de Sesquilé
+
+    </footer>
+
+  </div>
+
+
+  <script>
+
+    const API_TERRI =
+      "https://terri-api.onrender.com";
+
+
+    let resultadoAnalisis = null;
+
+    let analisisId = null;
+
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => {
+
+        consultarEstadoBase();
+
+      }
     );
 
 
-    mostrarNoCruzados(
-      datos.no_cruzados || []
-    );
+    async function consultarEstadoBase() {
+
+      const estadoBase =
+        document.getElementById(
+          "estadoBase"
+        );
+
+      try {
+
+        const respuesta =
+          await fetch(
+            `${API_TERRI}/tributario/estado`
+          );
 
 
-    mostrarEstado(
-      "✅ Archivo analizado correctamente. Revisa los resultados antes de confirmar la actualización.",
-      "ok"
-    );
+        if (!respuesta.ok) {
+
+          throw new Error(
+            "No fue posible consultar la base maestra."
+          );
+
+        }
 
 
-  } catch (error) {
-
-    console.error(
-      "Error analizando archivo:",
-      error
-    );
+        const datos =
+          await respuesta.json();
 
 
-    limpiarResultados();
+        estadoBase.textContent =
+          `Base maestra: ${formatearNumero(
+            datos.predios_maestro
+          )} predios`;
 
 
-    mostrarEstado(
-      error.message ||
-      "No fue posible conectar con TERRI+.",
-      "error"
-    );
+      } catch (error) {
 
-  } finally {
-
-    btnAnalizar.disabled =
-      false;
-
-
-    btnAnalizar.textContent =
-      "🔍 Analizar archivo";
-
-  }
-
-}
-
-
-/* ======================================================
-   MOSTRAR RESULTADOS REALES
-====================================================== */
-
-function mostrarResultadoReal(
-  datos
-) {
-
-  const resumen =
-    datos.resumen || {};
-
-
-  document.getElementById(
-    "resRegistros"
-  ).textContent =
-    formatearNumero(
-      resumen.registros_recibidos || 0
-    );
-
-
-  document.getElementById(
-    "resUnicos"
-  ).textContent =
-    formatearNumero(
-      resumen.predios_unicos || 0
-    );
-
-
-  document.getElementById(
-    "resCruzados"
-  ).textContent =
-    formatearNumero(
-      resumen.predios_cruzados || 0
-    );
-
-
-  document.getElementById(
-    "resNoCruzados"
-  ).textContent =
-    formatearNumero(
-      resumen.predios_no_cruzados || 0
-    );
-
-
-  document.getElementById(
-    "btnVerNoCruzados"
-  ).disabled =
-    !resumen.predios_no_cruzados;
-
-
-  document.getElementById(
-    "btnConfirmar"
-  ).disabled =
-    !datos.analisis_id;
-
-}
-
-
-/* ======================================================
-   MOSTRAR NO CRUZADOS
-====================================================== */
-
-function mostrarNoCruzados(
-  registros
-) {
-
-  const tbody =
-    document.getElementById(
-      "tablaNoCruzadosBody"
-    );
-
-
-  tbody.innerHTML =
-    "";
-
-
-  registros.forEach(
-    registro => {
-
-      const fila =
-        document.createElement(
-          "tr"
+        console.error(
+          "Error consultando base maestra:",
+          error
         );
 
 
-      fila.innerHTML = `
+        estadoBase.textContent =
+          "Base maestra no disponible";
 
-        <td>
-          ${escaparHTML(
-            registro.numero_predial || ""
-          )}
-        </td>
-
-        <td>
-          ${escaparHTML(
-            registro.cedula_nit || ""
-          )}
-        </td>
-
-        <td>
-          ${escaparHTML(
-            registro.vigencia ?? ""
-          )}
-        </td>
-
-        <td>
-          ${escaparHTML(
-            registro.fecha_pago || ""
-          )}
-        </td>
-
-      `;
-
-
-      tbody.appendChild(
-        fila
-      );
+      }
 
     }
-  );
-
-}
 
 
-/* ======================================================
-   VER / OCULTAR NO CRUZADOS
-====================================================== */
+    async function analizarArchivoTributario() {
 
-function alternarNoCruzados() {
-
-  const tabla =
-    document.getElementById(
-      "tablaNoCruzados"
-    );
+      const archivoInput =
+        document.getElementById(
+          "archivoTributario"
+        );
 
 
-  tabla.classList.toggle(
-    "visible"
-  );
-
-}
+      const archivo =
+        archivoInput.files[0];
 
 
-/* ======================================================
-   CONFIRMAR ACTUALIZACIÓN REAL
-====================================================== */
-
-async function confirmarActualizacion() {
-
-  if (!analisisId) {
-
-    mostrarEstado(
-      "Primero debes analizar correctamente un archivo.",
-      "error"
-    );
-
-    return;
-
-  }
+      const fechaCorte =
+        document.getElementById(
+          "fechaCorte"
+        ).value;
 
 
-  const confirmar =
-    window.confirm(
-      "¿Confirmas que deseas guardar esta actualización tributaria en PostgreSQL?"
-    );
+      const tipo =
+        document.getElementById(
+          "tipoActualizacion"
+        ).value;
 
 
-  if (!confirmar) {
-
-    return;
-
-  }
-
-
-  const btnConfirmar =
-    document.getElementById(
-      "btnConfirmar"
-    );
+      const btnAnalizar =
+        document.getElementById(
+          "btnAnalizar"
+        );
 
 
-  btnConfirmar.disabled =
-    true;
+      if (!archivo) {
 
+        mostrarEstado(
+          "Selecciona primero un archivo Excel.",
+          "error"
+        );
 
-  btnConfirmar.textContent =
-    "⏳ Guardando...";
-
-
-  mostrarEstado(
-    "Guardando actualización tributaria en PostgreSQL...",
-    "info"
-  );
-
-
-  try {
-
-    const respuesta =
-      await fetch(
-        `${API_TERRI}/tributario/confirmar/${analisisId}`,
-        {
-          method: "POST"
-        }
-      );
-
-
-    const datos =
-      await respuesta.json();
-
-
-    if (!respuesta.ok) {
-
-      let mensaje =
-        "No fue posible guardar la actualización.";
-
-
-      if (datos.detail) {
-
-        mensaje =
-          typeof datos.detail === "string"
-            ? datos.detail
-            : JSON.stringify(
-                datos.detail
-              );
+        return;
 
       }
 
 
-      throw new Error(
-        mensaje
+      if (!fechaCorte) {
+
+        mostrarEstado(
+          "Selecciona la fecha de corte.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      if (
+        !archivo.name
+          .toLowerCase()
+          .endsWith(".xlsx")
+        &&
+        !archivo.name
+          .toLowerCase()
+          .endsWith(".xls")
+      ) {
+
+        mostrarEstado(
+          "El archivo debe ser Excel (.xlsx o .xls).",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      btnAnalizar.disabled =
+        true;
+
+
+      btnAnalizar.textContent =
+        "⏳ Analizando...";
+
+
+      mostrarEstado(
+        "TERRI+ está leyendo el archivo y cruzando los códigos prediales con la base maestra...",
+        "info"
+      );
+
+
+      const formData =
+        new FormData();
+
+
+      formData.append(
+        "tipo",
+        tipo
+      );
+
+
+      formData.append(
+        "fecha_corte",
+        fechaCorte
+      );
+
+
+      formData.append(
+        "archivo",
+        archivo
+      );
+
+
+      try {
+
+        const respuesta =
+          await fetch(
+            `${API_TERRI}/tributario/analizar`,
+            {
+              method: "POST",
+              body: formData
+            }
+          );
+
+
+        let datos = null;
+
+        try {
+
+          datos =
+            await respuesta.json();
+
+        } catch (errorJson) {
+
+          throw new Error(
+            `El servidor respondió ${respuesta.status}, pero no devolvió JSON válido.`
+          );
+
+        }
+
+
+        if (!respuesta.ok) {
+
+          let mensaje =
+            "No fue posible analizar el archivo.";
+
+
+          if (datos.detail) {
+
+            mensaje =
+              typeof datos.detail === "string"
+                ? datos.detail
+                : JSON.stringify(
+                    datos.detail
+                  );
+
+          }
+
+
+          throw new Error(
+            mensaje
+          );
+
+        }
+
+
+        analisisId =
+          datos.analisis_id;
+
+
+        resultadoAnalisis =
+          datos;
+
+
+        mostrarResultadoReal(
+          datos
+        );
+
+
+        mostrarNoCruzados(
+          datos.no_cruzados || []
+        );
+
+
+        mostrarEstado(
+          "✅ Archivo analizado correctamente. Revisa los resultados antes de confirmar la actualización.",
+          "ok"
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Error analizando archivo:",
+          error
+        );
+
+
+        resultadoAnalisis =
+          null;
+
+
+        analisisId =
+          null;
+
+
+        limpiarResultados();
+
+
+        mostrarEstado(
+          error.message ||
+          "No fue posible conectar con TERRI+.",
+          "error"
+        );
+
+      } finally {
+
+        btnAnalizar.disabled =
+          false;
+
+
+        btnAnalizar.textContent =
+          "🔍 Analizar archivo";
+
+      }
+
+    }
+
+
+    function mostrarResultadoReal(
+      datos
+    ) {
+
+      const resumen =
+        datos.resumen || {};
+
+
+      document.getElementById(
+        "resRegistros"
+      ).textContent =
+        formatearNumero(
+          resumen.registros_recibidos || 0
+        );
+
+
+      document.getElementById(
+        "resUnicos"
+      ).textContent =
+        formatearNumero(
+          resumen.predios_unicos || 0
+        );
+
+
+      document.getElementById(
+        "resCruzados"
+      ).textContent =
+        formatearNumero(
+          resumen.predios_cruzados || 0
+        );
+
+
+      document.getElementById(
+        "resNoCruzados"
+      ).textContent =
+        formatearNumero(
+          resumen.predios_no_cruzados || 0
+        );
+
+
+      document.getElementById(
+        "btnVerNoCruzados"
+      ).disabled =
+        !resumen.predios_no_cruzados;
+
+
+      document.getElementById(
+        "btnConfirmar"
+      ).disabled =
+        !datos.analisis_id;
+
+    }
+
+
+    function mostrarNoCruzados(
+      registros
+    ) {
+
+      const tbody =
+        document.getElementById(
+          "tablaNoCruzadosBody"
+        );
+
+
+      tbody.innerHTML =
+        "";
+
+
+      registros.forEach(
+        registro => {
+
+          const fila =
+            document.createElement(
+              "tr"
+            );
+
+
+          fila.innerHTML = `
+
+            <td>
+              ${escaparHTML(
+                registro.numero_predial || ""
+              )}
+            </td>
+
+            <td>
+              ${escaparHTML(
+                registro.cedula_nit || ""
+              )}
+            </td>
+
+            <td>
+              ${escaparHTML(
+                registro.vigencia ?? ""
+              )}
+            </td>
+
+            <td>
+              ${escaparHTML(
+                registro.fecha_pago || ""
+              )}
+            </td>
+
+          `;
+
+
+          tbody.appendChild(
+            fila
+          );
+
+        }
       );
 
     }
 
 
-    mostrarEstado(
-      `✅ Actualización guardada correctamente. Registros insertados: ${formatearNumero(
-        datos.registros_insertados || 0
-      )}.`,
-      "ok"
-    );
+    function alternarNoCruzados() {
 
+      const tabla =
+        document.getElementById(
+          "tablaNoCruzados"
+        );
 
-    /* --------------------------------------------
-       YA NO PERMITIR CONFIRMAR DE NUEVO
-    -------------------------------------------- */
 
-    analisisId =
-      null;
+      tabla.classList.toggle(
+        "visible"
+      );
 
+    }
 
-    btnConfirmar.disabled =
-      true;
 
+    async function confirmarActualizacion() {
 
-    btnConfirmar.textContent =
-      "✅ Actualización guardada";
+      if (!analisisId) {
 
+        mostrarEstado(
+          "Primero debes analizar correctamente un archivo.",
+          "error"
+        );
 
-    consultarEstadoBase();
+        return;
 
+      }
 
-  } catch (error) {
 
-    console.error(
-      "Error confirmando actualización:",
-      error
-    );
+      const confirmar =
+        window.confirm(
+          "¿Confirmas que deseas guardar esta actualización tributaria en PostgreSQL?"
+        );
 
 
-    mostrarEstado(
-      error.message ||
-      "No fue posible guardar la actualización.",
-      "error"
-    );
+      if (!confirmar) {
 
+        return;
 
-    btnConfirmar.disabled =
-      false;
+      }
 
 
-    btnConfirmar.textContent =
-      "✅ Confirmar actualización";
+      const btnConfirmar =
+        document.getElementById(
+          "btnConfirmar"
+        );
 
-  }
 
-}
+      btnConfirmar.disabled =
+        true;
 
 
-/* ======================================================
-   LIMPIAR
-====================================================== */
+      btnConfirmar.textContent =
+        "⏳ Guardando...";
 
-function limpiarFormulario() {
 
-  document.getElementById(
-    "archivoTributario"
-  ).value =
-    "";
+      mostrarEstado(
+        "Guardando actualización tributaria en PostgreSQL...",
+        "info"
+      );
 
 
-  document.getElementById(
-    "fechaCorte"
-  ).value =
-    "";
+      try {
 
+        const respuesta =
+          await fetch(
+            `${API_TERRI}/tributario/confirmar/${analisisId}`,
+            {
+              method: "POST"
+            }
+          );
 
-  resultadoAnalisis =
-    null;
 
+        let datos = null;
 
-  analisisId =
-    null;
+        try {
 
+          datos =
+            await respuesta.json();
 
-  limpiarResultados();
+        } catch (errorJson) {
 
+          throw new Error(
+            `El servidor respondió ${respuesta.status}, pero no devolvió JSON válido.`
+          );
 
-  document.getElementById(
-    "estadoProceso"
-  ).className =
-    "estado-proceso";
+        }
 
 
-  document.getElementById(
-    "estadoProceso"
-  ).textContent =
-    "";
+        if (!respuesta.ok) {
 
-}
+          let mensaje =
+            "No fue posible guardar la actualización.";
 
 
-/* ======================================================
-   LIMPIAR RESULTADOS
-====================================================== */
+          if (datos.detail) {
 
-function limpiarResultados() {
+            mensaje =
+              typeof datos.detail === "string"
+                ? datos.detail
+                : JSON.stringify(
+                    datos.detail
+                  );
 
-  document.getElementById(
-    "resRegistros"
-  ).textContent =
-    "-";
+          }
 
 
-  document.getElementById(
-    "resUnicos"
-  ).textContent =
-    "-";
+          throw new Error(
+            mensaje
+          );
 
+        }
 
-  document.getElementById(
-    "resCruzados"
-  ).textContent =
-    "-";
 
+        mostrarEstado(
+          `✅ Actualización guardada correctamente. Registros insertados: ${formatearNumero(
+            datos.registros_insertados || 0
+          )}.`,
+          "ok"
+        );
 
-  document.getElementById(
-    "resNoCruzados"
-  ).textContent =
-    "-";
 
+        analisisId =
+          null;
 
-  document.getElementById(
-    "btnVerNoCruzados"
-  ).disabled =
-    true;
 
+        btnConfirmar.disabled =
+          true;
 
-  document.getElementById(
-    "btnConfirmar"
-  ).disabled =
-    true;
 
+        btnConfirmar.textContent =
+          "✅ Actualización guardada";
 
-  document.getElementById(
-    "btnConfirmar"
-  ).textContent =
-    "✅ Confirmar actualización";
 
+        consultarEstadoBase();
 
-  document.getElementById(
-    "tablaNoCruzados"
-  ).classList.remove(
-    "visible"
-  );
 
+      } catch (error) {
 
-  document.getElementById(
-    "tablaNoCruzadosBody"
-  ).innerHTML =
-    "";
+        console.error(
+          "Error confirmando actualización:",
+          error
+        );
 
-}
 
+        mostrarEstado(
+          error.message ||
+          "No fue posible guardar la actualización.",
+          "error"
+        );
 
-/* ======================================================
-   ESTADO
-====================================================== */
 
-function mostrarEstado(
-  mensaje,
-  tipo
-) {
+        btnConfirmar.disabled =
+          false;
 
-  const estado =
-    document.getElementById(
-      "estadoProceso"
-    );
 
+        btnConfirmar.textContent =
+          "✅ Confirmar actualización";
 
-  estado.className =
-    `estado-proceso ${tipo}`;
+      }
 
+    }
 
-  estado.textContent =
-    mensaje;
 
-}
+    function limpiarFormulario() {
 
+      document.getElementById(
+        "archivoTributario"
+      ).value =
+        "";
 
-/* ======================================================
-   NÚMEROS
-====================================================== */
 
-function formatearNumero(
-  valor
-) {
+      document.getElementById(
+        "fechaCorte"
+      ).value =
+        "";
 
-  return new Intl
-    .NumberFormat(
-      "es-CO"
-    )
-    .format(
-      Number(
-        valor || 0
-      )
-    );
 
-}
+      resultadoAnalisis =
+        null;
 
 
-/* ======================================================
-   SEGURIDAD HTML
-====================================================== */
+      analisisId =
+        null;
 
-function escaparHTML(
-  valor
-) {
 
-  const div =
-    document.createElement(
-      "div"
-    );
+      limpiarResultados();
 
 
-  div.textContent =
-    String(
-      valor ?? ""
-    );
+      document.getElementById(
+        "estadoProceso"
+      ).className =
+        "estado-proceso";
 
 
-  return div.innerHTML;
+      document.getElementById(
+        "estadoProceso"
+      ).textContent =
+        "";
 
-}
+    }
 
-</script>
+
+    function limpiarResultados() {
+
+      document.getElementById(
+        "resRegistros"
+      ).textContent =
+        "-";
+
+
+      document.getElementById(
+        "resUnicos"
+      ).textContent =
+        "-";
+
+
+      document.getElementById(
+        "resCruzados"
+      ).textContent =
+        "-";
+
+
+      document.getElementById(
+        "resNoCruzados"
+      ).textContent =
+        "-";
+
+
+      document.getElementById(
+        "btnVerNoCruzados"
+      ).disabled =
+        true;
+
+
+      document.getElementById(
+        "btnConfirmar"
+      ).disabled =
+        true;
+
+
+      document.getElementById(
+        "btnConfirmar"
+      ).textContent =
+        "✅ Confirmar actualización";
+
+
+      document.getElementById(
+        "tablaNoCruzados"
+      ).classList.remove(
+        "visible"
+      );
+
+
+      document.getElementById(
+        "tablaNoCruzadosBody"
+      ).innerHTML =
+        "";
+
+    }
+
+
+    function mostrarEstado(
+      mensaje,
+      tipo
+    ) {
+
+      const estado =
+        document.getElementById(
+          "estadoProceso"
+        );
+
+
+      estado.className =
+        `estado-proceso ${tipo}`;
+
+
+      estado.textContent =
+        mensaje;
+
+    }
+
+
+    function formatearNumero(
+      valor
+    ) {
+
+      return new Intl
+        .NumberFormat(
+          "es-CO"
+        )
+        .format(
+          Number(
+            valor || 0
+          )
+        );
+
+    }
+
+
+    function escaparHTML(
+      valor
+    ) {
+
+      const div =
+        document.createElement(
+          "div"
+        );
+
+
+      div.textContent =
+        String(
+          valor ?? ""
+        );
+
+
+      return div.innerHTML;
+
+    }
+
+  </script>
+
+</body>
+
+</html>
