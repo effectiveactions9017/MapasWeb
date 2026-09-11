@@ -414,7 +414,54 @@ function abrirVisualizadorCapas() {
         "Carga, visualiza y consulta capas GeoJSON y JSON sobre el territorio.",
         "./capas/capas.html"
     );
+/* ==========================================================
+   ABRIR ACTUALIZACIÓN TRIBUTARIA
+========================================================== */
 
+function abrirActualizacionTributaria() {
+
+    const {
+        menuPrincipal,
+        sidebarMapas
+    } = obtenerElementosPrincipales();
+
+
+    /* Ocultar menú principal */
+
+    if (menuPrincipal) {
+
+        menuPrincipal.style.display = "none";
+
+    }
+
+
+    /* Ocultar menú lateral */
+
+    if (sidebarMapas) {
+
+        sidebarMapas.style.display = "none";
+
+    }
+
+
+    /* Abrir módulo de actualización tributaria */
+
+    abrirDashboardSolo(
+
+        "📤 Actualización tributaria",
+
+        "Carga, valida y actualiza los reportes oficiales de impuesto predial y cartera del municipio.",
+
+        "./tributario/actualizacion_tributaria.html"
+
+    );
+
+
+    console.log(
+        "📤 Módulo de actualización tributaria TERRI+ abierto."
+    );
+
+}
 
     /* ======================================================
        TÍTULO SUPERIOR CON LOGO DE CAPAS
