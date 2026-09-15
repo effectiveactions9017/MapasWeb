@@ -102,59 +102,274 @@ body{
 
 
 /* ==========================================================
-   MENÚ LATERAL
+   MENÚ LATERAL TERRI+
+   ESTILO LIMPIO / MODERNO
 ========================================================== */
 
 .sidebar{
-    width:330px;
-    min-width:330px;
+    width:285px;
+    min-width:285px;
     height:100%;
 
-    background:white;
+    background:#ffffff;
 
-    padding:20px;
+    padding:24px 14px;
 
     overflow-y:auto;
     overflow-x:hidden;
 
-    box-shadow:5px 0 20px rgba(0,0,0,.2);
+    border-right:1px solid #e5edf2;
+
+    box-shadow:
+        4px 0 16px rgba(12,45,72,.05);
 }
+
+
+/* ==========================================================
+   TÍTULO MAPAS SESQUILÉ
+========================================================== */
 
 .sidebar h2{
+    margin:0 0 18px;
+
+    padding:
+        0
+        12px
+        15px;
+
     color:#0C2D48;
 
-    font-size:24px;
+    font-size:21px;
+    font-weight:800;
+
+    line-height:1.2;
+
+    border-bottom:
+        1px solid #edf2f5;
 }
+
+
+/* ==========================================================
+   BOTONES DEL MENÚ
+========================================================== */
 
 .sidebar button{
     width:100%;
-    height:52px;
 
-    margin-bottom:12px;
+    min-height:48px;
+    height:auto;
+
+    margin:2px 0;
+
+    padding:
+        10px
+        13px;
 
     border:none;
-    border-radius:14px;
+    border-radius:11px;
 
-    background:#1D3557;
+    background:transparent;
 
-    color:white;
+    color:#173f63;
 
-    font-size:16px;
+    font-family:
+        'Segoe UI',
+        Arial,
+        sans-serif;
+
+    font-size:14px;
     font-weight:600;
 
+    line-height:1.2;
+
+    text-align:left;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:flex-start;
+
+    gap:10px;
+
     cursor:pointer;
+
+    box-shadow:none;
+
+    transition:
+        background .18s ease,
+        color .18s ease;
 }
+
+
+/* ==========================================================
+   HOVER
+========================================================== */
 
 .sidebar button:hover{
-    background:#0C2D48;
+    background:#f0f7fc;
+
+    color:#0875ce;
 }
 
-.btn-secundario{
-    background:#dceeee !important;
 
-    color:#0C2D48 !important;
+/* ==========================================================
+   BOTÓN ACTIVO
+========================================================== */
+
+.sidebar button.activo{
+    background:
+        linear-gradient(
+            135deg,
+            #e4f3ff,
+            #d8efff
+        );
+
+    color:#0875ce;
+
+    font-weight:700;
 }
 
+
+/* ==========================================================
+   BOTONES SECUNDARIOS
+========================================================== */
+
+.sidebar .btn-secundario{
+    background:transparent !important;
+
+    color:#526d80 !important;
+
+    font-weight:600;
+}
+
+
+.sidebar .btn-secundario:hover{
+    background:#f4f7f9 !important;
+
+    color:#173f63 !important;
+}
+
+
+/* ==========================================================
+   SEPARACIÓN DE BOTONES INFERIORES
+========================================================== */
+
+.sidebar .btn-secundario:first-of-type{
+    margin-top:18px;
+}
+
+
+/* ==========================================================
+   SCROLLBAR
+========================================================== */
+
+.sidebar::-webkit-scrollbar{
+    width:6px;
+}
+
+
+.sidebar::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+
+.sidebar::-webkit-scrollbar-thumb{
+    background:#cbd6de;
+
+    border-radius:20px;
+}
+
+
+.sidebar::-webkit-scrollbar-thumb:hover{
+    background:#aebdc8;
+}
+
+
+/* ==========================================================
+   TABLET
+========================================================== */
+
+@media(max-width:1000px){
+
+    .sidebar{
+        width:255px;
+        min-width:255px;
+
+        padding:
+            18px
+            10px;
+    }
+
+
+    .sidebar h2{
+        font-size:18px;
+
+        padding-left:9px;
+        padding-right:9px;
+    }
+
+
+    .sidebar button{
+        min-height:44px;
+
+        padding:
+            9px
+            10px;
+
+        font-size:13px;
+
+        gap:8px;
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR
+========================================================== */
+
+@media(max-width:700px){
+
+    .sidebar{
+        width:225px;
+        min-width:225px;
+
+        padding:
+            14px
+            8px;
+    }
+
+
+    .sidebar h2{
+        margin-bottom:10px;
+
+        padding:
+            0
+            7px
+            11px;
+
+        font-size:16px;
+    }
+
+
+    .sidebar button{
+        min-height:41px;
+
+        margin:1px 0;
+
+        padding:
+            8px
+            9px;
+
+        border-radius:9px;
+
+        font-size:12px;
+
+        gap:7px;
+    }
+
+}
 
 /* ==========================================================
    ÁREA DEL VISOR
