@@ -3189,7 +3189,8 @@ body{
 
 
 /* ==========================================================
-   TERRI+ - PORTADA CON FOTOGRAFÍA REAL DE SESQUILÉ
+   TERRI+ - FONDO CARTOGRÁFICO INSTITUCIONAL
+   REUTILIZABLE PARA CUALQUIER MUNICIPIO
    CAPA FINAL - DEBE PERMANECER AL FINAL DEL CSS
 ========================================================== */
 
@@ -3204,18 +3205,21 @@ body{
         clamp(18px,3vh,34px)
         clamp(20px,4vw,58px);
 
+    /* Fondo TERRI+ */
     background-image:
         linear-gradient(
             90deg,
-            rgba(248,252,253,.86) 0%,
-            rgba(247,252,253,.82) 34%,
-            rgba(242,250,252,.73) 62%,
-            rgba(236,248,251,.62) 100%
+            rgba(248,252,253,.68) 0%,
+            rgba(247,252,253,.62) 34%,
+            rgba(242,250,252,.54) 62%,
+            rgba(236,248,251,.44) 100%
         ),
-        url("https://extrategiamedios.com/wp-content/uploads/2026/06/Sesquile-unico-municipio-de-Cundinamarca-seleccionado-para-representar-a-Colombia-en-Best-Tourism-Villages-20263.jpg.webp");
+        url("../fondo_terri+.png");
 
     background-size:cover;
-    background-position:center 62%;
+
+    background-position:center center;
+
     background-repeat:no-repeat;
 
     border-radius:18px;
@@ -3223,11 +3227,17 @@ body{
     overflow:auto;
 }
 
-/* velo sutil inferior: deja aparecer más el paisaje sin perder legibilidad */
+
+/* ==========================================================
+   VELO CARTOGRÁFICO SUAVE
+   Mantiene la lectura sin ocultar el fondo
+========================================================== */
+
 .menu-principal::before{
     content:"";
 
     position:absolute;
+
     inset:0;
 
     z-index:-1;
@@ -3238,14 +3248,93 @@ body{
 
     background:
         linear-gradient(
-            to bottom,
-            rgba(255,255,255,.03) 0%,
-            rgba(255,255,255,.02) 62%,
-            rgba(235,247,250,.10) 100%
+            180deg,
+            rgba(255,255,255,.10) 0%,
+            rgba(255,255,255,.04) 42%,
+            rgba(232,247,250,.02) 72%,
+            rgba(219,241,246,.06) 100%
         );
 }
 
 
+/* ==========================================================
+   TABLET
+========================================================== */
+
+@media(max-width:900px){
+
+    .menu-principal{
+
+        background-position:center center;
+
+        background-image:
+            linear-gradient(
+                90deg,
+                rgba(248,252,253,.72) 0%,
+                rgba(245,251,252,.65) 50%,
+                rgba(238,249,251,.55) 100%
+            ),
+            url("../fondo_terri+.png");
+
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR
+========================================================== */
+
+@media(max-width:700px){
+
+    .menu-principal{
+
+        /*
+           En celular aumentamos ligeramente el velo
+           para que las líneas topográficas no compitan
+           con las tarjetas.
+        */
+
+        background-image:
+            linear-gradient(
+                180deg,
+                rgba(248,252,253,.80) 0%,
+                rgba(244,251,252,.70) 48%,
+                rgba(237,248,250,.62) 100%
+            ),
+            url("../fondo_terri+.png");
+
+        background-size:cover;
+
+        background-position:center center;
+
+        background-repeat:no-repeat;
+    }
+
+
+    .menu-principal::before{
+
+        background:
+            rgba(245,251,252,.04);
+
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR MUY PEQUEÑO
+========================================================== */
+
+@media(max-width:390px){
+
+    .menu-principal{
+
+        background-position:center center;
+
+    }
+
+}
 /* ==========================================================
    TARJETAS SEMITRANSPARENTES
 ========================================================== */
