@@ -3190,8 +3190,14 @@ body{
 
 /* ==========================================================
    TERRI+ - FONDO CARTOGRÁFICO INSTITUCIONAL
+   VERSIÓN NÍTIDA / SIN SUAVIZADO
    REUTILIZABLE PARA CUALQUIER MUNICIPIO
-   CAPA FINAL - DEBE PERMANECER AL FINAL DEL CSS
+   DEBE PERMANECER AL FINAL DEL CSS
+========================================================== */
+
+
+/* ==========================================================
+   FONDO PRINCIPAL
 ========================================================== */
 
 .menu-principal{
@@ -3205,21 +3211,15 @@ body{
         clamp(18px,3vh,34px)
         clamp(20px,4vw,58px);
 
-    /* Fondo TERRI+ */
+    /*
+       Mostramos directamente el fondo original.
+       Sin degradado blanco encima.
+    */
     background-image:
-        linear-gradient(
-            90deg,
-            rgba(248,252,253,.68) 0%,
-            rgba(247,252,253,.62) 34%,
-            rgba(242,250,252,.54) 62%,
-            rgba(236,248,251,.44) 100%
-        ),
         url("../fondo_terri+.png");
 
     background-size:cover;
-
     background-position:center center;
-
     background-repeat:no-repeat;
 
     border-radius:18px;
@@ -3229,31 +3229,149 @@ body{
 
 
 /* ==========================================================
-   VELO CARTOGRÁFICO SUAVE
-   Mantiene la lectura sin ocultar el fondo
+   ELIMINAMOS EL VELO BLANCO
 ========================================================== */
 
 .menu-principal::before{
-    content:"";
+    display:none;
+}
 
-    position:absolute;
 
-    inset:0;
+/* ==========================================================
+   TARJETAS
+   SIN DESENFOCAR EL FONDO
+========================================================== */
 
-    z-index:-1;
+.menu-principal .menu-card{
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
 
-    pointer-events:none;
+    border:
+        1px solid
+        rgba(255,255,255,.92);
 
-    border-radius:inherit;
+    box-shadow:
+        0 14px 34px
+        rgba(12,45,72,.12);
+}
 
+
+/* ==========================================================
+   TARJETA GEOVISORES
+========================================================== */
+
+.menu-principal .card-mapas{
     background:
         linear-gradient(
-            180deg,
-            rgba(255,255,255,.10) 0%,
-            rgba(255,255,255,.04) 42%,
-            rgba(232,247,250,.02) 72%,
-            rgba(219,241,246,.06) 100%
+            155deg,
+            rgba(255,255,255,.97),
+            rgba(238,248,255,.94)
         );
+}
+
+
+/* ==========================================================
+   TARJETA IA
+========================================================== */
+
+.menu-principal .card-ia{
+    background:
+        linear-gradient(
+            155deg,
+            rgba(255,255,255,.97),
+            rgba(235,250,245,.94)
+        );
+}
+
+
+/* ==========================================================
+   TARJETA CAPAS
+========================================================== */
+
+.menu-principal .card-capas{
+    background:
+        linear-gradient(
+            155deg,
+            rgba(255,255,255,.97),
+            rgba(241,239,255,.94)
+        );
+}
+
+
+/* ==========================================================
+   TARJETA TRIBUTARIA
+========================================================== */
+
+.menu-principal .card-tributario{
+    background:
+        linear-gradient(
+            155deg,
+            rgba(255,255,255,.97),
+            rgba(255,245,233,.95)
+        );
+}
+
+
+/* ==========================================================
+   BIENVENIDA
+========================================================== */
+
+.menu-principal-header{
+    position:relative;
+}
+
+
+/* DATOS · TERRITORIO · DECISIONES */
+
+.menu-eyebrow{
+    color:#476e88;
+}
+
+
+/* BIENVENIDO A TERRI+ */
+
+.menu-principal-header h2{
+    color:#0C2D48;
+
+    text-shadow:
+        0 1px 2px
+        rgba(255,255,255,.85);
+}
+
+
+/* SUBTÍTULO */
+
+.menu-principal-header p{
+    color:#3f6279;
+
+    text-shadow:
+        0 1px 2px
+        rgba(255,255,255,.85);
+}
+
+
+/* ==========================================================
+   FRANJA INFERIOR
+========================================================== */
+
+.menu-beneficios{
+    background:
+        rgba(255,255,255,.92);
+
+    border:
+        1px solid
+        rgba(255,255,255,.96);
+
+    /*
+       Sin blur.
+       El fondo que queda alrededor permanece nítido.
+    */
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
+
+    box-shadow:
+        0 8px 22px
+        rgba(12,45,72,.09);
 }
 
 
@@ -3264,18 +3382,11 @@ body{
 @media(max-width:900px){
 
     .menu-principal{
-
-        background-position:center center;
-
         background-image:
-            linear-gradient(
-                90deg,
-                rgba(248,252,253,.72) 0%,
-                rgba(245,251,252,.65) 50%,
-                rgba(238,249,251,.55) 100%
-            ),
             url("../fondo_terri+.png");
 
+        background-size:cover;
+        background-position:center center;
     }
 
 }
@@ -3290,33 +3401,36 @@ body{
     .menu-principal{
 
         /*
-           En celular aumentamos ligeramente el velo
-           para que las líneas topográficas no compitan
-           con las tarjetas.
+           Seguimos usando el fondo original.
+           No lo blanqueamos ni desenfocamos.
         */
 
         background-image:
-            linear-gradient(
-                180deg,
-                rgba(248,252,253,.80) 0%,
-                rgba(244,251,252,.70) 48%,
-                rgba(237,248,250,.62) 100%
-            ),
             url("../fondo_terri+.png");
 
         background-size:cover;
-
         background-position:center center;
-
         background-repeat:no-repeat;
     }
 
 
     .menu-principal::before{
+        display:none;
+    }
+
+
+    .menu-principal .menu-card{
+        -webkit-backdrop-filter:none;
+        backdrop-filter:none;
+    }
+
+
+    .menu-beneficios{
+        -webkit-backdrop-filter:none;
+        backdrop-filter:none;
 
         background:
-            rgba(245,251,252,.04);
-
+            rgba(255,255,255,.94);
     }
 
 }
@@ -3329,9 +3443,7 @@ body{
 @media(max-width:390px){
 
     .menu-principal{
-
         background-position:center center;
-
     }
 
 }
