@@ -3186,3 +3186,217 @@ body{
     }
 
 }
+
+
+/* ==========================================================
+   TERRI+ - PORTADA CON FOTOGRAFÍA REAL DE SESQUILÉ
+   CAPA FINAL - DEBE PERMANECER AL FINAL DEL CSS
+========================================================== */
+
+.menu-principal{
+    position:relative;
+    isolation:isolate;
+
+    justify-content:flex-start;
+    align-items:stretch;
+
+    padding:
+        clamp(18px,3vh,34px)
+        clamp(20px,4vw,58px);
+
+    background-image:
+        linear-gradient(
+            90deg,
+            rgba(248,252,253,.94) 0%,
+            rgba(247,252,253,.90) 34%,
+            rgba(242,250,252,.82) 62%,
+            rgba(236,248,251,.72) 100%
+        ),
+        url("https://extrategiamedios.com/wp-content/uploads/2026/06/Sesquile-unico-municipio-de-Cundinamarca-seleccionado-para-representar-a-Colombia-en-Best-Tourism-Villages-20263.jpg.webp");
+
+    background-size:cover;
+    background-position:center center;
+    background-repeat:no-repeat;
+
+    border-radius:18px;
+
+    overflow:auto;
+}
+
+/* velo sutil inferior: deja aparecer más el paisaje sin perder legibilidad */
+.menu-principal::before{
+    content:"";
+
+    position:absolute;
+    inset:0;
+
+    z-index:-1;
+
+    pointer-events:none;
+
+    border-radius:inherit;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(255,255,255,.03) 0%,
+            rgba(255,255,255,.02) 62%,
+            rgba(235,247,250,.10) 100%
+        );
+}
+
+
+/* ==========================================================
+   TARJETAS SEMITRANSPARENTES
+========================================================== */
+
+.menu-principal .menu-card{
+    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(8px);
+
+    border:1px solid rgba(255,255,255,.84);
+
+    box-shadow:
+        0 14px 34px rgba(12,45,72,.11),
+        inset 0 0 0 1px rgba(12,45,72,.025);
+}
+
+.menu-principal .card-mapas{
+    background:
+        linear-gradient(
+            155deg,
+            rgba(255,255,255,.95),
+            rgba(238,248,255,.90)
+        );
+}
+
+.menu-principal .card-ia{
+    background:
+        linear-gradient(
+            155deg,
+            rgba(255,255,255,.95),
+            rgba(235,250,245,.90)
+        );
+}
+
+.menu-principal .card-capas{
+    background:
+        linear-gradient(
+            155deg,
+            rgba(255,255,255,.95),
+            rgba(241,239,255,.90)
+        );
+}
+
+.menu-principal .card-tributario{
+    background:
+        linear-gradient(
+            155deg,
+            rgba(255,255,255,.95),
+            rgba(255,245,233,.91)
+        );
+}
+
+
+/* ==========================================================
+   BIENVENIDA - CONTRASTE SOBRE LA FOTO
+========================================================== */
+
+.menu-principal-header{
+    position:relative;
+}
+
+.menu-eyebrow{
+    color:#54758d;
+}
+
+.menu-principal-header h2{
+    color:#0C2D48;
+
+    text-shadow:
+        0 1px 0 rgba(255,255,255,.70);
+}
+
+.menu-principal-header p{
+    color:#45677d;
+
+    text-shadow:
+        0 1px 0 rgba(255,255,255,.60);
+}
+
+
+/* ==========================================================
+   FRANJA INFERIOR TIPO CRISTAL
+========================================================== */
+
+.menu-beneficios{
+    background:rgba(255,255,255,.82);
+
+    border:1px solid rgba(255,255,255,.88);
+
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
+
+    box-shadow:
+        0 8px 22px rgba(12,45,72,.08);
+}
+
+
+/* ==========================================================
+   PORTÁTIL / TABLET
+========================================================== */
+
+@media(max-width:1100px){
+
+    .menu-principal{
+        background-position:center center;
+    }
+
+}
+
+
+/* ==========================================================
+   MÓVIL
+   Más velo para garantizar lectura sobre cualquier zona de foto
+========================================================== */
+
+@media(max-width:700px){
+
+    .menu-principal{
+        background-image:
+            linear-gradient(
+                180deg,
+                rgba(248,252,253,.95) 0%,
+                rgba(244,251,252,.90) 48%,
+                rgba(237,248,250,.80) 100%
+            ),
+            url("https://extrategiamedios.com/wp-content/uploads/2026/06/Sesquile-unico-municipio-de-Cundinamarca-seleccionado-para-representar-a-Colombia-en-Best-Tourism-Villages-20263.jpg.webp");
+
+        background-position:center center;
+        background-size:cover;
+    }
+
+    .menu-principal .menu-card{
+        -webkit-backdrop-filter:blur(7px);
+        backdrop-filter:blur(7px);
+    }
+
+    .menu-beneficios{
+        background:rgba(255,255,255,.86);
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR MUY ESTRECHO
+========================================================== */
+
+@media(max-width:390px){
+
+    .menu-principal{
+        background-position:center center;
+    }
+
+}
+
