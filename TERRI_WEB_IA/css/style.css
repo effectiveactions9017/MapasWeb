@@ -2333,3 +2333,541 @@ body{
     height:100vh;
     height:100dvh;
 }
+
+
+/* ==========================================================
+   TERRI+ - PORTADA PRINCIPAL MINIMALISTA
+   Debe permanecer al FINAL del CSS
+========================================================== */
+
+.menu-principal{
+    position:relative;
+    justify-content:flex-start;
+    align-items:stretch;
+    padding:clamp(18px,3vh,34px) clamp(20px,4vw,58px);
+    background:
+        radial-gradient(circle at 82% 15%,rgba(63,142,208,.13),transparent 28%),
+        radial-gradient(circle at 10% 92%,rgba(162,217,206,.20),transparent 30%),
+        linear-gradient(135deg,#f9fcfd,#edf5f8);
+    overflow:auto;
+}
+
+.menu-principal-header{
+    width:100%;
+    max-width:1400px;
+    margin:0 auto clamp(16px,2.4vh,28px);
+    text-align:left;
+}
+
+.menu-eyebrow{
+    margin-bottom:7px;
+    color:#6c8799;
+    font-size:clamp(8px,.72vw,12px);
+    font-weight:700;
+    letter-spacing:.26em;
+}
+
+.menu-principal-header h2{
+    margin:0 0 8px;
+    color:#0C2D48;
+    font-size:clamp(30px,3vw,47px);
+    font-weight:800;
+    line-height:1.03;
+    letter-spacing:-1px;
+}
+
+.menu-principal-header h2 span{
+    color:#39a99c;
+}
+
+.menu-principal-header p{
+    max-width:720px;
+    margin:0;
+    color:#587286;
+    font-size:clamp(13px,1.05vw,17px);
+    line-height:1.4;
+}
+
+.menu-principal-grid{
+    width:100%;
+    max-width:1400px;
+    min-height:0;
+    flex:0 0 auto;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    grid-template-rows:none;
+    gap:clamp(12px,1.25vw,20px);
+    align-items:stretch;
+}
+
+.menu-principal .menu-card{
+    position:relative;
+    min-width:0;
+    min-height:clamp(280px,40vh,370px);
+    padding:clamp(19px,1.8vw,28px);
+    border:1px solid rgba(255,255,255,.9);
+    border-radius:24px;
+    box-shadow:0 14px 34px rgba(12,45,72,.10);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    transition:transform .22s ease,box-shadow .22s ease;
+}
+
+.menu-principal .menu-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 20px 42px rgba(12,45,72,.15);
+}
+
+.menu-principal .card-mapas{
+    background:linear-gradient(155deg,#fff,#eef8ff);
+}
+
+.menu-principal .card-ia{
+    background:linear-gradient(155deg,#fff,#ebfaf5);
+}
+
+.menu-principal .card-capas{
+    background:linear-gradient(155deg,#fff,#f1efff);
+}
+
+.menu-principal .card-tributario{
+    background:linear-gradient(155deg,#fff,#fff5e9);
+}
+
+.menu-principal .menu-icon{
+    width:clamp(58px,4.6vw,74px);
+    height:clamp(58px,4.6vw,74px);
+    flex:0 0 auto;
+    margin:0 0 clamp(14px,1.5vh,19px);
+    display:grid;
+    place-items:center;
+    border-radius:20px;
+    box-shadow:none;
+}
+
+.menu-principal .menu-icon svg{
+    width:55%;
+    height:55%;
+    display:block;
+    filter:none;
+}
+
+.menu-principal .menu-icon-mapas{
+    color:#1268a8;
+    background:#dff1ff;
+}
+
+.menu-principal .menu-icon-ia{
+    color:#087f76;
+    background:#dff5ee;
+}
+
+.menu-principal .menu-icon-capas{
+    color:#5145c7;
+    background:#e8e5ff;
+}
+
+.menu-principal .menu-icon-tributario{
+    color:#df650b;
+    background:#fff0dc;
+}
+
+.menu-principal .menu-icon-capas svg{
+    width:55%;
+    height:55%;
+    filter:none;
+}
+
+.menu-principal .menu-card h3{
+    margin:0 0 9px;
+    color:#0C2D48;
+    font-size:clamp(17px,1.3vw,22px);
+    font-weight:800;
+    line-height:1.12;
+    letter-spacing:-.3px;
+}
+
+.menu-principal .menu-card p{
+    margin:0 0 18px;
+    color:#526d80;
+    font-size:clamp(11.5px,.86vw,14px);
+    line-height:1.43;
+}
+
+.menu-principal .menu-card p::after{
+    content:"";
+    display:block;
+    width:40px;
+    height:3px;
+    margin-top:14px;
+    border-radius:999px;
+}
+
+.menu-principal .card-mapas p::after{background:#268bd2;}
+.menu-principal .card-ia p::after{background:#18a67f;}
+.menu-principal .card-capas p::after{background:#6457df;}
+.menu-principal .card-tributario p::after{background:#ef720e;}
+
+.menu-principal .menu-card button{
+    width:100%;
+    height:46px;
+    margin-top:auto;
+    padding:0 12px 0 18px;
+    border:0;
+    border-radius:999px;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    font-family:'Segoe UI',Arial,sans-serif;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 8px 18px rgba(12,45,72,.13);
+    transition:transform .18s ease,filter .18s ease,box-shadow .18s ease;
+}
+
+.menu-principal .menu-card button span{
+    flex:1;
+    text-align:center;
+}
+
+.menu-principal .menu-card button strong{
+    width:29px;
+    height:29px;
+    flex:0 0 29px;
+    display:grid;
+    place-items:center;
+    border-radius:50%;
+    background:rgba(255,255,255,.13);
+    font-size:19px;
+    font-weight:400;
+}
+
+.menu-principal .card-mapas button{
+    background:linear-gradient(135deg,#1679ba,#0e5f99);
+}
+
+.menu-principal .card-ia button{
+    background:linear-gradient(135deg,#17a47e,#087f70);
+}
+
+.menu-principal .card-capas button{
+    background:linear-gradient(135deg,#6758e7,#4936c7);
+}
+
+.menu-principal .card-tributario button{
+    background:linear-gradient(135deg,#ff8617,#e95d05);
+}
+
+.menu-principal .menu-card button:hover{
+    transform:translateY(-1px);
+    filter:brightness(1.04);
+    box-shadow:0 11px 22px rgba(12,45,72,.18);
+}
+
+.menu-beneficios{
+    width:100%;
+    max-width:1400px;
+    margin:clamp(15px,2vh,24px) auto 0;
+    padding:12px clamp(12px,2vw,28px);
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(12,45,72,.07);
+    border-radius:17px;
+    box-shadow:0 8px 22px rgba(12,45,72,.06);
+}
+
+.menu-beneficios > div{
+    min-width:0;
+    padding:0 12px;
+    display:flex;
+    align-items:baseline;
+    justify-content:center;
+    gap:5px;
+    color:#567185;
+    font-size:11px;
+    text-align:center;
+}
+
+.menu-beneficios > div + div{
+    border-left:1px solid #dce6ec;
+}
+
+.menu-beneficios strong{
+    color:#0C2D48;
+    font-size:12px;
+}
+
+/* Portátil / tablet */
+@media(max-width:1100px){
+    .menu-principal{
+        padding:16px 18px;
+    }
+
+    .menu-principal-grid{
+        max-width:900px;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:11px;
+    }
+
+    .menu-principal-header,
+    .menu-beneficios{
+        max-width:900px;
+    }
+
+    .menu-principal .menu-card{
+        min-height:230px;
+        padding:16px;
+    }
+
+    .menu-principal .menu-icon{
+        width:50px;
+        height:50px;
+        margin-bottom:10px;
+        border-radius:15px;
+    }
+
+    .menu-principal .menu-card h3{
+        font-size:17px;
+    }
+
+    .menu-principal .menu-card p{
+        font-size:11.5px;
+        margin-bottom:12px;
+    }
+
+    .menu-principal .menu-card p::after{
+        margin-top:8px;
+    }
+
+    .menu-principal .menu-card button{
+        height:38px;
+        font-size:11.5px;
+    }
+
+    .menu-principal .menu-card button strong{
+        width:24px;
+        height:24px;
+        flex-basis:24px;
+        font-size:16px;
+    }
+}
+
+/* Móvil */
+@media(max-width:700px){
+    .menu-principal{
+        justify-content:flex-start;
+        padding:11px 9px;
+        overflow-y:auto;
+        overflow-x:hidden;
+    }
+
+    .menu-principal-header{
+        margin-bottom:12px;
+    }
+
+    .menu-eyebrow{
+        margin-bottom:4px;
+        font-size:7px;
+        letter-spacing:.18em;
+    }
+
+    .menu-principal-header h2{
+        margin-bottom:4px;
+        font-size:23px;
+        letter-spacing:-.4px;
+    }
+
+    .menu-principal-header p{
+        font-size:10.5px;
+        line-height:1.28;
+    }
+
+    .menu-principal-grid{
+        grid-template-columns:1fr;
+        grid-template-rows:none;
+        gap:8px;
+    }
+
+    .menu-principal .menu-card{
+        min-height:0;
+        padding:11px;
+        display:grid;
+        grid-template-columns:46px minmax(0,1fr) 36px;
+        grid-template-rows:auto auto;
+        column-gap:9px;
+        row-gap:2px;
+        align-items:center;
+        border-radius:15px;
+    }
+
+    .menu-principal .menu-card p::after{
+        display:none;
+    }
+
+    .menu-principal .menu-icon{
+        grid-column:1;
+        grid-row:1 / span 2;
+        width:46px;
+        height:46px;
+        margin:0;
+        border-radius:13px;
+    }
+
+    .menu-principal .menu-card h3{
+        grid-column:2;
+        grid-row:1;
+        margin:0 0 2px;
+        font-size:13px;
+    }
+
+    .menu-principal .menu-card p{
+        grid-column:2;
+        grid-row:2;
+        margin:0;
+        font-size:9px;
+        line-height:1.2;
+    }
+
+    .menu-principal .menu-card button{
+        grid-column:3;
+        grid-row:1 / span 2;
+        width:34px;
+        height:34px;
+        min-width:34px;
+        margin:0;
+        padding:0;
+        border-radius:50%;
+        display:grid;
+        place-items:center;
+    }
+
+    .menu-principal .menu-card button span{
+        display:none;
+    }
+
+    .menu-principal .menu-card button strong{
+        width:auto;
+        height:auto;
+        min-width:0;
+        background:transparent;
+        font-size:19px;
+    }
+
+    .menu-beneficios{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        margin-top:9px;
+        padding:7px;
+        border-radius:13px;
+    }
+
+    .menu-beneficios > div{
+        padding:4px;
+        border:0 !important;
+        display:block;
+        font-size:7.5px;
+    }
+
+    .menu-beneficios strong{
+        display:block;
+        font-size:8.5px;
+    }
+}
+
+/* Celulares estrechos */
+@media(max-width:390px){
+    .menu-principal{
+        padding:8px 6px;
+    }
+
+    .menu-principal-header h2{
+        font-size:20px;
+    }
+
+    .menu-principal-header p{
+        font-size:9.5px;
+    }
+
+    .menu-principal .menu-card{
+        grid-template-columns:41px minmax(0,1fr) 31px;
+        column-gap:7px;
+        padding:9px;
+    }
+
+    .menu-principal .menu-icon{
+        width:41px;
+        height:41px;
+    }
+
+    .menu-principal .menu-card h3{
+        font-size:11.5px;
+    }
+
+    .menu-principal .menu-card p{
+        font-size:8px;
+    }
+
+    .menu-principal .menu-card button{
+        width:30px;
+        height:30px;
+        min-width:30px;
+    }
+}
+
+/* Pantallas anchas pero de poca altura */
+@media(max-height:760px) and (min-width:1101px){
+    .menu-principal{
+        padding-top:12px;
+        padding-bottom:12px;
+    }
+
+    .menu-principal-header{
+        margin-bottom:10px;
+    }
+
+    .menu-principal-header h2{
+        font-size:32px;
+    }
+
+    .menu-principal .menu-card{
+        min-height:235px;
+        padding:15px;
+    }
+
+    .menu-principal .menu-icon{
+        width:48px;
+        height:48px;
+        margin-bottom:8px;
+    }
+
+    .menu-principal .menu-card h3{
+        font-size:17px;
+    }
+
+    .menu-principal .menu-card p{
+        font-size:10.5px;
+        line-height:1.25;
+        margin-bottom:10px;
+    }
+
+    .menu-principal .menu-card p::after{
+        margin-top:7px;
+    }
+
+    .menu-principal .menu-card button{
+        height:36px;
+        font-size:11px;
+    }
+
+    .menu-beneficios{
+        margin-top:10px;
+        padding:8px;
+    }
+}
+
