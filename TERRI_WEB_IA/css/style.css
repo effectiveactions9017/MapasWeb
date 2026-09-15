@@ -1847,3 +1847,489 @@ body{
 #sidebarMapas button:hover svg{
     stroke:#0875ce;
 }
+
+/* ==========================================================
+   TERRI+ - CAPA RESPONSIVE GLOBAL FINAL
+   Ajuste de la carcasa para monitor, portátil, tablet y móvil
+   IMPORTANTE: esta sección debe permanecer al FINAL del CSS.
+========================================================== */
+
+:root{
+    --terri-header-h: clamp(78px, 11vh, 120px);
+    --terri-shell-gap: clamp(5px, 1vw, 15px);
+}
+
+html,
+body{
+    width:100%;
+    height:100%;
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
+}
+
+body{
+    width:100%;
+    height:100vh;
+    height:100dvh;
+}
+
+.header{
+    width:100%;
+    height:var(--terri-header-h);
+    min-height:var(--terri-header-h);
+    max-height:var(--terri-header-h);
+    flex:0 0 var(--terri-header-h);
+    padding-inline:clamp(10px, 2vw, 28px);
+}
+
+.header-content{
+    width:min(100%, 1100px);
+    min-width:0;
+    gap:clamp(10px, 2vw, 28px);
+}
+
+.header-logo{
+    height:clamp(44px, 7vh, 75px);
+    max-width:22vw;
+}
+
+.header h1{
+    font-size:clamp(26px, 4vw, 44px);
+    letter-spacing:clamp(3px, .55vw, 6px);
+    white-space:nowrap;
+}
+
+.header p{
+    margin-top:clamp(3px, .7vh, 8px);
+    font-size:clamp(10px, 1.35vw, 17px);
+    line-height:1.2;
+}
+
+.app{
+    width:100%;
+    height:calc(100vh - var(--terri-header-h));
+    height:calc(100dvh - var(--terri-header-h));
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
+}
+
+.sidebar{
+    flex:0 0 clamp(225px, 20vw, 285px);
+    width:clamp(225px, 20vw, 285px);
+    min-width:0;
+    max-width:285px;
+    height:100%;
+    padding:clamp(12px, 1.6vw, 24px) clamp(8px, 1vw, 14px);
+}
+
+.sidebar h2{
+    font-size:clamp(16px, 1.45vw, 21px);
+}
+
+.sidebar button{
+    min-height:clamp(40px, 5.2vh, 48px);
+    padding:clamp(7px, .9vw, 10px) clamp(8px, 1vw, 13px);
+    font-size:clamp(12px, 1vw, 14px);
+}
+
+#sidebarMapas button span{
+    min-width:0;
+    font-size:clamp(12px, 1vw, 14px);
+    line-height:1.15;
+    overflow-wrap:anywhere;
+}
+
+#sidebarMapas button svg{
+    width:clamp(17px, 1.4vw, 20px);
+    height:clamp(17px, 1.4vw, 20px);
+    min-width:clamp(17px, 1.4vw, 20px);
+}
+
+.visor-contenedor{
+    flex:1 1 auto;
+    width:auto;
+    min-width:0;
+    min-height:0;
+    padding:var(--terri-shell-gap);
+    overflow:hidden;
+}
+
+.inicio,
+.modulo,
+.visor-inteligente,
+.visor-area{
+    width:100%;
+    min-width:0;
+    min-height:0;
+}
+
+.modulo{
+    height:100%;
+}
+
+.visor-head{
+    width:100%;
+    height:auto;
+    min-height:clamp(66px, 9vh, 90px);
+    max-height:none;
+    flex:0 0 auto;
+    gap:clamp(8px, 1.2vw, 18px);
+    padding:clamp(9px, 1.2vw, 15px) clamp(10px, 1.5vw, 18px);
+    margin-bottom:var(--terri-shell-gap);
+    overflow:visible;
+}
+
+.visor-head > div:first-child{
+    min-width:0;
+}
+
+.visor-title{
+    font-size:clamp(17px, 2vw, 25px);
+    line-height:1.15;
+    overflow-wrap:anywhere;
+}
+
+.visor-sub{
+    margin:4px 0 0;
+    font-size:clamp(10px, 1.05vw, 14px);
+    line-height:1.25;
+    overflow-wrap:anywhere;
+}
+
+.visor-head-actions{
+    max-width:55%;
+    gap:clamp(5px, .7vw, 8px);
+    flex-wrap:wrap;
+}
+
+.visor-head-actions .visor-full-btn{
+    height:clamp(30px, 4.2vh, 34px);
+    padding:0 clamp(8px, 1vw, 13px);
+    font-size:clamp(10px, .9vw, 13px);
+}
+
+.visor-inteligente,
+.visor-area{
+    flex:1 1 auto;
+    height:auto;
+    overflow:hidden;
+}
+
+.visor-frame,
+.visor-area .visor-frame{
+    flex:1 1 0;
+    width:100%;
+    height:100%;
+    min-width:0;
+    min-height:0;
+    border-radius:clamp(8px, 1vw, 15px);
+}
+
+.menu-principal{
+    width:100%;
+    height:100%;
+    min-width:0;
+    min-height:0;
+    padding:clamp(6px, 1.5vw, 20px) clamp(6px, 2vw, 28px);
+}
+
+.menu-principal-header{
+    margin-bottom:clamp(6px, 1.2vh, 16px);
+}
+
+.menu-principal-header h2{
+    font-size:clamp(16px, 2.2vw, 34px);
+}
+
+.menu-principal-header p{
+    font-size:clamp(9px, 1.15vw, 17px);
+}
+
+.menu-principal-grid{
+    width:100%;
+    max-width:min(1100px, 100%);
+    min-height:0;
+    gap:clamp(5px, 1vw, 14px);
+}
+
+.menu-principal .menu-card{
+    min-width:0;
+    min-height:0;
+    padding:clamp(6px, 1.5vw, 18px) clamp(6px, 1.7vw, 20px);
+    border-radius:clamp(10px, 1.4vw, 20px);
+}
+
+.menu-principal .menu-icon{
+    width:clamp(31px, 4vw, 58px);
+    height:clamp(31px, 4vw, 58px);
+    flex-basis:clamp(31px, 4vw, 58px);
+    margin-bottom:clamp(4px, .8vh, 10px);
+    font-size:clamp(17px, 2.2vw, 29px);
+}
+
+.menu-principal .menu-card h3{
+    font-size:clamp(10px, 1.45vw, 23px);
+}
+
+.menu-principal .menu-card p{
+    font-size:clamp(7px, .95vw, 14.5px);
+    line-height:1.2;
+}
+
+.menu-principal .menu-card button{
+    height:clamp(25px, 4.5vh, 42px);
+    padding-inline:clamp(4px, 1vw, 14px);
+    font-size:clamp(7.5px, .95vw, 13.5px);
+}
+
+.home-portada{
+    width:100%;
+    height:100%;
+    min-width:0;
+    min-height:0;
+    padding:clamp(8px, 1.5vw, 20px);
+}
+
+.home-encabezado{
+    height:clamp(110px, 20vh, 170px);
+    padding:clamp(16px, 2.4vw, 34px);
+}
+
+.home-wrapper{
+    grid-template-columns:minmax(0, 1.05fr) minmax(0, .95fr);
+    gap:clamp(10px, 1.6vw, 22px);
+}
+
+.home-box{
+    min-width:0;
+    padding:clamp(14px, 2vw, 26px);
+}
+
+.home-title{
+    font-size:clamp(20px, 2.2vw, 30px);
+}
+
+.home-text{
+    font-size:clamp(13px, 1.4vw, 18px);
+}
+
+.home-text-principal{
+    font-size:clamp(15px, 1.65vw, 21px);
+}
+
+.home-subtitle{
+    font-size:clamp(17px, 1.9vw, 24px);
+}
+
+.home-list li{
+    font-size:clamp(11px, 1.2vw, 15.8px);
+}
+
+/* Portátiles y tablets */
+@media (max-width:900px){
+    .sidebar{
+        flex-basis:230px;
+        width:230px;
+        max-width:230px;
+    }
+
+    .visor-head{
+        align-items:flex-start;
+    }
+
+    .visor-head-actions{
+        max-width:48%;
+    }
+
+    .home-wrapper{
+        grid-template-columns:1fr;
+    }
+}
+
+/* Móvil: la carcasa se vuelve vertical y evita que el sidebar robe el ancho */
+@media (max-width:700px){
+    :root{
+        --terri-header-h:72px;
+        --terri-shell-gap:5px;
+    }
+
+    .header-content{
+        justify-content:flex-start;
+    }
+
+    .header-logo{
+        height:40px;
+        max-width:18vw;
+    }
+
+    .header h1{
+        font-size:23px;
+        letter-spacing:3px;
+    }
+
+    .header p{
+        font-size:9.5px;
+    }
+
+    .app{
+        position:relative;
+        display:block;
+    }
+
+    .sidebar{
+        position:absolute;
+        inset:0 auto 0 0;
+        z-index:50;
+        width:min(82vw, 285px);
+        min-width:0;
+        max-width:285px;
+        height:100%;
+        padding:12px 8px;
+        box-shadow:8px 0 24px rgba(12,45,72,.14);
+    }
+
+    .visor-contenedor{
+        width:100%;
+        height:100%;
+        padding:5px;
+    }
+
+    .visor-head{
+        min-height:0;
+        flex-direction:column;
+        align-items:stretch;
+        gap:7px;
+        padding:8px 9px;
+    }
+
+    .visor-head-actions{
+        width:100%;
+        max-width:none;
+        justify-content:flex-start;
+        gap:5px;
+    }
+
+    .visor-head-actions .visor-full-btn{
+        flex:1 1 auto;
+        min-width:max-content;
+        height:30px;
+        padding:0 7px;
+        font-size:9.5px;
+    }
+
+    .visor-title{
+        font-size:16px;
+    }
+
+    .visor-sub{
+        font-size:9.5px;
+    }
+
+    .menu-principal{
+        padding:5px;
+    }
+
+    .menu-principal-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        grid-template-rows:repeat(2, minmax(0, 1fr));
+        gap:5px;
+    }
+
+    .menu-principal .menu-card{
+        padding:6px 5px;
+    }
+
+    .menu-principal .menu-card p{
+        font-size:7.5px;
+        line-height:1.1;
+    }
+
+    .home-wrapper{
+        grid-template-columns:1fr;
+    }
+}
+
+/* Celulares estrechos */
+@media (max-width:430px){
+    :root{
+        --terri-header-h:66px;
+    }
+
+    .header-logo{
+        height:36px;
+    }
+
+    .header h1{
+        font-size:20px;
+    }
+
+    .header p{
+        font-size:8.5px;
+    }
+
+    .menu-principal-header h2{
+        font-size:14px;
+    }
+
+    .menu-principal-header p{
+        font-size:8px;
+    }
+
+    .menu-principal .menu-card h3{
+        font-size:9px;
+    }
+
+    .menu-principal .menu-card p{
+        font-size:6.8px;
+    }
+
+    .menu-principal .menu-card button{
+        font-size:7px;
+    }
+}
+
+/* Pantallas bajas: comprime verticalmente sin cortar el iframe */
+@media (max-height:700px) and (min-width:701px){
+    :root{
+        --terri-header-h:84px;
+    }
+
+    .header-logo{
+        height:50px;
+    }
+
+    .header h1{
+        font-size:30px;
+    }
+
+    .header p{
+        font-size:11px;
+    }
+
+    .visor-head{
+        min-height:62px;
+        padding-top:7px;
+        padding-bottom:7px;
+    }
+
+    .sidebar button{
+        min-height:38px;
+        padding-top:6px;
+        padding-bottom:6px;
+    }
+}
+
+/* Pantalla completa */
+.modulo:fullscreen,
+.inicio:fullscreen,
+.visor-contenedor:fullscreen,
+.modulo:-webkit-full-screen,
+.inicio:-webkit-full-screen,
+.visor-contenedor:-webkit-full-screen{
+    --terri-header-h:0px;
+    width:100vw;
+    height:100vh;
+    height:100dvh;
+}
