@@ -1,12 +1,6 @@
 /* ==========================================================
-   TERRI+ - BUSCADOR PREDIAL SESQUILÉ
-   CSS RESPONSIVE
-   PC · PORTÁTIL · TABLET · CELULAR
-========================================================== */
-
-
-/* ==========================================================
-   CONFIGURACIÓN GENERAL
+   BUSCADOR PREDIAL SESQUILÉ
+   RESPONSIVE REAL POR TAMAÑO DE PANTALLA
 ========================================================== */
 
 * {
@@ -17,10 +11,8 @@ html,
 body {
   width: 100%;
   height: 100%;
-
   margin: 0;
   padding: 0;
-
   overflow: hidden;
 
   font-family:
@@ -36,289 +28,143 @@ body {
 
 #map {
   position: absolute;
-
   inset: 0;
 
   width: 100%;
   height: 100%;
-
-  min-width: 0;
-  min-height: 0;
 }
 
 
 /* ==========================================================
-   LEYENDA
+   ESCRITORIO GRANDE
+   Conservamos prácticamente el diseño original
 ========================================================== */
 
 .legend-container {
-
   position: absolute;
 
-  right: clamp(6px, 1vw, 14px);
-  bottom: clamp(18px, 3vh, 28px);
+  right: 8px;
+  bottom: 25px;
 
   z-index: 10;
 
-  width: clamp(
-    145px,
-    16vw,
-    200px
-  );
+  width: 200px;
 
-  max-width:
-    calc(100vw - 20px);
+  padding: 15px;
 
-  padding:
-    clamp(
-      8px,
-      1.2vw,
-      15px
-    );
-
-  background-color:
+  background:
     rgba(0, 0, 0, 0.72);
 
   color: white;
 
-  border-radius:
-    clamp(
-      6px,
-      .8vw,
-      8px
-    );
+  border-radius: 8px;
 
   box-shadow:
-    0 2px 6px
-    rgba(0, 0, 0, 0.40);
-
-  overflow: hidden;
+    0 2px 5px
+    rgba(0, 0, 0, 0.5);
 }
 
 
-/* ==========================================================
-   TÍTULO LEYENDA
-========================================================== */
-
 .legend-title {
-
   margin:
     0
     0
-    clamp(5px, .8vw, 10px)
-    0;
+    10px;
 
   color: white;
 
-  font-size:
-    clamp(
-      11px,
-      .9vw,
-      16px
-    );
-
+  font-size: 16px;
   font-weight: 600;
 
   line-height: 1.2;
-
-  text-align: left;
 }
 
 
-/* ==========================================================
-   LISTA LEYENDA
-========================================================== */
-
 .legend-list {
-
   list-style: none;
 
   padding: 0;
   margin: 0;
-
 }
 
 
 .legend-list li {
-
   display: flex;
 
   align-items: center;
 
-  gap:
-    clamp(
-      5px,
-      .7vw,
-      10px
-    );
+  gap: 10px;
 
-  margin-bottom:
-    clamp(
-      4px,
-      .6vw,
-      8px
-    );
+  margin-bottom: 8px;
 
   color: white;
 
-  font-size:
-    clamp(
-      9px,
-      .78vw,
-      14px
-    );
+  font-size: 14px;
 
-  line-height: 1.2;
-
+  line-height: 1.25;
 }
 
 
-/* ==========================================================
-   COLORES DE LEYENDA
-========================================================== */
-
 .legend-color {
+  width: 18px;
+  height: 18px;
 
-  display: inline-block;
-
-  width:
-    clamp(
-      10px,
-      1.2vw,
-      18px
-    );
-
-  height:
-    clamp(
-      10px,
-      1.2vw,
-      18px
-    );
-
-  min-width:
-    clamp(
-      10px,
-      1.2vw,
-      18px
-    );
-
-  min-height:
-    clamp(
-      10px,
-      1.2vw,
-      18px
-    );
+  min-width: 18px;
 
   flex:
     0
     0
-    clamp(
-      10px,
-      1.2vw,
-      18px
-    );
+    18px;
 
   border-radius: 3px;
 
   border:
-    1px solid
-    rgba(255, 255, 255, .9);
-
+    1px solid white;
 }
 
-
-/* PREDIOS MUNICIPALES */
 
 .legend-color.predios-municipales {
-
-  background-color:
-    #2ec4b6;
-
+  background: #2ec4b6;
 }
 
-
-/* PREDIO SELECCIONADO */
 
 .legend-color.predio-seleccionado {
-
-  background-color:
-    #ffff00;
-
+  background: #ffff00;
 }
 
 
-/* ==========================================================
-   CRÉDITO
-========================================================== */
-
 .legend-container a {
-
   display: block;
 
   margin-top: 5px;
 
+  font-size: 9px !important;
+
   color: #00bcd4 !important;
-
-  font-size:
-    clamp(
-      7px,
-      .65vw,
-      9px
-    ) !important;
-
-  line-height: 1.1;
-
 }
 
 
 /* ==========================================================
-   CAJA DE INFORMACIÓN
+   INFORMACIÓN DEL PREDIO
 ========================================================== */
 
 .info-box {
-
   position: absolute;
 
-  left:
-    clamp(
-      6px,
-      1vw,
-      12px
-    );
-
-  top:
-    clamp(
-      115px,
-      30vh,
-      310px
-    );
+  left: 10px;
+  top: 310px;
 
   z-index: 10;
 
-  width:
-    clamp(
-      155px,
-      18vw,
-      210px
-    );
+  width: 200px;
 
-  max-width:
-    calc(100vw - 20px);
+  max-height: 45vh;
 
-  max-height:
-    45vh;
-
-  padding:
-    clamp(
-      7px,
-      1vw,
-      10px
-    );
+  padding: 10px;
 
   overflow-y: auto;
-  overflow-x: hidden;
 
-  background-color:
+  background:
     rgba(0, 0, 0, 0.72);
 
   color: white;
@@ -328,49 +174,27 @@ body {
     Arial,
     sans-serif;
 
-  font-size:
-    clamp(
-      9px,
-      .75vw,
-      11px
-    );
-
-  line-height: 1.35;
+  font-size: 10px;
 
   border-radius: 8px;
 
   box-shadow:
-    0 2px 6px
-    rgba(0, 0, 0, 0.40);
+    0 2px 5px
+    rgba(0, 0, 0, 0.5);
 
   display: none;
-
 }
 
 
-/* ==========================================================
-   TÍTULO INFORMACIÓN
-========================================================== */
-
 .info-box h3 {
-
   margin:
     0
     0
-    8px
-    0;
+    10px;
 
-  font-size:
-    clamp(
-      11px,
-      .95vw,
-      14px
-    );
+  font-size: 14px;
 
   font-weight: 700;
-
-  line-height: 1.2;
-
 }
 
 
@@ -378,71 +202,38 @@ body {
    POPUP
 ========================================================== */
 
-.custom-popup {
-
-  max-width:
-    min(
-      280px,
-      calc(100vw - 24px)
-    );
-
-}
-
-
 .custom-popup .mapboxgl-popup-content {
-
-  max-width:
-    min(
-      260px,
-      calc(100vw - 28px)
-    );
-
+  max-width: 250px;
   max-height: 50vh;
 
   overflow-y: auto;
-  overflow-x: hidden;
 
   padding:
-    clamp(
-      8px,
-      1vw,
-      15px
-    );
+    10px
+    15px;
 
-  background-color:
+  background:
     rgba(0, 0, 0, 0.84);
 
-  color: #ffffff;
+  color: white;
 
   border-radius: 8px;
 
-  font-size:
-    clamp(
-      10px,
-      .78vw,
-      13px
-    );
+  font-size: 13px;
 
   line-height: 1.35;
-
-  overflow-wrap: anywhere;
-
 }
 
 
 .mapboxgl-popup-content a {
-
   color: #00bcd4;
 
   text-decoration: none;
-
 }
 
 
 .mapboxgl-popup-content a:hover {
-
   text-decoration: underline;
-
 }
 
 
@@ -458,10 +249,8 @@ body {
 
 .mapboxgl-popup-anchor-top-right
 .mapboxgl-popup-tip {
-
   border-bottom-color:
     rgba(0, 0, 0, 0.84);
-
 }
 
 
@@ -473,158 +262,170 @@ body {
 
 .mapboxgl-popup-anchor-bottom-right
 .mapboxgl-popup-tip {
-
   border-top-color:
     rgba(0, 0, 0, 0.84);
-
 }
 
 
 .mapboxgl-popup-anchor-left
 .mapboxgl-popup-tip {
-
   border-right-color:
     rgba(0, 0, 0, 0.84);
-
 }
 
 
 .mapboxgl-popup-anchor-right
 .mapboxgl-popup-tip {
-
   border-left-color:
     rgba(0, 0, 0, 0.84);
-
 }
 
 
 /* ==========================================================
-   GEOCODER / BUSCADOR
+   BUSCADOR
 ========================================================== */
 
 .mapboxgl-ctrl-geocoder {
-
-  width:
-    clamp(
-      190px,
-      30vw,
-      300px
-    ) !important;
-
+  width: 300px !important;
   max-width:
-    calc(100vw - 80px) !important;
-
-  min-width: 0 !important;
-
-  font-size:
-    clamp(
-      11px,
-      .85vw,
-      14px
-    ) !important;
-
-}
-
-
-.mapboxgl-ctrl-geocoder input {
-
-  font-size:
-    clamp(
-      11px,
-      .85vw,
-      14px
-    ) !important;
-
+    calc(100vw - 90px) !important;
 }
 
 
 /* ==========================================================
-   CONTROLES MAPBOX
+   PORTÁTIL
+   901px - 1200px
 ========================================================== */
 
-.mapboxgl-ctrl-group {
-
-  border-radius: 7px !important;
-
-}
-
-
-.mapboxgl-ctrl-group button {
-
-  width:
-    clamp(
-      26px,
-      2.2vw,
-      30px
-    );
-
-  height:
-    clamp(
-      26px,
-      2.2vw,
-      30px
-    );
-
-}
-
-
-/* ==========================================================
-   PORTÁTIL / TABLET
-========================================================== */
-
-@media (max-width: 900px) {
+@media
+(max-width: 1200px)
+and
+(min-width: 901px) {
 
   .legend-container {
+    width: 180px;
 
-    width: 155px;
-
-    right: 7px;
-    bottom: 20px;
-
-    padding: 9px;
-
+    padding: 12px;
   }
 
 
   .legend-title {
+    margin-bottom: 8px;
 
-    font-size: 12px;
-
-    margin-bottom: 6px;
-
+    font-size: 14px;
   }
 
 
   .legend-list li {
+    gap: 8px;
 
+    margin-bottom: 6px;
+
+    font-size: 12px;
+  }
+
+
+  .legend-color {
+    width: 15px;
+    height: 15px;
+
+    min-width: 15px;
+
+    flex-basis: 15px;
+  }
+
+
+  .info-box {
+    width: 185px;
+
+    top: 250px;
+  }
+
+
+  .mapboxgl-ctrl-geocoder {
+    width: 270px !important;
+  }
+
+}
+
+
+/* ==========================================================
+   TABLET
+   601px - 900px
+========================================================== */
+
+@media
+(max-width: 900px)
+and
+(min-width: 601px) {
+
+  .legend-container {
+    width: 160px;
+
+    right: 7px;
+    bottom: 20px;
+
+    padding: 10px;
+  }
+
+
+  .legend-title {
+    margin-bottom: 6px;
+
+    font-size: 12px;
+  }
+
+
+  .legend-list li {
     gap: 6px;
 
     margin-bottom: 5px;
 
     font-size: 10px;
-
   }
 
 
   .legend-color {
-
     width: 12px;
     height: 12px;
 
     min-width: 12px;
-    min-height: 12px;
 
     flex-basis: 12px;
+  }
 
+
+  .legend-container a {
+    font-size:
+      7.5px !important;
   }
 
 
   .info-box {
+    left: 7px;
+    top: 150px;
 
-    top: 120px;
+    width: 170px;
 
-    width: 175px;
+    font-size: 9.5px;
+  }
 
+
+  .info-box h3 {
+    font-size: 12px;
+  }
+
+
+  .custom-popup
+  .mapboxgl-popup-content {
+    max-width: 220px;
+
+    font-size: 11px;
+  }
+
+
+  .mapboxgl-ctrl-geocoder {
+    width: 230px !important;
   }
 
 }
@@ -632,184 +433,129 @@ body {
 
 /* ==========================================================
    CELULAR
+   <= 600px
 ========================================================== */
 
-@media (max-width: 600px) {
-
-  /*
-     En móvil dejamos el mapa como protagonista.
-  */
+@media
+(max-width: 600px) {
 
   .legend-container {
+    width: 128px;
 
-    right: 6px;
+    right: 5px;
     bottom: 18px;
 
-    width: 132px;
+    padding: 7px;
 
-    padding:
-      7px
-      8px;
-
-    border-radius: 7px;
-
-    background-color:
-      rgba(0, 0, 0, 0.72);
-
+    border-radius: 6px;
   }
 
 
   .legend-title {
-
     margin-bottom: 4px;
 
-    font-size: 10px;
-
-    line-height: 1.1;
-
+    font-size: 9px;
   }
 
 
   .legend-list li {
-
-    gap: 5px;
+    gap: 4px;
 
     margin-bottom: 3px;
 
-    font-size: 8.5px;
+    font-size: 7.5px;
 
     line-height: 1.1;
-
   }
 
 
   .legend-color {
+    width: 8px;
+    height: 8px;
 
-    width: 9px;
-    height: 9px;
+    min-width: 8px;
 
-    min-width: 9px;
-    min-height: 9px;
-
-    flex:
-      0
-      0
-      9px;
+    flex-basis: 8px;
 
     border-radius: 2px;
-
   }
 
 
   .legend-container a {
-
     margin-top: 3px;
 
     font-size:
-      6.5px !important;
-
+      6px !important;
   }
 
 
-  /* ----------------------------------------------
-     INFORMACIÓN DEL PREDIO
-  ---------------------------------------------- */
+  /* INFORMACIÓN */
 
   .info-box {
-
-    left: 6px;
-    top: 92px;
+    left: 5px;
+    top: 85px;
 
     width:
       min(
-        165px,
-        calc(100vw - 20px)
+        150px,
+        calc(100vw - 15px)
       );
 
-    max-height: 35vh;
+    max-height: 32vh;
 
     padding: 7px;
 
-    font-size: 9px;
-
+    font-size: 8.5px;
   }
 
 
   .info-box h3 {
-
     margin-bottom: 5px;
 
-    font-size: 11px;
-
-  }
-
-
-  /* ----------------------------------------------
-     POPUP
-  ---------------------------------------------- */
-
-  .custom-popup .mapboxgl-popup-content {
-
-    max-width:
-      calc(100vw - 40px);
-
-    max-height: 42vh;
-
-    padding:
-      8px
-      9px;
-
     font-size: 10px;
-
   }
 
 
-  /* ----------------------------------------------
-     BUSCADOR
-  ---------------------------------------------- */
+  /* POPUP */
+
+  .custom-popup
+  .mapboxgl-popup-content {
+    max-width:
+      calc(100vw - 35px);
+
+    max-height: 40vh;
+
+    padding: 8px;
+
+    font-size: 9.5px;
+  }
+
+
+  /* BUSCADOR */
 
   .mapboxgl-ctrl-geocoder {
-
     width:
       min(
-        220px,
-        calc(100vw - 72px)
+        210px,
+        calc(100vw - 75px)
       ) !important;
 
-    max-width:
-      calc(100vw - 72px) !important;
-
     min-width: 0 !important;
-
   }
 
 
   .mapboxgl-ctrl-geocoder input {
-
     font-size:
-      11px !important;
-
+      10px !important;
   }
 
 
-  /* ----------------------------------------------
-     CONTROLES MAPBOX
-  ---------------------------------------------- */
+  /* CONTROLES */
 
   .mapboxgl-ctrl-group button {
-
     width: 27px;
 
     height: 27px;
-
-  }
-
-
-  .mapboxgl-ctrl-top-right,
-  .mapboxgl-ctrl-top-left {
-
-    margin-top: 4px;
-
   }
 
 }
@@ -817,125 +563,52 @@ body {
 
 /* ==========================================================
    CELULAR MUY PEQUEÑO
+   <= 390px
 ========================================================== */
 
-@media (max-width: 390px) {
+@media
+(max-width: 390px) {
 
   .legend-container {
-
-    width: 118px;
-
-    right: 5px;
-    bottom: 16px;
+    width: 112px;
 
     padding: 6px;
 
+    bottom: 15px;
   }
 
 
   .legend-title {
-
-    font-size: 9px;
-
+    font-size: 8px;
   }
 
 
   .legend-list li {
-
-    font-size: 7.5px;
-
-    gap: 4px;
-
+    font-size: 7px;
   }
 
 
   .legend-color {
+    width: 7px;
+    height: 7px;
 
-    width: 8px;
-    height: 8px;
+    min-width: 7px;
 
-    min-width: 8px;
-    min-height: 8px;
-
-    flex-basis: 8px;
-
+    flex-basis: 7px;
   }
 
 
   .info-box {
-
-    width:
-      min(
-        150px,
-        calc(100vw - 16px)
-      );
-
-    max-height: 30vh;
-
-    font-size: 8.5px;
-
+    width: 140px;
   }
 
 
   .mapboxgl-ctrl-geocoder {
-
     width:
       min(
-        190px,
-        calc(100vw - 68px)
+        180px,
+        calc(100vw - 70px)
       ) !important;
-
-    max-width:
-      calc(100vw - 68px) !important;
-
-  }
-
-}
-
-
-/* ==========================================================
-   PANTALLAS CON POCA ALTURA
-========================================================== */
-
-@media (max-height: 600px) {
-
-  .legend-container {
-
-    bottom: 12px;
-
-    padding: 7px;
-
-  }
-
-
-  .legend-title {
-
-    margin-bottom: 4px;
-
-  }
-
-
-  .legend-list li {
-
-    margin-bottom: 3px;
-
-  }
-
-
-  .info-box {
-
-    top: 80px;
-
-    max-height: 40vh;
-
-  }
-
-
-  .custom-popup
-  .mapboxgl-popup-content {
-
-    max-height: 45vh;
-
   }
 
 }
