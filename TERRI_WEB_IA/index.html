@@ -333,37 +333,62 @@
       class="menu-principal"
     >
 
-
-      <!-- ENCABEZADO -->
+      <!-- ==================================================
+           BIENVENIDA
+      =================================================== -->
 
       <div class="menu-principal-header">
 
+        <div class="menu-eyebrow">
+          DATOS · TERRITORIO · DECISIONES
+        </div>
+
         <h2>
-          Bienvenido a TERRI+
+          Bienvenido a TERRI<span>+</span>
         </h2>
 
         <p>
-          Selecciona el espacio de trabajo que deseas utilizar.
+          Explora, analiza y gestiona la información territorial
+          de Sesquilé en un solo lugar.
         </p>
 
       </div>
 
 
       <!-- ==================================================
-           TARJETAS PRINCIPALES
+           CUATRO ESPACIOS DE TRABAJO
       =================================================== -->
 
       <div class="menu-principal-grid">
 
 
-        <!-- ==================================================
-             GEOVISORES
-        =================================================== -->
+        <!-- GEOVISORES -->
 
-        <article class="menu-card">
+        <article class="menu-card card-mapas">
 
           <div class="menu-icon menu-icon-mapas">
-            🗺️
+
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+
+              <path
+                d="M9 3v15M15 6v15"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+            </svg>
+
           </div>
 
           <h3>
@@ -379,20 +404,43 @@
             type="button"
             onclick="entrarGeovisores()"
           >
-            Entrar
+            <span>Entrar</span>
+            <strong aria-hidden="true">→</strong>
           </button>
 
         </article>
 
 
-        <!-- ==================================================
-             AGENTE IA TERRITORIAL
-        =================================================== -->
+        <!-- AGENTE IA TERRITORIAL -->
 
-        <article class="menu-card">
+        <article class="menu-card card-ia">
 
           <div class="menu-icon menu-icon-ia">
-            🤖
+
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <rect
+                x="5"
+                y="7"
+                width="14"
+                height="11"
+                rx="4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+
+              <path
+                d="M12 3v4M8 12h.01M16 12h.01M9 16h6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+
           </div>
 
           <h3>
@@ -401,81 +449,96 @@
 
           <p>
             Consulta el territorio mediante lenguaje natural y obtén
-            mapas inteligentes generados automáticamente.
+            mapas y análisis automáticamente.
           </p>
 
           <button
             type="button"
             onclick="abrirIATerritorial()"
           >
-            Entrar
+            <span>Entrar</span>
+            <strong aria-hidden="true">→</strong>
           </button>
 
         </article>
 
 
-        <!-- ==================================================
-             VISUALIZADOR DE CAPAS
-        =================================================== -->
+        <!-- VISUALIZADOR DE CAPAS -->
 
-        <article class="menu-card">
+        <article class="menu-card card-capas">
 
           <div class="menu-icon menu-icon-capas">
 
             <svg
-              viewBox="0 0 64 64"
+              viewBox="0 0 24 24"
               aria-hidden="true"
             >
-
-              <polygon
-                points="32,6 55,19 32,32 9,19"
-                fill="#63C990"
+              <path
+                d="M12 3L3 8l9 5 9-5-9-5z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
               />
 
-              <polygon
-                points="32,20 55,33 32,46 9,33"
-                fill="#3F8ED0"
+              <path
+                d="M3 12l9 5 9-5M3 16l9 5 9-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
               />
-
-              <polygon
-                points="32,34 55,47 32,60 9,47"
-                fill="#304E7A"
-              />
-
             </svg>
 
           </div>
-
 
           <h3>
             Visualizador de capas
           </h3>
 
-
           <p>
             Carga y visualiza capas GeoJSON y JSON, consulta sus
-            atributos y explora información territorial sobre el mapa.
+            atributos y explora información territorial.
           </p>
-
 
           <button
             type="button"
             onclick="abrirVisualizadorCapas()"
           >
-            Abrir visualizador
+            <span>Abrir visualizador</span>
+            <strong aria-hidden="true">→</strong>
           </button>
 
         </article>
 
 
-        <!-- ==================================================
-             ACTUALIZACIÓN TRIBUTARIA
-        =================================================== -->
+        <!-- ACTUALIZACIÓN TRIBUTARIA -->
 
-        <article class="menu-card">
+        <article class="menu-card card-tributario">
 
           <div class="menu-icon menu-icon-tributario">
-            📤
+
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                d="M5 3h10l4 4v14H5z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+              />
+
+              <path
+                d="M15 3v5h4M8 17v-4M12 17V9M16 17v-6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+
           </div>
 
           <h3>
@@ -484,19 +547,47 @@
 
           <p>
             Carga los reportes oficiales de impuesto predial y cartera,
-            valida los códigos prediales y actualiza la información
-            tributaria de TERRI+.
+            valida los códigos prediales y actualiza TERRI+.
           </p>
 
           <button
             type="button"
             onclick="abrirActualizacionTributaria()"
           >
-            Actualizar información
+            <span>Actualizar información</span>
+            <strong aria-hidden="true">→</strong>
           </button>
 
         </article>
 
+      </div>
+
+
+      <!-- ==================================================
+           FRANJA INFERIOR
+      =================================================== -->
+
+      <div class="menu-beneficios">
+
+        <div>
+          <strong>Datos</strong>
+          <span>para decisiones</span>
+        </div>
+
+        <div>
+          <strong>Territorio</strong>
+          <span>sostenible</span>
+        </div>
+
+        <div>
+          <strong>Gestión</strong>
+          <span>más eficiente</span>
+        </div>
+
+        <div>
+          <strong>Innovación</strong>
+          <span>para el municipio</span>
+        </div>
 
       </div>
 
