@@ -54,85 +54,28 @@
       gap: 18px;
     }
 
-    .tributario-header {
-      width: 100%;
-
-      background: white;
-
-      border-radius: 18px;
-
-      padding: 22px 24px;
-
-      box-shadow:
-        0 10px 28px
-        rgba(12, 45, 72, 0.10);
-
+    /* ESTADO DE PREDIOS REGISTRADOS */
+    .estado-predios {
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 9px 16px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-
-      gap: 20px;
-    }
-
-    .tributario-header-left {
-      display: flex;
-      align-items: center;
-
-      gap: 14px;
-    }
-
-    .tributario-icon {
-      width: 58px;
-      height: 58px;
-
-      border-radius: 16px;
-
-      display: grid;
-      place-items: center;
-
-      background:
-        linear-gradient(
-          135deg,
-          #edf5ef,
-          #e8f0f6
-        );
-
-      font-size: 30px;
-
-      box-shadow:
-        inset 0 0 0 1px
-        rgba(12, 45, 72, 0.08);
-    }
-
-    .tributario-header h1 {
-      margin: 0;
-
-      font-size: 27px;
-
-      color: #0C2D48;
-    }
-
-    .tributario-header p {
-      margin: 5px 0 0;
-
-      color: #60798a;
-
-      font-size: 14px;
-    }
-
-    .estado-base {
-      padding: 9px 13px;
-
-      border-radius: 10px;
-
+      justify-content: center;
+      gap: 7px;
       background: #edf8f1;
-
+      border: 1px solid #d8eee1;
+      border-radius: 10px;
       color: #1c6d42;
-
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
+      line-height: 1.3;
+      text-align: center;
+    }
 
-      white-space: nowrap;
+    .separador-estado {
+      color: #8ab79b;
     }
 
     .tributario-grid {
@@ -467,35 +410,7 @@
       .tributario-app {
         padding: 10px;
       }
-
-      .tributario-header {
-        padding: 15px;
-
-        align-items: flex-start;
-
-        flex-direction: column;
-      }
-
-      .tributario-header-left {
-        align-items: flex-start;
-      }
-
-      .tributario-header h1 {
-        font-size: 20px;
-      }
-
-      .tributario-header p {
-        font-size: 12px;
-      }
-
-      .tributario-icon {
-        width: 46px;
-        height: 46px;
-
-        font-size: 24px;
-      }
-
-      .panel {
+.panel {
         padding: 15px;
       }
 
@@ -513,6 +428,14 @@
 
       .btn {
         width: 100%;
+      }
+
+      .estado-predios {
+        width: 100%;
+        flex-wrap: wrap;
+        padding: 8px 10px;
+        font-size: 11px;
+        gap: 5px;
       }
 
     }
@@ -533,40 +456,6 @@
 <body>
 
   <div class="tributario-app">
-
-    <header class="tributario-header">
-
-      <div class="tributario-header-left">
-
-        <div class="tributario-icon">
-          📤
-        </div>
-
-        <div>
-
-          <h1>
-            Actualización tributaria
-          </h1>
-
-          <p>
-            Carga y valida los reportes oficiales del municipio
-            antes de actualizar la información de TERRI+.
-          </p>
-
-        </div>
-
-      </div>
-
-      <div
-        class="estado-base"
-        id="estadoBase"
-      >
-        Consultando base maestra...
-      </div>
-
-    </header>
-
-
     <section class="tributario-grid">
 
       <div class="panel">
@@ -797,6 +686,19 @@
     </section>
 
 
+    <div class="estado-predios">
+      <span id="estadoBase">
+        Consultando predios registrados...
+      </span>
+
+      <span class="separador-estado">·</span>
+
+      <span id="ultimaActualizacion">
+        Última actualización: pendiente
+      </span>
+    </div>
+
+
     <footer class="tributario-footer">
 
       TERRI+ · Módulo de actualización tributaria · Municipio de Sesquilé
@@ -856,9 +758,34 @@
 
 
         estadoBase.textContent =
-          `Base maestra: ${formatearNumero(
+          `Predios registrados en TERRI+: ${formatearNumero(
             datos.predios_maestro
-          )} predios`;
+          )}`;
+
+
+        const ultimaActualizacion =
+          document.getElementById(
+            "ultimaActualizacion"
+          );
+
+
+        const fechaActualizacion =
+          datos.ultima_actualizacion ||
+          datos.fecha_actualizacion ||
+          null;
+
+
+        if (
+          ultimaActualizacion &&
+          fechaActualizacion
+        ) {
+
+          ultimaActualizacion.textContent =
+            `Última actualización: ${formatearFecha(
+              fechaActualizacion
+            )}`;
+
+        }
 
 
       } catch (error) {
@@ -870,7 +797,7 @@
 
 
         estadoBase.textContent =
-          "Base maestra no disponible";
+          "Predios registrados no disponibles";
 
       }
 
@@ -960,7 +887,7 @@
 
 
       mostrarEstado(
-        "TERRI+ está leyendo el archivo y cruzando los códigos prediales con la base maestra...",
+        "TERRI+ está leyendo el archivo y cruzando los códigos con los predios registrados...",
         "info"
       );
 
@@ -1516,6 +1443,26 @@
           )
         );
 
+    }
+
+
+    function formatearFecha(
+      valor
+    ) {
+
+      if (!valor) {
+        return "pendiente";
+      }
+
+      const texto = String(valor).trim();
+      const soloFecha = texto.substring(0, 10);
+      const partes = soloFecha.split("-");
+
+      if (partes.length === 3) {
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+      }
+
+      return texto;
     }
 
 
