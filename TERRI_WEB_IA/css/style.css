@@ -2870,4 +2870,319 @@ body{
         padding:8px;
     }
 }
+/* ==========================================================
+   TERRI+ - HEADER FINAL
+   LOGO + TERRI+ + DESCRIPCIÓN A LA IZQUIERDA
+========================================================== */
 
+.header{
+    justify-content:flex-start;
+
+    padding-left:
+        clamp(
+            22px,
+            4vw,
+            64px
+        );
+
+    padding-right:
+        clamp(
+            14px,
+            2vw,
+            28px
+        );
+
+    text-align:left;
+}
+
+
+/* CONTENEDOR */
+
+.header-content{
+    width:auto;
+    max-width:none;
+
+    height:100%;
+
+    margin:0;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:flex-start;
+
+    gap:
+        clamp(
+            14px,
+            1.6vw,
+            22px
+        );
+}
+
+
+/* ESCUDO */
+
+.header-logo{
+    width:auto;
+
+    height:
+        clamp(
+            50px,
+            6.5vh,
+            68px
+        );
+
+    max-width:none;
+
+    flex:0 0 auto;
+
+    object-fit:contain;
+
+    filter:none;
+}
+
+
+/* ==========================================================
+   CONTENEDOR TERRI+ + DESCRIPCIÓN
+========================================================== */
+
+.header-content > div{
+    display:grid;
+
+    grid-template-columns:
+        auto
+        minmax(120px, 190px);
+
+    align-items:center;
+
+    column-gap:
+        clamp(
+            18px,
+            2vw,
+            28px
+        );
+}
+
+
+/* ==========================================================
+   TERRI+
+========================================================== */
+
+.header h1{
+    margin:0;
+
+    padding-right:
+        clamp(
+            18px,
+            2vw,
+            28px
+        );
+
+    border-right:
+        1px solid
+        rgba(255,255,255,.45);
+
+    color:#ffffff;
+
+    font-size:
+        clamp(
+            30px,
+            3vw,
+            42px
+        );
+
+    font-weight:800;
+
+    letter-spacing:
+        clamp(
+            3px,
+            .45vw,
+            5px
+        );
+
+    line-height:1;
+
+    white-space:nowrap;
+}
+
+
+/* + */
+
+.header h1 span{
+    color:#A2D9CE;
+}
+
+
+/* ==========================================================
+   GEOVISOR INTELIGENTE DEL TERRITORIO
+========================================================== */
+
+.header p{
+    margin:0;
+
+    max-width:190px;
+
+    color:#ffffff;
+
+    font-size:
+        clamp(
+            12px,
+            1vw,
+            15px
+        );
+
+    font-weight:400;
+
+    line-height:1.25;
+
+    text-align:left;
+}
+
+
+/* ==========================================================
+   TABLET
+========================================================== */
+
+@media(max-width:900px){
+
+    .header{
+        padding-left:20px;
+    }
+
+
+    .header-logo{
+        height:48px;
+    }
+
+
+    .header-content{
+        gap:12px;
+    }
+
+
+    .header-content > div{
+        grid-template-columns:
+            auto
+            minmax(105px, 145px);
+
+        column-gap:14px;
+    }
+
+
+    .header h1{
+        padding-right:14px;
+
+        font-size:28px;
+
+        letter-spacing:3px;
+    }
+
+
+    .header p{
+        max-width:145px;
+
+        font-size:11px;
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR
+========================================================== */
+
+@media(max-width:700px){
+
+    .header{
+        padding-left:10px;
+        padding-right:8px;
+    }
+
+
+    .header-content{
+        gap:8px;
+    }
+
+
+    .header-logo{
+        height:38px;
+
+        max-width:none;
+    }
+
+
+    .header-content > div{
+        grid-template-columns:
+            auto
+            minmax(80px, 105px);
+
+        column-gap:9px;
+    }
+
+
+    .header h1{
+        padding-right:9px;
+
+        font-size:20px;
+
+        letter-spacing:2px;
+    }
+
+
+    .header p{
+        max-width:105px;
+
+        font-size:8.5px;
+
+        line-height:1.15;
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR MUY ESTRECHO
+========================================================== */
+
+@media(max-width:390px){
+
+    .header{
+        padding-left:8px;
+    }
+
+
+    .header-logo{
+        height:34px;
+    }
+
+
+    .header-content{
+        gap:6px;
+    }
+
+
+    .header-content > div{
+        grid-template-columns:
+            auto
+            minmax(68px, 88px);
+
+        column-gap:7px;
+    }
+
+
+    .header h1{
+        padding-right:7px;
+
+        font-size:18px;
+
+        letter-spacing:1.5px;
+    }
+
+
+    .header p{
+        max-width:88px;
+
+        font-size:7.5px;
+    }
+
+}
