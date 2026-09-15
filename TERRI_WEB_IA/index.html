@@ -17,6 +17,12 @@
     href="css/style.css"
   >
 
+  <!-- ==================================================
+       ICONOS LUCIDE
+  =================================================== -->
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+
 </head>
 
 <body>
@@ -40,8 +46,6 @@
     <p>
       Plataforma inteligente de análisis territorial
     </p>
-
-    <!-- SOLO CONTRASEÑA -->
 
     <input
       id="password"
@@ -117,23 +121,42 @@
     style="display:none;"
   >
 
-    <h2>
-      🌎 MAPAS SESQUILÉ
+
+    <!-- TÍTULO -->
+
+    <h2 class="sidebar-title">
+
+      <i data-lucide="globe-2"></i>
+
+      <span>
+        MAPAS SESQUILÉ
+      </span>
+
     </h2>
 
 
-    <!-- BUSCADOR PREDIAL -->
+    <!-- ==================================================
+         BUSCADOR PREDIAL
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '📄 Buscador Predial',
       'Visualiza información predial para verificación y análisis.',
       'https://effectiveactions9017.github.io/MapasWeb/Catastro_SESQUILE_2/public/index.html'
     )">
-      🔎 Buscador Predial
+
+      <i data-lucide="search"></i>
+
+      <span>
+        Buscador Predial
+      </span>
+
     </button>
 
 
-    <!-- INCREMENTO PREDIAL -->
+    <!-- ==================================================
+         INCREMENTO PREDIAL
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '🏠 Oportunidades para incremento del predial',
@@ -141,11 +164,19 @@
       'https://effectiveactions9017.github.io/MapasWeb/Catastro_SESQUILE/public/index.html',
       './dashboards/predial.html'
     )">
-      🏠 Incremento Predial
+
+      <i data-lucide="house"></i>
+
+      <span>
+        Incremento Predial
+      </span>
+
     </button>
 
 
-    <!-- INCREMENTO ICA -->
+    <!-- ==================================================
+         INCREMENTO ICA
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '💰 Oportunidades para incremento del ICA',
@@ -153,22 +184,38 @@
       'https://effectiveactions9017.github.io/MapasWeb/RECAUDO%20IMPUESTOS%20ICA_SESQUILE/public/index.html',
       './dashboards/ica.html'
     )">
-      💰 Incremento ICA
+
+      <i data-lucide="badge-dollar-sign"></i>
+
+      <span>
+        Incremento ICA
+      </span>
+
     </button>
 
 
-    <!-- CONTRIBUYENTES ICA -->
+    <!-- ==================================================
+         CONTRIBUYENTES ICA
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '👥 Buscador contribuyentes del ICA',
       'Consulta contribuyentes activos y localización territorial.',
       'https://effectiveactions9017.github.io/MapasWeb/CONTRIBUYENTES_ACTIVOS_SESQUILE/public/index.html'
     )">
-      👥 Contribuyentes ICA
+
+      <i data-lucide="users"></i>
+
+      <span>
+        Contribuyentes ICA
+      </span>
+
     </button>
 
 
-    <!-- SERVICIOS PÚBLICOS -->
+    <!-- ==================================================
+         SERVICIOS PÚBLICOS
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '🚰 Situación Servicios Públicos',
@@ -176,11 +223,19 @@
       'https://effectiveactions9017.github.io/MapasWeb/SITUACI%C3%93N%20SERVICIOS%20PUBLICOS/public/index.html',
       './dashboards/servicios.html'
     )">
-      🚰 Servicios Públicos
+
+      <i data-lucide="droplets"></i>
+
+      <span>
+        Servicios Públicos
+      </span>
+
     </button>
 
 
-    <!-- ACTIVOS PÚBLICOS -->
+    <!-- ==================================================
+         ACTIVOS PÚBLICOS
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '🏛️ Activos Públicos',
@@ -188,11 +243,19 @@
       'https://effectiveactions9017.github.io/MapasWeb/ACTIVOS_PUBLICOS_SESQUILE/public/index.html',
       './dashboards/activos.html'
     )">
-      🏛️ Activos Públicos
+
+      <i data-lucide="landmark"></i>
+
+      <span>
+        Activos Públicos
+      </span>
+
     </button>
 
 
-    <!-- CRECIMIENTO URBANO -->
+    <!-- ==================================================
+         CRECIMIENTO URBANO
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '🏗️ Crecimiento Urbano',
@@ -200,11 +263,19 @@
       'https://effectiveactions9017.github.io/MapasWeb/SESQUILE/mapEvConst/public/index.html',
       './dashboards/construcciones.html'
     )">
-      🏗️ Crecimiento Urbano
+
+      <i data-lucide="chart-no-axes-combined"></i>
+
+      <span>
+        Crecimiento Urbano
+      </span>
+
     </button>
 
 
-    <!-- USO DEL SUELO -->
+    <!-- ==================================================
+         USO DEL SUELO
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '🧭 Uso del Suelo',
@@ -212,22 +283,38 @@
       'https://effectiveactions9017.github.io/MapasWeb/OPORTUNIDADES%20USO%20DLE%20SUELO%20SESQUILE/public/index.html',
       './dashboards/suelo.html'
     )">
-      🧭 Uso del Suelo
+
+      <i data-lucide="map"></i>
+
+      <span>
+        Uso del Suelo
+      </span>
+
     </button>
 
 
-    <!-- FORESTACIÓN -->
+    <!-- ==================================================
+         PÉRDIDA DE FORESTACIÓN
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '🌳 Pérdida de Forestación',
       'Monitoreo de pérdida de cobertura boscosa.',
       'https://effectiveactions9017.github.io/MapasWeb/SESQUILE_BOSQUE/public/index.html'
     )">
-      🌳 Pérdida Forestación
+
+      <i data-lucide="trees"></i>
+
+      <span>
+        Pérdida Forestación
+      </span>
+
     </button>
 
 
-    <!-- BONOS DE CARBONO -->
+    <!-- ==================================================
+         BONOS DE CARBONO
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '♻️ Bonos de Carbono',
@@ -235,11 +322,19 @@
       'https://effectiveactions9017.github.io/MapasWeb/BONOS%20DE%20CARBONO%20SESQUILE/public/index.html',
       './dashboards/bonos.html'
     )">
-      ♻️ Bonos Carbono
+
+      <i data-lucide="leaf"></i>
+
+      <span>
+        Bonos Carbono
+      </span>
+
     </button>
 
 
-    <!-- REPORTE PREDIAL -->
+    <!-- ==================================================
+         REPORTE PREDIAL
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '📑 Reporte Impuesto Predial',
@@ -247,11 +342,19 @@
       'https://effectiveactions9017.github.io/MapasWeb/Reporte_Impusto_Predial_2/public/index.html',
       './dashboards/reporte_predial.html'
     )">
-      📑 Reporte Predial
+
+      <i data-lucide="file-text"></i>
+
+      <span>
+        Reporte Predial
+      </span>
+
     </button>
 
 
-    <!-- CARTERA -->
+    <!-- ==================================================
+         REPORTE CARTERA
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '📊 Reporte Cartera',
@@ -259,60 +362,107 @@
       'https://effectiveactions9017.github.io/MapasWeb/Reporte%20de%20Cartera_Sesquile/public/index.html',
       './dashboards/cartera.html'
     )">
-      📊 Reporte Cartera
+
+      <i data-lucide="chart-column"></i>
+
+      <span>
+        Reporte Cartera
+      </span>
+
     </button>
 
 
-    <!-- PLACA HUELLAS -->
+    <!-- ==================================================
+         PLACA HUELLAS
+    =================================================== -->
 
     <button onclick="abrirModulo(
       '🛣️ Placa Huellas',
       'Consulta de placas huellas municipales.',
       'https://effectiveactions9017.github.io/MapasWeb/PLACA_HUELLAS/public/index.html'
     )">
-      🛣️ Placa Huellas
+
+      <i data-lucide="route"></i>
+
+      <span>
+        Placa Huellas
+      </span>
+
     </button>
 
 
-    <!-- CARACTERIZACIÓN -->
+    <!-- ==================================================
+         CARACTERIZACIÓN SOCIOECONÓMICA
+    =================================================== -->
 
     <button onclick="abrirDashboardSolo(
       '👨‍👩‍👧 Caracterización Socioeconómica',
       'Indicadores sociales, educación, salud y ocupación poblacional.',
       './dashboards/caracterizacion_socioeconomica.html'
     )">
-      👨‍👩‍👧 Caracterización Socioeconómica
+
+      <i data-lucide="users-round"></i>
+
+      <span>
+        Caracterización Socioeconómica
+      </span>
+
     </button>
 
 
-    <!-- INICIO GEOVISORES -->
+    <!-- ==================================================
+         INICIO DE GEOVISORES
+    =================================================== -->
 
     <button
       class="btn-secundario"
       onclick="limpiarVisor()"
     >
-      ⬅️ Inicio de geovisores
+
+      <i data-lucide="arrow-left"></i>
+
+      <span>
+        Inicio de geovisores
+      </span>
+
     </button>
 
 
-    <!-- MENÚ PRINCIPAL -->
+    <!-- ==================================================
+         MENÚ PRINCIPAL
+    =================================================== -->
 
     <button
       class="btn-secundario"
       onclick="volverMenuPrincipal()"
     >
-      🏠 Menú principal
+
+      <i data-lucide="house"></i>
+
+      <span>
+        Menú principal
+      </span>
+
     </button>
 
 
-    <!-- CERRAR SESIÓN -->
+    <!-- ==================================================
+         CERRAR SESIÓN
+    =================================================== -->
 
     <button
       class="btn-secundario"
       onclick="cerrarSesion()"
     >
-      🔐 Cerrar sesión
+
+      <i data-lucide="lock-keyhole"></i>
+
+      <span>
+        Cerrar sesión
+      </span>
+
     </button>
+
 
   </aside>
 
@@ -674,91 +824,4 @@
             type="button"
             class="visor-full-btn"
             onclick="verMapa()"
-            style="display:none;"
-          >
-            🗺️ Volver al visor
-          </button>
-
-
-          <!-- MENÚ PRINCIPAL -->
-
-          <button
-            type="button"
-            class="visor-full-btn btn-menu-principal"
-            onclick="volverMenuPrincipal()"
-          >
-            🏠 Menú principal
-          </button>
-
-
-          <!-- PANTALLA COMPLETA -->
-
-          <button
-            type="button"
-            class="visor-full-btn"
-            onclick="pantallaCompleta()"
-          >
-            ⛶ Pantalla completa
-          </button>
-
-
-        </div>
-
-      </div>
-
-
-      <!-- ==================================================
-           VISOR
-      =================================================== -->
-
-      <div class="visor-inteligente">
-
-        <div class="visor-area">
-
-
-          <!-- MAPA -->
-
-          <iframe
-            id="mapaFrame"
-            class="visor-frame"
-            allowfullscreen
-            loading="lazy"
-          ></iframe>
-
-
-          <!-- DASHBOARD / IA / VISUALIZADOR / ACTUALIZACIÓN -->
-
-          <iframe
-            id="dashboardFrame"
-            class="visor-frame"
-            allowfullscreen
-            loading="lazy"
-            style="display:none;"
-          ></iframe>
-
-
-        </div>
-
-      </div>
-
-
-    </div>
-
-
-  </main>
-
-</div>
-
-
-<!-- ==================================================
-     SCRIPTS
-=================================================== -->
-
-<script src="js/app.js"></script>
-
-<script src="js/login.js"></script>
-
-
-</body>
-
-</html>
+            style="display:none
