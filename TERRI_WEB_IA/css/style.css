@@ -775,100 +775,986 @@ body{
 
 
 /* ==========================================================
-   LOGIN
+   TERRI+ - LOGIN INSTITUCIONAL
+   FONDO CARTOGRÁFICO
 ========================================================== */
 
 .login{
     position:fixed;
-
     inset:0;
 
-    background:linear-gradient(135deg, #0C2D48, #1D3557);
+    width:100%;
+    height:100vh;
+    height:100dvh;
+
+    z-index:9999;
 
     display:flex;
     align-items:center;
     justify-content:center;
 
-    z-index:9999;
+    padding:
+        clamp(20px,4vh,48px)
+        clamp(20px,5vw,72px);
+
+    background-image:
+        url("../fondo_terri+.png");
+
+    background-size:cover;
+    background-position:center center;
+    background-repeat:no-repeat;
+
+    overflow:hidden;
+
+    font-family:
+        'Segoe UI',
+        Arial,
+        sans-serif;
 }
 
+
+/* ==========================================================
+   MARCA SUPERIOR IZQUIERDA
+========================================================== */
+
+.login-brand{
+    position:absolute;
+
+    top:
+        clamp(
+            24px,
+            5vh,
+            55px
+        );
+
+    left:
+        clamp(
+            24px,
+            5vw,
+            72px
+        );
+
+    display:flex;
+    align-items:center;
+
+    gap:
+        clamp(
+            12px,
+            1.4vw,
+            20px
+        );
+
+    color:#0C2D48;
+}
+
+
+.login-brand-logo{
+    width:auto;
+
+    height:
+        clamp(
+            48px,
+            6vw,
+            72px
+        );
+
+    object-fit:contain;
+}
+
+
+.login-brand-name{
+    color:#0C2D48;
+
+    font-size:
+        clamp(
+            28px,
+            3vw,
+            44px
+        );
+
+    font-weight:800;
+
+    letter-spacing:
+        clamp(
+            2px,
+            .35vw,
+            5px
+        );
+
+    line-height:1;
+
+    white-space:nowrap;
+}
+
+
+.login-brand-name span{
+    color:#3fae9e;
+}
+
+
+.login-brand-separator{
+    width:1px;
+
+    height:
+        clamp(
+            36px,
+            4.5vw,
+            54px
+        );
+
+    background:
+        rgba(12,45,72,.25);
+}
+
+
+.login-brand-description{
+    color:#527187;
+
+    font-size:
+        clamp(
+            10px,
+            1vw,
+            14px
+        );
+
+    line-height:1.25;
+}
+
+
+/* ==========================================================
+   MENSAJE SUPERIOR DERECHO
+========================================================== */
+
+.login-message{
+    position:absolute;
+
+    top:
+        clamp(
+            35px,
+            7vh,
+            75px
+        );
+
+    right:
+        clamp(
+            25px,
+            7vw,
+            100px
+        );
+
+    display:flex;
+    flex-direction:column;
+
+    align-items:flex-end;
+
+    color:#466b80;
+
+    font-size:
+        clamp(
+            10px,
+            .9vw,
+            13px
+        );
+
+    font-weight:600;
+
+    line-height:1.35;
+
+    letter-spacing:.03em;
+
+    text-align:right;
+}
+
+
+.login-message span:nth-child(3){
+    margin-top:2px;
+}
+
+
+.login-message i{
+    width:52px;
+    height:2px;
+
+    margin-top:8px;
+
+    border-radius:999px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #3fae9e,
+            #80c7bb
+        );
+}
+
+
+/* ==========================================================
+   TARJETA PRINCIPAL
+========================================================== */
+
 .login-box{
-    width:380px;
+    position:relative;
 
-    background:white;
+    width:
+        min(
+            430px,
+            calc(100vw - 40px)
+        );
 
-    padding:35px;
+    padding:
+        clamp(
+            26px,
+            3vw,
+            38px
+        );
 
-    border-radius:22px;
+    margin-top:
+        clamp(
+            45px,
+            7vh,
+            75px
+        );
+
+    background:
+        rgba(255,255,255,.94);
+
+    border:
+        1px solid
+        rgba(255,255,255,.96);
+
+    border-radius:28px;
 
     text-align:center;
 
-    box-shadow:0 20px 45px rgba(0,0,0,.35);
+    box-shadow:
+        0 24px 60px
+        rgba(12,45,72,.18);
+
+    overflow:hidden;
 }
+
+
+/* ==========================================================
+   ICONO DE SEGURIDAD
+========================================================== */
+
+.login-security-icon{
+    width:62px;
+    height:62px;
+
+    margin:
+        0
+        auto
+        14px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:18px;
+
+    color:#1877b5;
+
+    background:
+        linear-gradient(
+            145deg,
+            #e7f5fb,
+            #dff1f7
+        );
+}
+
+
+.login-security-icon svg{
+    width:32px;
+    height:32px;
+}
+
+
+/* ==========================================================
+   TERRI+
+========================================================== */
 
 .login-box h1{
     margin:0;
 
-    font-size:48px;
-
     color:#0C2D48;
 
+    font-size:
+        clamp(
+            32px,
+            3vw,
+            42px
+        );
+
+    font-weight:800;
+
     letter-spacing:4px;
+
+    line-height:1;
 }
+
 
 .login-box h1 span{
-    color:#A2D9CE;
+    color:#3fae9e;
 }
 
-.login-box p{
-    margin-bottom:25px;
 
-    color:#555;
+/* ==========================================================
+   SUBTÍTULO
+========================================================== */
+
+.login-box .login-subtitle{
+    max-width:280px;
+
+    margin:
+        10px
+        auto
+        24px;
+
+    color:#668294;
+
+    font-size:13px;
+
+    line-height:1.35;
 }
 
-.login-box input{
+
+/* ==========================================================
+   CAMPO DE CONTRASEÑA
+========================================================== */
+
+.login-password{
     width:100%;
-    height:48px;
+    height:52px;
+
+    position:relative;
 
     margin-bottom:14px;
 
-    padding:0 15px;
+    display:flex;
+    align-items:center;
 
-    border:1px solid #ccc;
-    border-radius:12px;
+    background:#f8fbfc;
 
-    font-size:16px;
-}
+    border:
+        1px solid
+        #dce7ed;
 
-.login-box button{
-    width:100%;
-    height:50px;
-
-    border:none;
     border-radius:14px;
 
-    background:#1D3557;
+    transition:
+        border-color .18s ease,
+        box-shadow .18s ease,
+        background .18s ease;
+}
 
-    color:white;
 
-    font-size:17px;
-    font-weight:700;
+.login-password:focus-within{
+    background:#ffffff;
+
+    border-color:#83b8d8;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(38,139,210,.10);
+}
+
+
+.login-password-icon{
+    width:46px;
+
+    flex:0 0 46px;
+
+    display:grid;
+    place-items:center;
+
+    color:#6e8798;
+}
+
+
+.login-password-icon svg{
+    width:20px;
+    height:20px;
+}
+
+
+/* IMPORTANTE:
+   anulamos los estilos del input antiguo */
+
+.login-box .login-password input{
+    flex:1 1 auto;
+
+    width:auto;
+    height:100%;
+
+    min-width:0;
+
+    margin:0;
+
+    padding:
+        0
+        8px;
+
+    border:0;
+
+    outline:none;
+
+    background:transparent;
+
+    color:#24465d;
+
+    font-family:
+        'Segoe UI',
+        Arial,
+        sans-serif;
+
+    font-size:14px;
+}
+
+
+.login-box .login-password input::placeholder{
+    color:#8da1af;
+}
+
+
+/* ==========================================================
+   OJO
+========================================================== */
+
+.login-box .login-eye{
+    width:46px;
+    height:46px;
+
+    min-width:46px;
+
+    margin:0;
+
+    padding:0;
+
+    border:0;
+
+    border-radius:50%;
+
+    display:grid;
+    place-items:center;
+
+    background:transparent;
+
+    color:#6e8798;
+
+    box-shadow:none;
 
     cursor:pointer;
 }
 
-.login-box button:hover{
-    background:#0C2D48;
+
+.login-box .login-eye svg{
+    width:20px;
+    height:20px;
 }
 
+
+.login-box .login-eye:hover{
+    background:
+        rgba(12,45,72,.05);
+
+    color:#0C2D48;
+}
+
+
+/* ==========================================================
+   BOTÓN INGRESAR
+========================================================== */
+
+.login-box .login-submit{
+    width:100%;
+    height:50px;
+
+    margin:0;
+
+    padding:
+        0
+        12px
+        0
+        20px;
+
+    border:0;
+
+    border-radius:14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #1B4F72,
+            #0C2D48
+        );
+
+    color:#ffffff;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    font-family:
+        'Segoe UI',
+        Arial,
+        sans-serif;
+
+    font-size:14px;
+    font-weight:700;
+
+    cursor:pointer;
+
+    box-shadow:
+        0 8px 18px
+        rgba(12,45,72,.18);
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease;
+}
+
+
+.login-submit span{
+    flex:1;
+
+    text-align:center;
+}
+
+
+.login-submit strong{
+    width:30px;
+    height:30px;
+
+    flex:0 0 30px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:50%;
+
+    background:
+        rgba(255,255,255,.12);
+
+    font-size:20px;
+    font-weight:400;
+}
+
+
+.login-box .login-submit:hover{
+    transform:
+        translateY(-1px);
+
+    background:
+        linear-gradient(
+            135deg,
+            #23658d,
+            #103956
+        );
+
+    box-shadow:
+        0 11px 23px
+        rgba(12,45,72,.22);
+}
+
+
+/* ==========================================================
+   MENSAJE DE ERROR
+========================================================== */
+
 #loginError{
-    margin-top:14px;
+    min-height:18px;
+
+    margin-top:10px;
 
     color:#c0392b;
 
-    font-weight:700;
+    font-size:12px;
+    font-weight:600;
 }
 
+
+/* ==========================================================
+   DIVISOR
+========================================================== */
+
+.login-divider{
+    width:100%;
+
+    margin:
+        10px
+        0
+        18px;
+
+    display:grid;
+
+    grid-template-columns:
+        1fr
+        auto
+        1fr;
+
+    align-items:center;
+
+    gap:12px;
+}
+
+
+.login-divider span{
+    height:1px;
+
+    background:#e1e9ee;
+}
+
+
+.login-divider p{
+    margin:0;
+
+    color:#708797;
+
+    font-size:11px;
+    font-weight:600;
+
+    white-space:nowrap;
+}
+
+
+/* ==========================================================
+   BENEFICIOS
+========================================================== */
+
+.login-benefits{
+    width:100%;
+
+    display:grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(0,1fr)
+        );
+
+    gap:10px;
+}
+
+
+.login-benefit{
+    min-width:0;
+
+    padding:
+        11px
+        5px;
+
+    border-radius:12px;
+
+    display:flex;
+    flex-direction:column;
+
+    align-items:center;
+
+    gap:3px;
+}
+
+
+.login-benefit svg{
+    width:23px;
+    height:23px;
+
+    margin-bottom:2px;
+}
+
+
+.login-benefit strong{
+    color:#23475f;
+
+    font-size:10.5px;
+}
+
+
+.login-benefit span{
+    color:#7a909e;
+
+    font-size:8.5px;
+
+    line-height:1.15;
+}
+
+
+/* DATOS */
+
+.benefit-data{
+    color:#2581ba;
+
+    background:
+        rgba(229,244,252,.72);
+}
+
+
+/* GESTIÓN */
+
+.benefit-management{
+    color:#29977f;
+
+    background:
+        rgba(227,247,240,.72);
+}
+
+
+/* INNOVACIÓN */
+
+.benefit-innovation{
+    color:#d47b2e;
+
+    background:
+        rgba(253,242,225,.75);
+}
+
+
+/* ==========================================================
+   TABLET
+========================================================== */
+
+@media(max-width:900px){
+
+    .login-brand{
+        top:24px;
+        left:24px;
+    }
+
+
+    .login-message{
+        top:34px;
+        right:28px;
+    }
+
+
+    .login-box{
+        margin-top:50px;
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR
+========================================================== */
+
+@media(max-width:700px){
+
+    .login{
+        align-items:center;
+
+        padding:
+            12px;
+
+        overflow-y:auto;
+    }
+
+
+    /* Marca más compacta */
+
+    .login-brand{
+        top:14px;
+        left:14px;
+
+        gap:8px;
+    }
+
+
+    .login-brand-logo{
+        height:38px;
+    }
+
+
+    .login-brand-name{
+        font-size:21px;
+
+        letter-spacing:2px;
+    }
+
+
+    .login-brand-separator{
+        height:28px;
+    }
+
+
+    .login-brand-description{
+        font-size:7.5px;
+    }
+
+
+    /* Ocultamos mensaje derecho para no saturar */
+
+    .login-message{
+        display:none;
+    }
+
+
+    /* Tarjeta */
+
+    .login-box{
+        width:
+            min(
+                390px,
+                calc(100vw - 24px)
+            );
+
+        margin-top:60px;
+
+        padding:
+            22px
+            18px;
+
+        border-radius:22px;
+    }
+
+
+    .login-security-icon{
+        width:52px;
+        height:52px;
+
+        margin-bottom:11px;
+
+        border-radius:15px;
+    }
+
+
+    .login-security-icon svg{
+        width:27px;
+        height:27px;
+    }
+
+
+    .login-box h1{
+        font-size:29px;
+
+        letter-spacing:3px;
+    }
+
+
+    .login-box .login-subtitle{
+        margin:
+            8px
+            auto
+            18px;
+
+        font-size:11px;
+    }
+
+
+    .login-password{
+        height:48px;
+    }
+
+
+    .login-box .login-submit{
+        height:46px;
+    }
+
+
+    .login-benefit{
+        padding:
+            9px
+            3px;
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR MUY PEQUEÑO
+========================================================== */
+
+@media(max-width:390px){
+
+    .login-brand-description{
+        display:none;
+    }
+
+
+    .login-brand-separator{
+        display:none;
+    }
+
+
+    .login-box{
+        margin-top:52px;
+
+        padding:
+            18px
+            14px;
+    }
+
+
+    .login-benefits{
+        gap:5px;
+    }
+
+
+    .login-benefit strong{
+        font-size:9px;
+    }
+
+
+    .login-benefit span{
+        font-size:7.5px;
+    }
+
+}
+
+
+/* ==========================================================
+   PANTALLAS DE POCA ALTURA
+========================================================== */
+
+@media(max-height:720px) and (min-width:701px){
+
+    .login-brand{
+        top:18px;
+    }
+
+
+    .login-message{
+        top:22px;
+    }
+
+
+    .login-box{
+        margin-top:35px;
+
+        padding:
+            20px
+            28px;
+    }
+
+
+    .login-security-icon{
+        width:50px;
+        height:50px;
+
+        margin-bottom:8px;
+    }
+
+
+    .login-box h1{
+        font-size:32px;
+    }
+
+
+    .login-box .login-subtitle{
+        margin:
+            7px
+            auto
+            14px;
+    }
+
+
+    .login-divider{
+        margin:
+            7px
+            0
+            12px;
+    }
+
+}
 
 /* ==========================================================
    MENÚ PRINCIPAL TERRI+
