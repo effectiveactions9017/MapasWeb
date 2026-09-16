@@ -5468,7 +5468,7 @@ body{
     min-width:0;
     min-height:0;
 
-    display:grid !important;
+    display:grid;
 
     grid-template-columns:
         minmax(0,1fr);
@@ -5626,7 +5626,7 @@ body{
 @media(max-width:700px){
 
     #menuPrincipal{
-        display:flex !important;
+        display:flex;
 
         flex-direction:column;
 
