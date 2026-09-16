@@ -4551,3 +4551,11 @@ body{
 .visor-area{
     background:transparent;
 }
+/* ==========================================================
+   TERRI+ - IFRAME TRANSPARENTE
+   Permite ver el fondo institucional detrás de los módulos
+========================================================== */
+
+#dashboardFrame{
+    background:transparent;
+}
