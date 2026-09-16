@@ -1351,3 +1351,213 @@ body{
     }
 
 }
+/* ==========================================================
+   TERRI+ - TOOLBAR CARTOGRÁFICA COMPACTA / RESPONSIVE
+========================================================== */
+
+.map-toolbar{
+    position:absolute;
+
+    top:clamp(8px, 1.3vw, 14px);
+    left:clamp(8px, 1.3vw, 14px);
+
+    z-index:20;
+
+    display:flex;
+    align-items:center;
+
+    gap:3px;
+
+    padding:4px;
+
+    border:1px solid rgba(12,45,72,.08);
+    border-radius:12px;
+
+    background:rgba(255,255,255,.94);
+
+    box-shadow:
+        0 5px 16px rgba(12,45,72,.12);
+
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+}
+
+
+/* BOTONES */
+
+.map-toolbar .mini-btn{
+    width:auto;
+
+    height:clamp(30px, 2.5vw, 36px);
+
+    padding:
+        0
+        clamp(8px, .8vw, 12px);
+
+    border:0;
+    border-radius:8px;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    gap:5px;
+
+    background:transparent;
+
+    color:#173f63;
+
+    font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+    font-size:
+        clamp(10px, .78vw, 12px);
+
+    font-weight:600;
+
+    white-space:nowrap;
+
+    cursor:pointer;
+
+    transition:
+        background .18s ease,
+        color .18s ease,
+        transform .18s ease;
+}
+
+
+/* HOVER */
+
+.map-toolbar .mini-btn:hover{
+    background:#eef6fb;
+
+    color:#0875ce;
+
+    transform:none;
+}
+
+
+/* MAPA BASE:
+   un poco más destacado porque abre menú */
+
+#btnMapaBase{
+    background:#f4f9fc;
+}
+
+
+/* ZOOM Y LIMPIAR MÁS COMPACTOS */
+
+#btnZoomResultado,
+#btnLimpiarMapa{
+    padding-left:
+        clamp(7px, .65vw, 10px);
+
+    padding-right:
+        clamp(7px, .65vw, 10px);
+}
+
+
+/* Separación visual mínima */
+
+#btnZoomResultado{
+    border-left:
+        1px solid
+        rgba(12,45,72,.07);
+}
+
+#btnLimpiarMapa{
+    border-left:
+        1px solid
+        rgba(12,45,72,.07);
+}
+
+
+/* ==========================================================
+   TABLET
+========================================================== */
+
+@media(max-width:900px){
+
+    .map-toolbar{
+        top:8px;
+        left:8px;
+
+        gap:2px;
+
+        padding:3px;
+
+        border-radius:10px;
+    }
+
+    .map-toolbar .mini-btn{
+        height:31px;
+
+        padding:
+            0
+            8px;
+
+        font-size:10px;
+
+        border-radius:7px;
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR
+========================================================== */
+
+@media(max-width:600px){
+
+    .map-toolbar{
+        top:6px;
+        left:6px;
+        right:auto;
+
+        width:auto;
+
+        flex-wrap:nowrap;
+
+        padding:3px;
+    }
+
+    .map-toolbar .mini-btn{
+        height:29px;
+
+        padding:
+            0
+            6px;
+
+        font-size:9px;
+
+        gap:3px;
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR MUY PEQUEÑO
+========================================================== */
+
+@media(max-width:390px){
+
+    .map-toolbar{
+        top:5px;
+        left:5px;
+    }
+
+    .map-toolbar .mini-btn{
+        height:27px;
+
+        padding:
+            0
+            5px;
+
+        font-size:8px;
+    }
+
+}
