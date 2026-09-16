@@ -5393,3 +5393,62 @@ body{
             rgba(229,244,250,.70)
         );
 }
+/* ==========================================================
+   TERRI+ - TARJETAS TRANSPARENTES FINAL
+   EL FONDO CARTOGRÁFICO SE VE A TRAVÉS
+========================================================== */
+
+.menu-principal .menu-card{
+
+    /* IMPORTANTE: sin blur */
+    -webkit-backdrop-filter:none !important;
+    backdrop-filter:none !important;
+
+    border:
+        1px solid
+        rgba(255,255,255,.72);
+
+    box-shadow:
+        0 14px 32px
+        rgba(12,45,72,.10);
+}
+
+
+/* ==========================================================
+   GEOVISORES
+========================================================== */
+
+.menu-principal .card-mapas{
+    background:
+        rgba(242,250,253,.68) !important;
+}
+
+
+/* ==========================================================
+   AGENTE IA
+========================================================== */
+
+.menu-principal .card-ia{
+    background:
+        rgba(239,250,246,.68) !important;
+}
+
+
+/* ==========================================================
+   VISUALIZADOR DE CAPAS
+========================================================== */
+
+.menu-principal .card-capas{
+    background:
+        rgba(244,243,252,.68) !important;
+}
+
+
+/* ==========================================================
+   ACTUALIZACIÓN TRIBUTARIA
+========================================================== */
+
+.menu-principal .card-tributario{
+    background:
+        rgba(240,249,253,.68) !important;
+}
