@@ -55,6 +55,7 @@
 
         <!-- ==================================================
              BARRA DE HERRAMIENTAS DEL MAPA
+             TERRI+ - COMPACTA / MODERNA
         =================================================== -->
 
         <div class="map-toolbar">
@@ -69,14 +70,64 @@
             <button
               type="button"
               id="btnMapaBase"
-              class="mini-btn"
+              class="mini-btn btn-mapa-base"
               title="Seleccionar mapa base"
               aria-haspopup="true"
               aria-expanded="false"
             >
-              🗺️ Mapa base ▾
+
+              <!-- ICONO MAPA -->
+              <svg
+                class="toolbar-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+
+                <path
+                  d="M9 3v15M15 6v15"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+
+
+              <span>
+                Mapa base
+              </span>
+
+
+              <!-- FLECHA -->
+              <svg
+                class="toolbar-chevron"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M7 9l5 5 5-5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+
             </button>
 
+
+            <!-- ==========================================
+                 MENÚ DE MAPAS BASE
+            =========================================== -->
 
             <div
               id="menuMapaBase"
@@ -91,7 +142,7 @@
                 <span class="mapa-base-check"></span>
 
                 <span>
-                  🗺️ Carto Claro
+                  Carto Claro
                 </span>
 
               </button>
@@ -105,7 +156,7 @@
                 <span class="mapa-base-check"></span>
 
                 <span>
-                  🛰️ Satelital híbrido
+                  Satelital híbrido
                 </span>
 
               </button>
@@ -119,7 +170,7 @@
                 <span class="mapa-base-check"></span>
 
                 <span>
-                  🌍 OpenStreetMap
+                  OpenStreetMap
                 </span>
 
               </button>
@@ -136,10 +187,49 @@
           <button
             type="button"
             id="btnZoomResultado"
-            class="mini-btn"
+            class="mini-btn toolbar-action"
             title="Acercar al resultado"
+            aria-label="Acercar al resultado"
           >
-            🔍 Zoom resultado
+
+            <svg
+              class="toolbar-icon"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+
+              <circle
+                cx="10.5"
+                cy="10.5"
+                r="5.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+
+              <path
+                d="M14.5 14.5L20 20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+
+              <path
+                d="M10.5 8v5M8 10.5h5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+
+            </svg>
+
+
+            <span class="toolbar-action-text">
+              Zoom resultado
+            </span>
+
           </button>
 
 
@@ -150,10 +240,41 @@
           <button
             type="button"
             id="btnLimpiarMapa"
-            class="mini-btn"
+            class="mini-btn toolbar-action toolbar-clear"
             title="Eliminar resultados del mapa"
+            aria-label="Limpiar resultados del mapa"
           >
-            🧹 Limpiar mapa
+
+            <svg
+              class="toolbar-icon"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+
+              <path
+                d="M4 17l7-11 8 5-7 11H7z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+
+              <path
+                d="M7 17h10"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+
+            </svg>
+
+
+            <span class="toolbar-action-text">
+              Limpiar mapa
+            </span>
+
           </button>
 
         </div>
