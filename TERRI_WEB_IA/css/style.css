@@ -4514,4 +4514,40 @@ body{
     background-position: center center;
     background-repeat: no-repeat;
 }
+/* ==========================================================
+   TERRI+ - FONDO GENERAL DE LOS MÓDULOS
+   Mantiene el header azul y elimina el fondo gris
+========================================================== */
 
+/* Fondo general debajo del header */
+.app{
+    background-image:
+        url("../fondo_terri+.png");
+
+    background-size:cover;
+    background-position:center center;
+    background-repeat:no-repeat;
+}
+
+
+/* El área que contiene los módulos queda transparente
+   para permitir ver el fondo cartográfico */
+.visor-contenedor{
+    background:transparent;
+}
+
+
+/* Cuando abrimos un módulo */
+.modulo{
+    background:transparent;
+}
+
+
+/* Área que contiene mapa / dashboard / IA / tributario */
+.visor-inteligente{
+    background:transparent;
+}
+
+.visor-area{
+    background:transparent;
+}
