@@ -1000,3 +1000,354 @@ body{
 
     overflow:hidden;
 }
+/* ==========================================================
+   TERRI+ IA - LAYOUT INTEGRADO FINAL
+   MAPA + CHAT SIN ESPACIOS DESPERDICIADOS
+   DEBE PERMANECER AL FINAL DEL CSS
+========================================================== */
+
+
+/* ==========================================================
+   FONDO TRANSPARENTE
+========================================================== */
+
+html,
+body{
+    background:transparent !important;
+}
+
+
+/* Contenedor general */
+
+.terri-app{
+    background:transparent !important;
+}
+
+
+/* ==========================================================
+   MAPA + CHAT
+   Aprovechan prácticamente todo el espacio
+========================================================== */
+
+.terri-main{
+    flex:1 1 0;
+
+    width:100%;
+    min-width:0;
+    min-height:0;
+
+    display:grid;
+
+    /* Aproximadamente 70% mapa / 30% IA */
+    grid-template-columns:
+        minmax(0, 7fr)
+        minmax(330px, 3fr);
+
+    grid-template-rows:
+        minmax(0, 1fr);
+
+    /*
+       IMPORTANTE:
+       eliminamos el espacio exterior
+       y el espacio entre mapa y chat
+    */
+    gap:0;
+    padding:0;
+
+    overflow:hidden;
+
+    background:transparent;
+}
+
+
+/* ==========================================================
+   PANELES
+========================================================== */
+
+.mapa-panel,
+.columna-asistente,
+.chat-panel{
+    width:100%;
+    height:100%;
+
+    min-width:0;
+    min-height:0;
+
+    margin:0;
+
+    overflow:hidden;
+}
+
+
+/* ==========================================================
+   MAPA
+========================================================== */
+
+.mapa-panel{
+    position:relative;
+
+    border-radius:0;
+
+    box-shadow:none;
+
+    /*
+       Línea divisoria mínima.
+       No genera espacio físico entre mapa y chat.
+    */
+    border-right:
+        1px solid
+        #dce7ed;
+}
+
+
+.map{
+    flex:1 1 0;
+
+    width:100%;
+    height:100%;
+
+    min-width:0;
+    min-height:0;
+}
+
+
+/* ==========================================================
+   COLUMNA IA
+========================================================== */
+
+.columna-asistente{
+    display:flex;
+    flex-direction:column;
+
+    border-radius:0;
+
+    background:#ffffff;
+}
+
+
+.chat-panel{
+    flex:1 1 0;
+
+    display:flex;
+    flex-direction:column;
+
+    border-radius:0;
+
+    box-shadow:none;
+}
+
+
+/* ==========================================================
+   CHAT
+========================================================== */
+
+.chat-box{
+    flex:1 1 0;
+
+    width:100%;
+    height:auto;
+
+    min-width:0;
+    min-height:0;
+
+    padding:16px;
+
+    overflow-y:auto;
+    overflow-x:hidden;
+}
+
+
+/* ==========================================================
+   ÁREA PARA PREGUNTAR
+========================================================== */
+
+.input-area{
+    flex:0 0 auto;
+
+    width:100%;
+
+    position:relative;
+
+    z-index:5;
+
+    padding:10px 12px;
+}
+
+
+/* ==========================================================
+   FOOTER TÉCNICO
+   Más compacto para darle altura al mapa y al chat
+========================================================== */
+
+.terri-footer{
+    height:40px;
+    min-height:40px;
+    max-height:40px;
+
+    flex:0 0 40px;
+
+    padding:
+        3px
+        14px;
+
+    gap:16px;
+
+    background:
+        rgba(255,255,255,.96);
+
+    border-top:
+        1px solid
+        #dce7ed;
+
+    overflow:hidden;
+}
+
+
+/* ==========================================================
+   TABLET / MÓVIL
+========================================================== */
+
+@media(max-width:800px){
+
+    html,
+    body{
+        height:auto;
+        min-height:100%;
+
+        overflow-x:hidden;
+        overflow-y:auto;
+
+        background:transparent !important;
+    }
+
+
+    .terri-app{
+        position:relative;
+
+        height:auto;
+        min-height:100vh;
+        min-height:100dvh;
+
+        overflow:visible;
+    }
+
+
+    .terri-main{
+        display:flex;
+        flex-direction:column;
+
+        width:100%;
+
+        gap:0;
+        padding:0;
+
+        overflow:visible;
+    }
+
+
+    /* MAPA ARRIBA */
+
+    .mapa-panel{
+        width:100%;
+
+        height:55vh;
+        min-height:380px;
+
+        border-right:0;
+
+        border-bottom:
+            1px solid
+            #dce7ed;
+    }
+
+
+    /* CHAT DEBAJO */
+
+    .columna-asistente{
+        width:100%;
+
+        height:50vh;
+        min-height:430px;
+    }
+
+
+    .chat-panel{
+        height:100%;
+    }
+
+
+    /* Footer responsive */
+
+    .terri-footer{
+        height:auto;
+        min-height:0;
+        max-height:none;
+
+        flex-wrap:wrap;
+
+        padding:
+            8px
+            10px;
+    }
+
+
+    .footer-sql{
+        flex-basis:100%;
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR PEQUEÑO
+========================================================== */
+
+@media(max-width:480px){
+
+    .mapa-panel{
+        height:50vh;
+        min-height:330px;
+    }
+
+
+    .columna-asistente{
+        height:55vh;
+        min-height:400px;
+    }
+
+
+    .map-toolbar{
+        top:8px;
+        left:8px;
+        right:8px;
+
+        gap:5px;
+
+        padding:5px;
+
+        flex-wrap:wrap;
+    }
+
+
+    .mini-btn{
+        padding:7px 8px;
+
+        font-size:10px;
+    }
+
+
+    .panel-title-row{
+        padding:10px 11px;
+    }
+
+
+    .chat-header h2{
+        font-size:16px;
+    }
+
+
+    .chat-box{
+        padding:10px;
+    }
+
+}
