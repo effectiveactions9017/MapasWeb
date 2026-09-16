@@ -4756,66 +4756,136 @@ body{
 
 }
 /* ==========================================================
-   TERRI+ - HEADER FINAL
-   MARCA + CERRAR SESIÓN
+   TERRI+ - HEADER DEFINITIVO
+   LOGO + MARCA + DESCRIPCIÓN + CERRAR SESIÓN
 ========================================================== */
 
 .header{
-    background:#0C2D48;
-}
-
-
-/* Contenido completo del header */
-
-.header .header-content{
     width:100%;
+
+    height:var(--terri-header-h);
+    min-height:var(--terri-header-h);
+    max-height:var(--terri-header-h);
+
+    flex:0 0 var(--terri-header-h);
+
+    padding:
+        0
+        clamp(22px,4vw,64px);
 
     display:flex;
     align-items:center;
-    justify-content:space-between;
+    justify-content:flex-start;
 
-    gap:24px;
+    background:#0C2D48;
+
+    color:#ffffff;
+
+    text-align:left;
+
+    overflow:hidden;
 }
 
 
 /* ==========================================================
-   MARCA
+   CONTENEDOR GENERAL
 ========================================================== */
 
-.header-brand{
-    display:flex;
-    align-items:center;
+.header .header-content{
+    width:100%;
+    max-width:none;
+    height:100%;
+
+    margin:0;
+    padding:0;
+
+    display:flex !important;
+    flex-direction:row !important;
+
+    align-items:center !important;
+    justify-content:space-between !important;
 
     gap:
         clamp(
-            10px,
-            1.2vw,
-            18px
+            16px,
+            2vw,
+            28px
         );
-
-    min-width:0;
 }
 
 
-.header-brand .header-logo{
+/* ==========================================================
+   BLOQUE DE MARCA
+========================================================== */
+
+.header .header-brand{
+    width:auto;
+
+    min-width:0;
+
+    display:flex !important;
+    flex-direction:row !important;
+
+    align-items:center !important;
+    justify-content:flex-start !important;
+
+    gap:
+        clamp(
+            12px,
+            1.3vw,
+            18px
+        );
+
+    flex:0 1 auto;
+}
+
+
+/* MUY IMPORTANTE:
+   anulamos el grid antiguo aplicado a los div del header */
+
+.header .header-content > .header-brand{
+    display:flex !important;
+
+    grid-template-columns:none !important;
+}
+
+
+/* ==========================================================
+   ESCUDO
+========================================================== */
+
+.header .header-brand .header-logo{
     width:auto;
 
     height:
         clamp(
             46px,
-            5vw,
+            6vh,
             62px
         );
+
+    max-width:none;
+
+    margin:0;
 
     flex:0 0 auto;
 
     object-fit:contain;
+
+    filter:none;
 }
 
 
-/* TERRI+ */
+/* ==========================================================
+   TERRI+
+========================================================== */
 
-.header-name{
+.header .header-name{
+    margin:0;
+    padding:0;
+
+    border:0;
+
     color:#ffffff;
 
     font-size:
@@ -4830,7 +4900,7 @@ body{
     letter-spacing:
         clamp(
             2px,
-            .3vw,
+            .35vw,
             5px
         );
 
@@ -4840,48 +4910,69 @@ body{
 }
 
 
-.header-name span{
+.header .header-name span{
     color:#66c9bb;
 }
 
 
-/* Línea divisoria */
+/* ==========================================================
+   SEPARADOR
+========================================================== */
 
-.header-separator{
+.header .header-separator{
     width:1px;
 
     height:
         clamp(
-            32px,
-            4vw,
-            46px
+            34px,
+            4vh,
+            44px
+        );
+
+    min-width:1px;
+
+    margin:
+        0
+        clamp(
+            3px,
+            .5vw,
+            8px
         );
 
     flex:0 0 1px;
 
     background:
-        rgba(255,255,255,.32);
+        rgba(255,255,255,.30);
 }
 
 
-/* Geovisor inteligente... */
+/* ==========================================================
+   DESCRIPCIÓN
+========================================================== */
 
-.header-description{
+.header .header-description{
+    width:auto;
+    max-width:190px;
+
+    margin:0;
+
+    display:block;
+
     color:
         rgba(255,255,255,.94);
 
     font-size:
         clamp(
             10px,
-            .95vw,
+            .9vw,
             14px
         );
 
     font-weight:400;
 
-    line-height:1.25;
+    line-height:1.22;
 
-    white-space:nowrap;
+    white-space:normal;
 }
 
 
@@ -4889,13 +4980,20 @@ body{
    ACCIONES DERECHA
 ========================================================== */
 
-.header-actions{
+.header .header-actions{
+    width:auto;
+
     margin-left:auto;
 
-    display:flex;
-    align-items:center;
+    display:flex !important;
+    flex-direction:row !important;
+
+    align-items:center !important;
+    justify-content:flex-end !important;
 
     flex:0 0 auto;
+
+    grid-template-columns:none !important;
 }
 
 
@@ -4903,23 +5001,30 @@ body{
    CERRAR SESIÓN
 ========================================================== */
 
-.header-logout{
+.header .header-logout{
+    width:auto;
+
     height:
         clamp(
             36px,
-            3.4vw,
+            4vh,
             42px
         );
+
+    min-width:0;
+
+    margin:0;
 
     padding:
         0
         clamp(
-            13px,
+            14px,
             1.4vw,
             20px
         );
 
     display:inline-flex;
+
     align-items:center;
     justify-content:center;
 
@@ -4927,12 +5032,12 @@ body{
 
     border:
         1px solid
-        rgba(255,255,255,.42);
+        rgba(255,255,255,.40);
 
     border-radius:999px;
 
     background:
-        rgba(255,255,255,.04);
+        rgba(255,255,255,.035);
 
     color:#ffffff;
 
@@ -4947,7 +5052,11 @@ body{
 
     font-weight:600;
 
+    white-space:nowrap;
+
     cursor:pointer;
+
+    box-shadow:none;
 
     transition:
         background .18s ease,
@@ -4956,31 +5065,33 @@ body{
 }
 
 
-.header-logout svg{
+.header .header-logout svg{
     width:
         clamp(
             16px,
-            1.3vw,
-            19px
+            1.2vw,
+            18px
         );
 
     height:
         clamp(
             16px,
-            1.3vw,
-            19px
+            1.2vw,
+            18px
         );
 
     flex:0 0 auto;
+
+    display:block;
 }
 
 
-.header-logout:hover{
+.header .header-logout:hover{
     background:
-        rgba(255,255,255,.12);
+        rgba(255,255,255,.11);
 
     border-color:
-        rgba(255,255,255,.72);
+        rgba(255,255,255,.68);
 
     transform:
         translateY(-1px);
@@ -4989,11 +5100,8 @@ body{
 
 /* ==========================================================
    ACTUALIZACIÓN TRIBUTARIA
-   CAMBIO NARANJA → AZUL TERRI+
+   AZUL TERRI+
 ========================================================== */
-
-
-/* Fondo de la tarjeta */
 
 .menu-principal .card-tributario{
     background:
@@ -5005,45 +5113,36 @@ body{
 }
 
 
-/* Contenedor del icono */
+/* Icono */
 
-.menu-icon-tributario{
-    background:#dceffc !important;
-
+.menu-principal .menu-icon-tributario{
     color:#1478b8 !important;
+
+    background:#dceffc !important;
 }
 
 
-/* Línea de acento */
+/* IMPORTANTE:
+   esta es la línea que todavía estaba naranja */
 
-.card-tributario::after{
-    background:#1885c5 !important;
-}
-
-
-/* Por si tu línea usa otro selector */
-
-.card-tributario .card-accent,
-.card-tributario .menu-card-line{
+.menu-principal .card-tributario p::after{
     background:#1885c5 !important;
 }
 
 
 /* Botón */
 
-.card-tributario > button{
+.menu-principal .card-tributario button{
     background:
         linear-gradient(
             135deg,
             #258bc6,
             #0875b9
         ) !important;
-
-    color:#ffffff;
 }
 
 
-.card-tributario > button:hover{
+.menu-principal .card-tributario button:hover{
     background:
         linear-gradient(
             135deg,
@@ -5053,72 +5152,143 @@ body{
 }
 
 
-/* Círculo de la flecha */
+/* Círculo de flecha */
 
-.card-tributario > button strong{
+.menu-principal .card-tributario button strong{
     background:
         rgba(255,255,255,.15);
 }
 
 
 /* ==========================================================
-   RESPONSIVE HEADER
+   TABLET
 ========================================================== */
 
-@media(max-width:700px){
+@media(max-width:900px){
+
+    .header{
+        padding:
+            0
+            20px;
+    }
+
 
     .header .header-content{
+        gap:14px;
+    }
+
+
+    .header .header-brand{
         gap:10px;
     }
 
 
-    .header-brand{
+    .header .header-brand .header-logo{
+        height:46px;
+    }
+
+
+    .header .header-name{
+        font-size:28px;
+
+        letter-spacing:3px;
+    }
+
+
+    .header .header-separator{
+        height:32px;
+
+        margin:
+            0
+            3px;
+    }
+
+
+    .header .header-description{
+        max-width:140px;
+
+        font-size:10px;
+    }
+
+
+    .header .header-logout{
+        height:36px;
+
+        padding:
+            0
+            13px;
+
+        font-size:10px;
+    }
+
+}
+
+
+/* ==========================================================
+   CELULAR
+========================================================== */
+
+@media(max-width:700px){
+
+    .header{
+        padding:
+            0
+            11px;
+    }
+
+
+    .header .header-content{
+        gap:8px;
+    }
+
+
+    .header .header-brand{
         gap:7px;
     }
 
 
-    .header-brand .header-logo{
+    .header .header-brand .header-logo{
         height:38px;
     }
 
 
-    .header-name{
-        font-size:22px;
+    .header .header-name{
+        font-size:21px;
 
         letter-spacing:2px;
     }
 
 
-    .header-separator{
-        height:27px;
+    /*
+       En celular quitamos descripción y separador.
+       Así evitamos que el header se parta.
+    */
+
+    .header .header-separator,
+    .header .header-description{
+        display:none;
     }
 
 
-    .header-description{
-        font-size:8px;
-    }
+    /*
+       Cerrar sesión queda solo como icono.
+    */
 
-
-    .header-logout{
-        width:38px;
-        min-width:38px;
-        height:38px;
+    .header .header-logout{
+        width:36px;
+        min-width:36px;
+        height:36px;
 
         padding:0;
     }
 
 
-    /*
-       En celular dejamos únicamente el icono
-       para ahorrar espacio.
-    */
-
-    .header-logout span{
+    .header .header-logout span{
         display:none;
     }
 
 
-    .header-logout svg{
+    .header .header-logout svg{
         width:17px;
         height:17px;
     }
@@ -5130,28 +5300,37 @@ body{
    CELULAR MUY PEQUEÑO
 ========================================================== */
 
-@media(max-width:430px){
+@media(max-width:390px){
 
-    .header-description,
-    .header-separator{
-        display:none;
+    .header{
+        padding:
+            0
+            8px;
     }
 
 
-    .header-brand .header-logo{
-        height:34px;
+    .header .header-brand .header-logo{
+        height:33px;
     }
 
 
-    .header-name{
-        font-size:19px;
+    .header .header-name{
+        font-size:18px;
+
+        letter-spacing:1.5px;
     }
 
 
-    .header-logout{
-        width:34px;
-        min-width:34px;
-        height:34px;
+    .header .header-logout{
+        width:32px;
+        min-width:32px;
+        height:32px;
+    }
+
+
+    .header .header-logout svg{
+        width:15px;
+        height:15px;
     }
 
 }
