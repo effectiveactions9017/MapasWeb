@@ -1,11 +1,11 @@
 // =====================================================
 // VISOR EVOLUCIÓN DE CONSTRUCCIONES — SESQUILÉ
 // =====================================================
-//
 // ✅ Mapa satelital
 // ✅ Evolución construcciones 1985 - 2024
 // ✅ Autoplay automático una sola vez
-// ✅ Slider manual después de la animación
+// ✅ Slider manual
+// ✅ Contorno blanco fino en construcciones
 // =====================================================
 
 
@@ -27,7 +27,7 @@ const map =
     container:
       'map',
 
-    // 🛰️ MAPA SATELITAL
+    // MAPA SATELITAL
     style:
       'mapbox://styles/mapbox/satellite-streets-v12',
 
@@ -50,6 +50,15 @@ const map =
 
 
 // =====================================================
+// CONTROL DE NAVEGACIÓN
+// =====================================================
+
+map.addControl(
+  new mapboxgl.NavigationControl()
+);
+
+
+// =====================================================
 // DATOS
 // =====================================================
 
@@ -61,7 +70,7 @@ let geojsonData =
 // POPUP
 // =====================================================
 
-let popup =
+const popup =
   new mapboxgl.Popup({
 
     closeButton:
@@ -77,15 +86,7 @@ let popup =
 
 
 // =====================================================
-// CONFIGURACIÓN AUTOPLAY
-// =====================================================
-//
-// La animación:
-//
-// 1985 → 1986 → 1987 → ... → 2024
-//
-// y se ejecuta UNA SOLA VEZ.
-//
+// AUTOPLAY
 // =====================================================
 
 const AUTOPLAY_START_YEAR =
@@ -96,27 +97,376 @@ const AUTOPLAY_END_YEAR =
   2024;
 
 
-// Tiempo entre cada año.
-//
-// 350 ms = animación relativamente fluida.
-//
-// 39 pasos x 350 ms ≈ 14 segundos.
-//
+// 350 ms por año.
+// Recorrido aproximado: 14 segundos.
 const AUTOPLAY_INTERVAL =
   350;
 
 
-// Evita que se ejecute dos veces.
+// Evita ejecutar dos veces la animación.
 let autoplayEjecutado =
   false;
 
 
-// Guarda el temporizador.
+// Intervalo del autoplay.
 let autoplayTimer =
   null;
+
+
+// Timeout inicial.
+// Nos permite cancelar también el segundo de espera
+// si el usuario toca el slider.
+let autoplayStartTimeout =
+  null;
+
+
 // =====================================================
-// PARTE 2
-// CONSTRUCCIONES + POPUP + LÍMITES
+// CONFIGURAR SLIDER + AUTOPLAY
+// =====================================================
+
+function configurarSliderYAutoplay() {
+
+
+  const yearSlider =
+    document.getElementById(
+      'year-slider'
+    );
+
+
+  const yearLabel =
+    document.getElementById(
+      'year-label'
+    );
+
+
+  if (
+    !yearSlider ||
+    !yearLabel
+  ) {
+
+    console.warn(
+      'No se encontró year-slider o year-label.'
+    );
+
+    return;
+
+  }
+
+
+  // ===================================================
+  // CONFIGURACIÓN DEL SLIDER
+  // ===================================================
+
+  yearSlider.min =
+    AUTOPLAY_START_YEAR;
+
+
+  yearSlider.max =
+    AUTOPLAY_END_YEAR;
+
+
+  yearSlider.step =
+    1;
+
+
+  // ===================================================
+  // APLICAR AÑO
+  // ===================================================
+
+  function aplicarAnio(
+    year
+  ) {
+
+
+    const selectedYear =
+      Number(year);
+
+
+    if (
+      !Number.isFinite(
+        selectedYear
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    // Actualizar slider
+    yearSlider.value =
+      selectedYear;
+
+
+    // Actualizar etiqueta
+    yearLabel.textContent =
+      `${selectedYear}`;
+
+
+    // =================================================
+    // FILTRO ACUMULATIVO
+    // =================================================
+    //
+    // Ejemplo:
+    //
+    // 1995 = construcciones hasta 1995
+    // 2010 = construcciones hasta 2010
+    // 2024 = todas
+    //
+    // =================================================
+
+    const filtroAnio = [
+
+      '<=',
+
+      [
+        'get',
+        'const_year'
+      ],
+
+      selectedYear
+
+    ];
+
+
+    // =================================================
+    // FILTRAR RELLENO
+    // =================================================
+
+    if (
+      map.getLayer(
+        'buildings'
+      )
+    ) {
+
+      map.setFilter(
+
+        'buildings',
+
+        filtroAnio
+
+      );
+
+    }
+
+
+    // =================================================
+    // FILTRAR CONTORNO
+    // =================================================
+    //
+    // MUY IMPORTANTE:
+    // El contorno debe recibir exactamente el mismo
+    // filtro que el relleno.
+    //
+    // =================================================
+
+    if (
+      map.getLayer(
+        'buildings_outline'
+      )
+    ) {
+
+      map.setFilter(
+
+        'buildings_outline',
+
+        filtroAnio
+
+      );
+
+    }
+
+  }
+
+
+  // ===================================================
+  // DETENER AUTOPLAY
+  // ===================================================
+
+  function detenerAutoplay() {
+
+
+    // Detener intervalo
+    if (
+      autoplayTimer
+    ) {
+
+      clearInterval(
+        autoplayTimer
+      );
+
+
+      autoplayTimer =
+        null;
+
+    }
+
+
+    // Detener espera inicial
+    if (
+      autoplayStartTimeout
+    ) {
+
+      clearTimeout(
+        autoplayStartTimeout
+      );
+
+
+      autoplayStartTimeout =
+        null;
+
+    }
+
+  }
+
+
+  // ===================================================
+  // SLIDER MANUAL
+  // ===================================================
+
+  yearSlider.addEventListener(
+
+    'input',
+
+    (event) => {
+
+
+      // Si el usuario interviene,
+      // detener la animación.
+      detenerAutoplay();
+
+
+      const selectedYear =
+        Number(
+          event.target.value
+        );
+
+
+      aplicarAnio(
+        selectedYear
+      );
+
+    }
+
+  );
+
+
+  // ===================================================
+  // EVITAR SEGUNDO AUTOPLAY
+  // ===================================================
+
+  if (
+    autoplayEjecutado
+  ) {
+
+    return;
+
+  }
+
+
+  autoplayEjecutado =
+    true;
+
+
+  // ===================================================
+  // COMENZAR EN 1985
+  // ===================================================
+
+  let currentYear =
+    AUTOPLAY_START_YEAR;
+
+
+  aplicarAnio(
+    currentYear
+  );
+
+
+  // ===================================================
+  // ESPERAR 1 SEGUNDO EN 1985
+  // ===================================================
+
+  autoplayStartTimeout =
+    setTimeout(
+      () => {
+
+
+        autoplayStartTimeout =
+          null;
+
+
+        // =============================================
+        // INICIAR ANIMACIÓN
+        // =============================================
+
+        autoplayTimer =
+          setInterval(
+            () => {
+
+
+              currentYear +=
+                1;
+
+
+              // =======================================
+              // SEGURIDAD
+              // =======================================
+
+              if (
+                currentYear >
+                AUTOPLAY_END_YEAR
+              ) {
+
+                aplicarAnio(
+                  AUTOPLAY_END_YEAR
+                );
+
+
+                detenerAutoplay();
+
+
+                return;
+
+              }
+
+
+              // =======================================
+              // MOSTRAR SIGUIENTE AÑO
+              // =======================================
+
+              aplicarAnio(
+                currentYear
+              );
+
+
+              // =======================================
+              // TERMINAR EN 2024
+              // =======================================
+
+              if (
+                currentYear ===
+                AUTOPLAY_END_YEAR
+              ) {
+
+                detenerAutoplay();
+
+              }
+
+            },
+
+            AUTOPLAY_INTERVAL
+
+          );
+
+      },
+
+      1000
+
+    );
+
+}
+// =====================================================
+// PARTE 2 DE 3
+// CONSTRUCCIONES + CONTORNO + POPUP + LÍMITES
 // =====================================================
 
 
@@ -130,12 +480,7 @@ map.on(
 
 
     // =================================================
-    // IDENTIFICAR CAPA DE ETIQUETAS
-    // =================================================
-    //
-    // Esto permite colocar las construcciones debajo
-    // de los nombres y etiquetas del mapa satelital.
-    //
+    // IDENTIFICAR CAPA DE ETIQUETAS DEL MAPA
     // =================================================
 
     const layers =
@@ -157,7 +502,7 @@ map.on(
 
 
     // =================================================
-    // 1. CARGAR CONSTRUCCIONES
+    // CARGAR CONSTRUCCIONES
     // =================================================
 
     fetch(
@@ -221,7 +566,7 @@ map.on(
 
 
           // ===========================================
-          // CAPA DE CONSTRUCCIONES
+          // CAPA DE RELLENO DE CONSTRUCCIONES
           // ===========================================
 
           if (
@@ -301,10 +646,12 @@ map.on(
 
 
                   // ===================================
-                  // TRANSPARENCIA
+                  // OPACIDAD
+                  // ===================================
                   //
-                  // Dejamos un poco visible el
-                  // satélite debajo.
+                  // Permite apreciar el satélite
+                  // debajo de las construcciones.
+                  //
                   // ===================================
 
                   'fill-opacity':
@@ -315,12 +662,111 @@ map.on(
               },
 
 
-              // Debajo de las etiquetas
+              // Debajo de las etiquetas del mapa
               labelLayerId
 
             );
 
           }
+
+
+          // ===========================================
+          // NUEVO:
+          // CONTORNO DE CADA CONSTRUCCIÓN
+          // ===========================================
+          //
+          // Creamos una capa independiente porque
+          // así podemos controlar exactamente:
+          //
+          // color
+          // grosor
+          // opacidad
+          //
+          // ===========================================
+
+          if (
+            !map.getLayer(
+              'buildings_outline'
+            )
+          ) {
+
+            map.addLayer(
+
+              {
+
+                id:
+                  'buildings_outline',
+
+                source:
+                  'buildings',
+
+                type:
+                  'line',
+
+                minzoom:
+                  12,
+
+                paint: {
+
+                  // Contorno blanco
+                  'line-color':
+                    '#ffffff',
+
+                  // Borde fino
+                  'line-width':
+                    0.6,
+
+                  // Visible pero no demasiado fuerte
+                  'line-opacity':
+                    0.80
+
+                }
+
+              },
+
+
+              // También debajo de las etiquetas
+              labelLayerId
+
+            );
+
+          }
+
+
+          // ===========================================
+          // ASEGURAR ORDEN:
+          //
+          // relleno
+          // ↓
+          // contorno
+          // ↓
+          // etiquetas
+          // ===========================================
+
+          try {
+
+
+            if (
+              map.getLayer(
+                'buildings'
+              ) &&
+              map.getLayer(
+                'buildings_outline'
+              )
+            ) {
+
+              map.moveLayer(
+
+                'buildings_outline',
+
+                labelLayerId
+
+              );
+
+            }
+
+
+          } catch (e) {}
 
 
           // ===========================================
@@ -358,7 +804,7 @@ map.on(
 
 
           // ===========================================
-          // POPUP AL PASAR EL MOUSE
+          // POPUP SOBRE CONSTRUCCIONES
           // ===========================================
 
           map.on(
@@ -488,7 +934,7 @@ map.on(
 
 
           // ===========================================
-          // CURSOR
+          // CURSOR SOBRE CONSTRUCCIONES
           // ===========================================
 
           map.on(
@@ -533,7 +979,7 @@ map.on(
 
 
           // ===========================================
-          // 2. LÍMITE URBANO
+          // LÍMITE URBANO
           // ===========================================
 
           addOutlineOnly({
@@ -560,7 +1006,7 @@ map.on(
 
 
           // ===========================================
-          // 3. LÍMITE MUNICIPAL
+          // LÍMITE MUNICIPAL
           // ===========================================
 
           addOutlineOnly({
@@ -587,7 +1033,7 @@ map.on(
 
 
           // ===========================================
-          // ASEGURAR LÍMITES ARRIBA
+          // LÍMITES ENCIMA DE LAS CONSTRUCCIONES
           // ===========================================
 
           setTimeout(
@@ -632,8 +1078,7 @@ map.on(
 
 
           // ===========================================
-          // EL SLIDER + AUTOPLAY SE CONFIGURAN
-          // EN LA PARTE 3
+          // INICIAR SLIDER + AUTOPLAY
           // ===========================================
 
           configurarSliderYAutoplay();
@@ -642,6 +1087,10 @@ map.on(
 
       )
 
+
+      // =================================================
+      // ERROR
+      // =================================================
 
       .catch(
         (err) => {
@@ -661,357 +1110,17 @@ map.on(
 
 );
 // =====================================================
-// PARTE 3
-// SLIDER + AUTOPLAY 1985 → 2024
-// =====================================================
-
-
-// =====================================================
-// CONFIGURAR SLIDER Y AUTOPLAY
-// =====================================================
-
-function configurarSliderYAutoplay() {
-
-
-  // ===================================================
-  // OBTENER ELEMENTOS DEL HTML
-  // ===================================================
-
-  const yearSlider =
-    document.getElementById(
-      'year-slider'
-    );
-
-
-  const yearLabel =
-    document.getElementById(
-      'year-label'
-    );
-
-
-  // Si el HTML no tiene slider o etiqueta,
-  // no hacemos nada.
-  if (
-    !yearSlider ||
-    !yearLabel
-  ) {
-
-    console.warn(
-      'No se encontró year-slider o year-label.'
-    );
-
-    return;
-
-  }
-
-
-  // ===================================================
-  // CONFIGURAR RANGO
-  // ===================================================
-
-  yearSlider.min =
-    AUTOPLAY_START_YEAR;
-
-
-  yearSlider.max =
-    AUTOPLAY_END_YEAR;
-
-
-  yearSlider.step =
-    1;
-
-
-  // ===================================================
-  // FUNCIÓN CENTRAL PARA CAMBIAR AÑO
-  // ===================================================
-  //
-  // Esta misma función será utilizada por:
-  //
-  // 1. El autoplay.
-  // 2. El movimiento manual del slider.
-  //
-  // ===================================================
-
-  function aplicarAnio(
-    year
-  ) {
-
-
-    const selectedYear =
-      Number(year);
-
-
-    if (
-      !Number.isFinite(
-        selectedYear
-      )
-    ) {
-
-      return;
-
-    }
-
-
-    // ===============================================
-    // ACTUALIZAR SLIDER
-    // ===============================================
-
-    yearSlider.value =
-      selectedYear;
-
-
-    // ===============================================
-    // ACTUALIZAR TEXTO
-    // ===============================================
-
-    yearLabel.textContent =
-      `${selectedYear}`;
-
-
-    // ===============================================
-    // FILTRAR CONSTRUCCIONES
-    // ===============================================
-    //
-    // Se conserva tu comportamiento original:
-    //
-    // const_year <= año seleccionado
-    //
-    // Por tanto, la evolución es ACUMULATIVA.
-    //
-    // ===============================================
-
-    if (
-      map.getLayer(
-        'buildings'
-      )
-    ) {
-
-      map.setFilter(
-
-        'buildings',
-
-        [
-
-          '<=',
-
-          [
-            'get',
-            'const_year'
-          ],
-
-          selectedYear
-
-        ]
-
-      );
-
-    }
-
-  }
-
-
-  // ===================================================
-  // DETENER AUTOPLAY
-  // ===================================================
-
-  function detenerAutoplay() {
-
-
-    if (
-      autoplayTimer
-    ) {
-
-      clearInterval(
-        autoplayTimer
-      );
-
-
-      autoplayTimer =
-        null;
-
-    }
-
-  }
-
-
-  // ===================================================
-  // MOVIMIENTO MANUAL DEL SLIDER
-  // ===================================================
-  //
-  // Si el usuario toca el slider mientras se está
-  // reproduciendo la animación, detenemos el autoplay
-  // y le damos el control inmediatamente.
-  //
-  // ===================================================
-
-  yearSlider.addEventListener(
-
-    'input',
-
-    (event) => {
-
-
-      detenerAutoplay();
-
-
-      const selectedYear =
-        Number(
-          event.target.value
-        );
-
-
-      aplicarAnio(
-        selectedYear
-      );
-
-    }
-
-  );
-
-
-  // ===================================================
-  // EVITAR AUTOPLAY DUPLICADO
-  // ===================================================
-
-  if (
-    autoplayEjecutado
-  ) {
-
-    return;
-
-  }
-
-
-  autoplayEjecutado =
-    true;
-
-
-  // ===================================================
-  // COMENZAR EN 1985
-  // ===================================================
-
-  let currentYear =
-    AUTOPLAY_START_YEAR;
-
-
-  aplicarAnio(
-    currentYear
-  );
-
-
-  // ===================================================
-  // PEQUEÑA ESPERA ANTES DE EMPEZAR
-  // ===================================================
-  //
-  // Dejamos aproximadamente 1 segundo mostrando 1985
-  // antes de comenzar el recorrido.
-  //
-  // ===================================================
-
-  setTimeout(
-    () => {
-
-
-      // Si por alguna razón ya existe un timer,
-      // no crear otro.
-      if (
-        autoplayTimer
-      ) {
-
-        return;
-
-      }
-
-
-      // ===============================================
-      // INICIAR AUTOPLAY
-      // ===============================================
-
-      autoplayTimer =
-        setInterval(
-          () => {
-
-
-            // =========================================
-            // SIGUIENTE AÑO
-            // =========================================
-
-            currentYear +=
-              1;
-
-
-            // =========================================
-            // ¿LLEGAMOS AL FINAL?
-            // =========================================
-
-            if (
-              currentYear >
-              AUTOPLAY_END_YEAR
-            ) {
-
-
-              // Asegurar que quede exactamente en 2024
-              aplicarAnio(
-                AUTOPLAY_END_YEAR
-              );
-
-
-              detenerAutoplay();
-
-
-              return;
-
-            }
-
-
-            // =========================================
-            // MOSTRAR AÑO
-            // =========================================
-
-            aplicarAnio(
-              currentYear
-            );
-
-
-            // =========================================
-            // SI ESTAMOS EN 2024, DETENER
-            // =========================================
-
-            if (
-              currentYear ===
-              AUTOPLAY_END_YEAR
-            ) {
-
-              detenerAutoplay();
-
-            }
-
-          },
-
-          AUTOPLAY_INTERVAL
-
-        );
-
-    },
-
-    1000
-
-  );
-
-}
-
-
-// =====================================================
+// PARTE 3 DE 3 — FINAL
 // FUNCIÓN PARA AGREGAR CONTORNOS
 // =====================================================
 //
-// Se conserva para:
+// Se utiliza para:
 //
-// - Límite urbano
-// - Límite municipal
+// 1. Límite urbano
+// 2. Límite municipal
 //
-// Sin relleno.
-//
+// Los límites son únicamente contornos.
+// NO tienen relleno.
 // =====================================================
 
 function addOutlineOnly({
@@ -1033,6 +1142,10 @@ function addOutlineOnly({
 
 }) {
 
+
+  // ===================================================
+  // CARGAR GEOJSON
+  // ===================================================
 
   fetch(
     `../src/data/${geojsonFile}`
@@ -1087,7 +1200,7 @@ function addOutlineOnly({
 
 
         // =============================================
-        // CAPA
+        // CAPA DE CONTORNO
         // =============================================
 
         if (
@@ -1127,10 +1240,36 @@ function addOutlineOnly({
 
         }
 
+
+        // =============================================
+        // MANTENER EL LÍMITE ENCIMA
+        // =============================================
+
+        try {
+
+          if (
+            map.getLayer(
+              layerId
+            )
+          ) {
+
+            map.moveLayer(
+              layerId
+            );
+
+          }
+
+        } catch (e) {}
+
+
       }
 
     )
 
+
+    // =================================================
+    // ERROR
+    // =================================================
 
     .catch(
       (err) => {
