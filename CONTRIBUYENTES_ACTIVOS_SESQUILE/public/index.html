@@ -1,138 +1,378 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
   <meta charset="utf-8">
+
   <title>Contribuyentes y Predios — Sesquilé</title>
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
-  <!-- Mapbox CSS -->
-  <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet" />
-  <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+  <meta
+    name="viewport"
+    content="initial-scale=1,maximum-scale=1,user-scalable=no"
+  >
 
-  <!-- Geocoder -->
-  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
-  <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" rel="stylesheet" />
 
-  <!-- Turf.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+  <!-- ============================================== -->
+  <!-- MAPBOX -->
+  <!-- ============================================== -->
 
-  <!-- Fuentes y estilos adicionales -->
-  <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap" rel="stylesheet">
-  <link href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css" rel="stylesheet">
-  <script async defer src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"></script>
+  <link
+    href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css"
+    rel="stylesheet"
+  />
 
-  <!-- CSS personalizado -->
-  <link rel="stylesheet" href="../src/main.css" />
+  <script
+    src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js">
+  </script>
 
-  <!-- CSS extra: control de capas (dropdown + checks) -->
+
+  <!-- ============================================== -->
+  <!-- GEOCODER -->
+  <!-- ============================================== -->
+
+  <script
+    src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js">
+  </script>
+
+  <link
+    href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
+    rel="stylesheet"
+  />
+
+
+  <!-- ============================================== -->
+  <!-- TURF.JS -->
+  <!-- ============================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js">
+  </script>
+
+
+  <!-- ============================================== -->
+  <!-- FUENTES -->
+  <!-- ============================================== -->
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- ============================================== -->
+  <!-- MAPBOX ASSEMBLY -->
+  <!-- ============================================== -->
+
+  <link
+    href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css"
+    rel="stylesheet"
+  >
+
+  <script
+    async
+    defer
+    src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js">
+  </script>
+
+
+  <!-- ============================================== -->
+  <!-- CSS PERSONALIZADO -->
+  <!-- ============================================== -->
+
+  <link
+    rel="stylesheet"
+    href="../src/main.css"
+  />
+
+
+  <!-- ============================================== -->
+  <!-- CSS EXTRA: LEYENDA / CONTROL DE CAPAS -->
+  <!-- ============================================== -->
+
   <style>
-    .legend-color{
-      display:inline-block;
-      width:12px;
-      height:12px;
-      margin-right:8px;
-      vertical-align:middle;
-      border:1px solid rgba(255,255,255,.85);
-      box-sizing:border-box;
+
+    /* ============================================== */
+    /* CÍRCULOS DE COLOR */
+    /* ============================================== */
+
+    .legend-color {
+
+      display: inline-block;
+
+      width: 12px;
+
+      height: 12px;
+
+      margin-right: 8px;
+
+      vertical-align: middle;
+
+      border:
+        1px solid rgba(255,255,255,.85);
+
+      box-sizing:
+        border-box;
+
     }
 
-    /* Iconos (SOLO PUNTOS) */
-    .persona-natural{ background:#2ec4b6; border-radius:999px; }
-    .persona-juridica{ background:#ff006e; border-radius:999px; }
 
-    /* ✅ CONTROL DE CAPAS (UI) */
-    .layer-control{
-      position:absolute;
-      top: 15px;
-      right: 10px;
-      z-index: 30;
-      background: rgba(0,0,0,0.75);
-      padding: 12px;
-      border-radius: 10px;
-      width: 250px;
-      color: #fff;
-      font-family: 'Libre Franklin', sans-serif;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-      border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(3px);
+    /* Persona Natural */
+
+    .persona-natural {
+
+      background:
+        #2ec4b6;
+
+      border-radius:
+        999px;
+
     }
-    .lc-title{
-      font-weight: 800;
-      margin-bottom: 8px;
-      letter-spacing: .2px;
+
+
+    /* Persona Jurídica */
+
+    .persona-juridica {
+
+      background:
+        #ff006e;
+
+      border-radius:
+        999px;
+
     }
-    .lc-select{
-      width:100%;
-      padding:8px;
-      border-radius:8px;
-      border:1px solid rgba(255,255,255,0.18);
-      background:#111;
-      color:#fff;
-      outline:none;
-      margin-bottom:10px;
+
+
+    /* ============================================== */
+    /* CONTROL DE CAPAS */
+    /* ============================================== */
+
+    .layer-control {
+
+      position:
+        absolute;
+
+      top:
+        15px;
+
+      right:
+        10px;
+
+      z-index:
+        30;
+
+      background:
+        rgba(0,0,0,0.75);
+
+      padding:
+        12px;
+
+      border-radius:
+        10px;
+
+      width:
+        250px;
+
+      color:
+        #fff;
+
+      font-family:
+        'Libre Franklin',
+        sans-serif;
+
+      box-shadow:
+        0 6px 18px
+        rgba(0,0,0,0.35);
+
+      border:
+        1px solid
+        rgba(255,255,255,0.12);
+
+      backdrop-filter:
+        blur(3px);
+
     }
-    .lc-group{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
+
+
+    /* ============================================== */
+    /* GRUPO DE CHECKBOXES */
+    /* ============================================== */
+
+    .lc-group {
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      gap:
+        10px;
+
     }
-    .lc-item{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      font-size:13px;
-      line-height: 1.2;
-      user-select:none;
+
+
+    /* ============================================== */
+    /* CADA FILA */
+    /* ============================================== */
+
+    .lc-item {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        8px;
+
+      font-size:
+        13px;
+
+      line-height:
+        1.2;
+
+      user-select:
+        none;
+
+      cursor:
+        pointer;
+
     }
-    .lc-item input{ transform: translateY(1px); }
+
+
+    /* ============================================== */
+    /* CHECKBOX */
+    /* ============================================== */
+
+    .lc-item input {
+
+      transform:
+        translateY(1px);
+
+      cursor:
+        pointer;
+
+    }
+
   </style>
+
 </head>
+
 
 <body>
 
-  <!-- CONTENEDOR DEL MAPA -->
+
+  <!-- ============================================== -->
+  <!-- MAPA -->
+  <!-- ============================================== -->
+
   <div id="map"></div>
 
-  <!-- ✅ CONTROL DE CAPAS (SOLO PUNTOS) -->
-  <div id="layerControl" class="layer-control">
-    <div class="lc-title">Filtros de visualización</div>
 
-    <select id="lcMode" class="lc-select">
-      <option value="ALL" selected>Ver ambos (Natural + Jurídica)</option>
-      <option value="NATURAL">Solo Persona NATURAL (puntos)</option>
-      <option value="JURIDICO">Solo Persona JURÍDICA (puntos)</option>
-    </select>
+  <!-- ============================================== -->
+  <!-- CONTROL DE CAPAS -->
+  <!-- ============================================== -->
+  <!--
+       Ya NO tiene:
+       - "Filtros de visualización"
+       - desplegable "Ver ambos..."
+  -->
+
+  <div
+    id="layerControl"
+    class="layer-control"
+  >
+
 
     <div class="lc-group">
-      <label class="lc-item">
-        <input type="checkbox" id="toggle_persona_natural" checked />
-        <span class="legend-color persona-natural"></span>
-        Persona natural (puntos)
-      </label>
+
+
+      <!-- ========================================== -->
+      <!-- PERSONA NATURAL -->
+      <!-- ========================================== -->
 
       <label class="lc-item">
-        <input type="checkbox" id="toggle_persona_juridica" checked />
-        <span class="legend-color persona-juridica"></span>
-        Persona jurídica (puntos)
+
+        <input
+          type="checkbox"
+          id="toggle_persona_natural"
+          checked
+        />
+
+
+        <span
+          class="legend-color persona-natural">
+        </span>
+
+
+        <span>
+          Persona natural (puntos)
+        </span>
+
       </label>
+
+
+      <!-- ========================================== -->
+      <!-- PERSONA JURÍDICA -->
+      <!-- ========================================== -->
+
+      <label class="lc-item">
+
+        <input
+          type="checkbox"
+          id="toggle_persona_juridica"
+          checked
+        />
+
+
+        <span
+          class="legend-color persona-juridica">
+        </span>
+
+
+        <span>
+          Persona jurídica (puntos)
+        </span>
+
+      </label>
+
+
     </div>
+
   </div>
 
-  <!-- ✅ QUITAMOS LA LEYENDA DE ABAJO (YA NO SE NECESITA) -->
-  <!-- (Se eliminó el bloque <div id="legend" ...> completo) -->
 
-  <!-- ========================= -->
-  <!-- CAJA DE INFORMACIÓN (opcional) -->
-  <!-- ========================= -->
+  <!-- ============================================== -->
+  <!-- CAJA DE INFORMACIÓN -->
+  <!-- ============================================== -->
+
   <div class="info-box">
-    <h3>Información</h3>
+
+    <h3>
+      Información
+    </h3>
+
+
     <div class="info-content">
+
       Busca un contribuyente para ver detalles
+
     </div>
+
   </div>
 
+
+  <!-- ============================================== -->
   <!-- SCRIPT PRINCIPAL -->
-  <script src="../src/index.js"></script>
+  <!-- ============================================== -->
+
+  <script
+    src="../src/index.js">
+  </script>
+
 
 </body>
+
 </html>
