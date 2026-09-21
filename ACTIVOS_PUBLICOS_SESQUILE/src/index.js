@@ -559,10 +559,10 @@ function addPublicosLayer() {
             paint: {
 
               "fill-color":
-                "#2ec4b6",
+                "#ff2d95",
 
               "fill-opacity":
-                0.50,
+                0.60,
 
               "fill-outline-color":
                 "#ffffff"
