@@ -1,1077 +1,4899 @@
 // =====================================================
 // ✅ Visor Predial + Recaudo impuesto ICA – Sesquilé
-// ✅ + Contribuyentes Activos (Jurídica + Natural) (puntos) ✅ MISMO COLOR + MISMO NOMBRE
-// ✅ + Fachadas con letreros encontradas (puntos)           ✅ NUEVO (antes: construcciones que coinciden)
-// ✅ + Posibilidades de recaudo del ICA (puntos)            ✅ NUEVO NOMBRE (antes: unidades productivas identificadas)
-// ✅ + ICA muestra FOTO (campo FOTOS) en el popup
-// ✅ Popup organizado + Foto ampliable (clic)
-// ✅ Popup siempre visible (SMART pan automático, no se recorta)
-// ✅ FIX: ICA ya NO se ve tan oscuro
-// ✅ FIX: Activos ya NO se ven transparentes (tarjeta con fondo)
-// ✅ FIX: Código predial ya NO se recorta (wrap inteligente en grid)
-// ❌ (ELIMINADO) Predios Contribuyentes Jurídicos (polígono)
-// ✅ NUEVO: Leyenda con ON/OFF + orden fijo de capas
+// ✅ Mapa base SATELITAL
+// ✅ Zoom inicial: Posible recaudo ICA
+// ✅ Puntos optimizados para mejor visualización
+// ✅ Predios con línea más delgada y 50% opacidad
+// ✅ Selección única entre capas
+// ✅ Contribuyentes activos con popup simplificado
 // =====================================================
 
 mapboxgl.accessToken =
   "pk.eyJ1Ijoiam9yZ2VwYXRpbm8iLCJhIjoiY2tnc2R0c20zMWVvdTJ5bXRpZ3Z4bDN1dCJ9.2LgsqgR7lXR6YFH2IaNc-w";
 
+
+// =====================================================
+// MAPA
+// =====================================================
+
 const map = new mapboxgl.Map({
+
   container: "map",
-  style: "mapbox://styles/mapbox/dark-v11",
+
+  // 🛰️ MAPA SATELITAL
+  style: "mapbox://styles/mapbox/satellite-streets-v12",
+
+  // Posición temporal mientras carga Posible recaudo ICA
   center: [-73.79724, 5.04463],
-  zoom: 15,
-  antialias: true,
+
+  zoom: 12,
+
+  antialias: true
+
 });
 
-map.addControl(new mapboxgl.NavigationControl());
 
-// ✅ Popup: maxWidth + offset para mejor posicionamiento
-const popup = new mapboxgl.Popup({
-  closeButton: true,
-  closeOnClick: true,
-  className: "custom-popup",
-  maxWidth: "360px",
-  offset: 18,
-});
+map.addControl(
+  new mapboxgl.NavigationControl()
+);
+
 
 // =====================================================
-// DATASETS COMPLETOS PARA BUSCADOR
+// POPUP
 // =====================================================
-let PREDIOS_DATA = null; // (solo visual)
+
+const popup =
+  new mapboxgl.Popup({
+
+    closeButton: true,
+
+    closeOnClick: true,
+
+    className: "custom-popup",
+
+    maxWidth: "360px",
+
+    offset: 18
+
+  });
+
+
+// =====================================================
+// DATASETS COMPLETOS
+// =====================================================
+
+let PREDIOS_DATA = null;
+
 let ICA_DATA = null;
+
 let CONTRIB_JURIDICA_DATA = null;
+
 let CONTRIB_NATURAL_DATA = null;
+
 let COINCIDEN_DATA = null;
+
+
+// =====================================================
+// CONTROL DEL ZOOM INICIAL
+// Evita repetir fitBounds si la capa se recarga
+// =====================================================
+
+let ICA_INITIAL_ZOOM_DONE = false;
+
 
 // =====================================================
 // HELPERS
 // =====================================================
-function safeOff(evt, layer) {
+
+function safeOff(
+  evt,
+  layer
+) {
+
   try {
-    map.off(evt, layer);
+
+    map.off(
+      evt,
+      layer
+    );
+
   } catch (e) {}
+
 }
+
+
+// =====================================================
+// NORMALIZAR TEXTO
+// =====================================================
 
 function norm(v) {
-  return (v ?? "")
+
+  return (
+    v ??
+    ""
+  )
+
     .toString()
+
     .toLowerCase()
+
     .replace(/\s+/g, " ")
+
     .trim();
+
 }
 
-function getPointLngLat(feature) {
-  const c = feature?.geometry?.coordinates;
-  if (Array.isArray(c) && c.length >= 2) return [Number(c[0]), Number(c[1])];
-  try {
-    const cent = turf.centroid(feature).geometry.coordinates;
-    return [Number(cent[0]), Number(cent[1])];
-  } catch {
-    return [-73.79724, 5.04463];
+
+// =====================================================
+// OBTENER COORDENADA DE FEATURE
+// =====================================================
+
+function getPointLngLat(
+  feature
+) {
+
+  const c =
+    feature?.geometry?.coordinates;
+
+
+  if (
+    Array.isArray(c) &&
+    c.length >= 2
+  ) {
+
+    return [
+
+      Number(c[0]),
+
+      Number(c[1])
+
+    ];
+
   }
+
+
+  try {
+
+    const cent =
+
+      turf
+        .centroid(feature)
+        .geometry
+        .coordinates;
+
+
+    return [
+
+      Number(cent[0]),
+
+      Number(cent[1])
+
+    ];
+
+  } catch {
+
+    return [
+
+      -73.79724,
+
+      5.04463
+
+    ];
+
+  }
+
 }
 
-function streetViewUrl([lng, lat]) {
-  return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
+
+// =====================================================
+// STREET VIEW
+// =====================================================
+
+function streetViewUrl(
+  [lng, lat]
+) {
+
+  return (
+    `https://www.google.com/maps/@?api=1` +
+    `&map_action=pano` +
+    `&viewpoint=${lat},${lng}`
+  );
+
 }
 
+
 // =====================================================
-// ✅ Popup visible "SMART": mide el popup y pan automático
-// (Evita recortes arriba/abajo/izq/der)
+// LIMPIAR TODOS LOS ELEMENTOS SELECCIONADOS
 // =====================================================
-function ensurePopupVisibleSmart(padding = 14) {
-  requestAnimationFrame(() => {
-    const el = document.querySelector(".mapboxgl-popup");
-    if (!el) return;
+//
+// Esto corrige el problema de selecciones amarillas
+// que se quedaban pegadas al seleccionar otra capa.
+//
+// =====================================================
 
-    const rect = el.getBoundingClientRect();
+function clearAllHighlights() {
 
-    let dx = 0;
-    let dy = 0;
 
-    if (rect.top < padding) dy = rect.top - padding;
-    if (rect.bottom > window.innerHeight - padding)
-      dy = rect.bottom - (window.innerHeight - padding);
+  const sources = [
 
-    if (rect.left < padding) dx = rect.left - padding;
-    if (rect.right > window.innerWidth - padding)
-      dx = rect.right - (window.innerWidth - padding);
+    "highlight_ica",
 
-    if (dx || dy) map.panBy([dx, dy], { duration: 0 });
-  });
+    "highlight_coinciden",
+
+    "highlight_contrib_juridica",
+
+    "highlight_contrib_natural"
+
+  ];
+
+
+  sources.forEach(
+    (sourceId) => {
+
+
+      const source =
+        map.getSource(
+          sourceId
+        );
+
+
+      if (
+        source
+      ) {
+
+        source.setData({
+
+          type:
+            "FeatureCollection",
+
+          features:
+            []
+
+        });
+
+      }
+
+    }
+  );
+
 }
 
-// =====================================================
-// ✅ LIGHTBOX para agrandar foto (clic)
-// =====================================================
-function openLightbox(url) {
-  if (!url) return;
 
-  const old = document.getElementById("ea-lightbox");
-  if (old) old.remove();
+// =====================================================
+// SELECCIONAR UN SOLO ELEMENTO
+// =====================================================
 
-  const lb = document.createElement("div");
-  lb.id = "ea-lightbox";
+function setSingleHighlight(
+  sourceId,
+  feature
+) {
+
+
+  // Primero eliminar cualquier selección anterior
+  clearAllHighlights();
+
+
+  const source =
+    map.getSource(
+      sourceId
+    );
+
+
+  if (
+    source &&
+    feature
+  ) {
+
+    source.setData({
+
+      type:
+        "FeatureCollection",
+
+      features:
+        [feature]
+
+    });
+
+  }
+
+}
+
+
+// =====================================================
+// POPUP VISIBLE SMART
+// =====================================================
+
+function ensurePopupVisibleSmart(
+  padding = 14
+) {
+
+
+  requestAnimationFrame(
+    () => {
+
+
+      const el =
+        document.querySelector(
+          ".mapboxgl-popup"
+        );
+
+
+      if (
+        !el
+      ) {
+
+        return;
+
+      }
+
+
+      const rect =
+        el.getBoundingClientRect();
+
+
+      let dx =
+        0;
+
+
+      let dy =
+        0;
+
+
+      if (
+        rect.top <
+        padding
+      ) {
+
+        dy =
+          rect.top -
+          padding;
+
+      }
+
+
+      if (
+        rect.bottom >
+        window.innerHeight -
+        padding
+      ) {
+
+        dy =
+          rect.bottom -
+          (
+            window.innerHeight -
+            padding
+          );
+
+      }
+
+
+      if (
+        rect.left <
+        padding
+      ) {
+
+        dx =
+          rect.left -
+          padding;
+
+      }
+
+
+      if (
+        rect.right >
+        window.innerWidth -
+        padding
+      ) {
+
+        dx =
+          rect.right -
+          (
+            window.innerWidth -
+            padding
+          );
+
+      }
+
+
+      if (
+        dx ||
+        dy
+      ) {
+
+        map.panBy(
+
+          [
+            dx,
+            dy
+          ],
+
+          {
+            duration: 0
+          }
+
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// LIGHTBOX PARA AGRANDAR FOTOGRAFÍAS
+// =====================================================
+
+function openLightbox(
+  url
+) {
+
+
+  if (
+    !url
+  ) {
+
+    return;
+
+  }
+
+
+  const old =
+    document.getElementById(
+      "ea-lightbox"
+    );
+
+
+  if (
+    old
+  ) {
+
+    old.remove();
+
+  }
+
+
+  const lb =
+    document.createElement(
+      "div"
+    );
+
+
+  lb.id =
+    "ea-lightbox";
+
+
   lb.style.cssText = `
-    position:fixed; inset:0; z-index:99999;
+
+    position:fixed;
+
+    inset:0;
+
+    z-index:99999;
+
     background:rgba(0,0,0,0.78);
-    display:flex; align-items:center; justify-content:center;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
     padding:18px;
+
   `;
+
 
   lb.innerHTML = `
-    <div style="position:relative; max-width:92vw; max-height:92vh;">
-      <button id="ea-lb-close" aria-label="Cerrar"
-        style="position:absolute; top:-12px; right:-12px;
-               width:36px; height:36px; border:0; cursor:pointer;
-               border-radius:999px; font-weight:900;
-               background:#00bcd4; color:#000;">
+
+    <div
+      style="
+        position:relative;
+        max-width:92vw;
+        max-height:92vh;
+      "
+    >
+
+      <button
+        id="ea-lb-close"
+        aria-label="Cerrar"
+
+        style="
+          position:absolute;
+          top:-12px;
+          right:-12px;
+          width:36px;
+          height:36px;
+          border:0;
+          cursor:pointer;
+          border-radius:999px;
+          font-weight:900;
+          background:#00bcd4;
+          color:#000;
+        "
+      >
+
         ✕
+
       </button>
-      <img src="${url}" alt="Foto ampliada"
-           style="max-width:92vw; max-height:92vh; border-radius:14px; display:block; object-fit:contain;" />
+
+
+      <img
+        src="${url}"
+        alt="Foto ampliada"
+
+        style="
+          max-width:92vw;
+          max-height:92vh;
+          border-radius:14px;
+          display:block;
+          object-fit:contain;
+        "
+      />
+
     </div>
+
   `;
 
-  lb.addEventListener("click", (e) => {
-    if (e.target === lb) lb.remove();
-  });
 
-  lb.querySelector("#ea-lb-close").addEventListener("click", () => lb.remove());
+  lb.addEventListener(
+    "click",
+    (e) => {
+
+      if (
+        e.target === lb
+      ) {
+
+        lb.remove();
+
+      }
+
+    }
+  );
+
+
+  lb
+    .querySelector(
+      "#ea-lb-close"
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        lb.remove();
+
+      }
+    );
+
 
   document.addEventListener(
+
     "keydown",
+
     (ev) => {
-      if (ev.key === "Escape") {
-        const x = document.getElementById("ea-lightbox");
-        if (x) x.remove();
+
+
+      if (
+        ev.key ===
+        "Escape"
+      ) {
+
+
+        const x =
+          document.getElementById(
+            "ea-lightbox"
+          );
+
+
+        if (
+          x
+        ) {
+
+          x.remove();
+
+        }
+
       }
+
     },
-    { once: true }
+
+    {
+      once: true
+    }
+
   );
 
-  document.body.appendChild(lb);
+
+  document.body.appendChild(
+    lb
+  );
+
 }
 
-// ✅ IMPORTANTE: para que el onclick="" funcione siempre
-window.openLightbox = openLightbox;
-window.ensurePopupVisibleSmart = ensurePopupVisibleSmart;
 
 // =====================================================
-// ✅ HELPERS FOTO ICA (QField attachments)
+// HACER FUNCIONES DISPONIBLES PARA onclick
 // =====================================================
-function sanitizePhotoRelPath(p) {
-  let s = (p ?? "").toString().trim();
-  if (!s) return "";
-  s = s.replace(/\\/g, "/");
-  s = s.replace(/^\/+/, "");
-  s = s.replace(/\.\.\//g, "");
+
+window.openLightbox =
+  openLightbox;
+
+
+window.ensurePopupVisibleSmart =
+  ensurePopupVisibleSmart;
+
+
+// =====================================================
+// FOTO ICA
+// =====================================================
+
+function sanitizePhotoRelPath(
+  p
+) {
+
+
+  let s =
+
+    (
+      p ??
+      ""
+    )
+
+      .toString()
+
+      .trim();
+
+
+  if (
+    !s
+  ) {
+
+    return "";
+
+  }
+
+
+  s =
+    s.replace(
+      /\\/g,
+      "/"
+    );
+
+
+  s =
+    s.replace(
+      /^\/+/,
+      ""
+    );
+
+
+  s =
+    s.replace(
+      /\.\.\//g,
+      ""
+    );
+
+
   return s;
+
 }
 
-function buildIcaPhotoUrl(props) {
-  const rel = sanitizePhotoRelPath(
-    props?.FOTOS ?? props?.fotos ?? props?.Foto ?? props?.FOTO ?? ""
+
+// =====================================================
+// CONSTRUIR URL FOTO ICA
+// =====================================================
+
+function buildIcaPhotoUrl(
+  props
+) {
+
+
+  const rel =
+
+    sanitizePhotoRelPath(
+
+      props?.FOTOS ??
+
+      props?.fotos ??
+
+      props?.Foto ??
+
+      props?.FOTO ??
+
+      ""
+
+    );
+
+
+  if (
+    !rel
+  ) {
+
+    return "";
+
+  }
+
+
+  return (
+    `../src/data/fotos_ica/${rel}`
   );
-  if (!rel) return "";
-  return `../src/data/fotos_ica/${rel}`;
+
 }
-
 // =====================================================
-// POPUP ICA (imagenes_limpias) ✅ ORGANIZADO + FOTO AMPLIABLE
-// ✅ CAMBIO NOMBRE: "Posibilidades de recaudo del ICA"
+// POPUP: POSIBLE RECAUDO ICA
 // =====================================================
-function popupHTMLICA(props, lngLat) {
-  props = props || {};
 
-  const nombre = (props.NOMBRE ?? "N/A").toString().trim() || "N/A";
-  const codigo = (props.codigo ?? "N/A").toString().trim() || "N/A";
+function popupHTMLICA(
+  props,
+  lngLat
+) {
 
-  const fotoUrl = buildIcaPhotoUrl(props);
+  props =
+    props || {};
+
+
+  const nombre =
+
+    (
+      props.NOMBRE ??
+      "N/A"
+    )
+
+      .toString()
+
+      .trim()
+
+    || "N/A";
+
+
+  const codigo =
+
+    (
+      props.codigo ??
+      "N/A"
+    )
+
+      .toString()
+
+      .trim()
+
+    || "N/A";
+
+
+  // ===================================================
+  // FOTO
+  // ===================================================
+
+  const fotoUrl =
+    buildIcaPhotoUrl(
+      props
+    );
+
 
   const fotoHTML = `
-    <div style="
-      margin-top:10px;
-      border-radius:14px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,0.12);
-      background:rgba(255,255,255,0.06);
-    ">
+
+    <div
+      style="
+        margin-top:10px;
+        border-radius:14px;
+        overflow:hidden;
+        border:1px solid rgba(255,255,255,0.12);
+        background:rgba(255,255,255,0.06);
+      "
+    >
+
       ${
         fotoUrl
-          ? `<img
-               src="${fotoUrl}"
-               alt="Foto del establecimiento"
-               loading="lazy"
-               style="width:100%; height:320px; object-fit:cover; display:block; cursor:zoom-in;"
-               onclick="openLightbox('${fotoUrl}')"
-               onload="ensurePopupVisibleSmart()"
-               onerror="this.outerHTML='<div style=&quot;height:320px;display:flex;align-items:center;justify-content:center;opacity:.75;font-size:12px;padding:12px;text-align:center;&quot;>Sin foto disponible</div>';"
-             />`
-          : `<div style="height:320px;display:flex;align-items:center;justify-content:center;opacity:.75;font-size:12px;padding:12px;text-align:center;">
-               Sin foto disponible
-             </div>`
+
+          ? `
+
+            <img
+              src="${fotoUrl}"
+
+              alt="Foto del establecimiento"
+
+              loading="lazy"
+
+              style="
+                width:100%;
+                height:320px;
+                object-fit:cover;
+                display:block;
+                cursor:zoom-in;
+              "
+
+              onclick="openLightbox('${fotoUrl}')"
+
+              onload="ensurePopupVisibleSmart()"
+
+              onerror="
+                this.outerHTML=
+                '<div style=&quot;
+                  height:320px;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  opacity:.75;
+                  font-size:12px;
+                  padding:12px;
+                  text-align:center;
+                &quot;>
+                  Sin foto disponible
+                </div>'
+              "
+            />
+
+          `
+
+          : `
+
+            <div
+              style="
+                height:320px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                opacity:.75;
+                font-size:12px;
+                padding:12px;
+                text-align:center;
+              "
+            >
+
+              Sin foto disponible
+
+            </div>
+
+          `
       }
+
     </div>
+
   `;
 
+
+  // ===================================================
+  // HTML
+  // ===================================================
+
   return `
-    <div style="
-      width: 340px;
-      max-width: 340px;
-      padding: 12px;
-      box-sizing: border-box;
-      border-radius: 14px;
-      background: rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(6px);
-      color:#fff;
-    ">
-      <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
-        Posibilidades de recaudo del ICA
+
+    <div
+      style="
+        width:340px;
+        max-width:340px;
+        padding:12px;
+        box-sizing:border-box;
+        border-radius:14px;
+        background:rgba(0,0,0,0.45);
+        border:1px solid rgba(255,255,255,0.12);
+        backdrop-filter:blur(6px);
+        color:#fff;
+      "
+    >
+
+
+      <div
+        style="
+          font-weight:800;
+          font-size:14px;
+          margin-bottom:8px;
+        "
+      >
+
+        Posible recaudo ICA
+
       </div>
 
-      <div style="
-        display:grid;
-        grid-template-columns: 120px 1fr;
-        gap: 6px 10px;
-        font-size:12px;
-        line-height:1.25;
-        min-width:0;
-      ">
-        <div style="opacity:.75; font-weight:700;">Nombre</div>
-        <div style="font-weight:700; min-width:0;">${nombre}</div>
 
-        <div style="opacity:.75; font-weight:700;">Código predial</div>
-        <div style="min-width:0; overflow-wrap:anywhere; word-break:break-word;">
-          ${codigo}
+      <div
+        style="
+          display:grid;
+          grid-template-columns:120px 1fr;
+          gap:6px 10px;
+          font-size:12px;
+          line-height:1.25;
+          min-width:0;
+        "
+      >
+
+
+        <div
+          style="
+            opacity:.75;
+            font-weight:700;
+          "
+        >
+
+          Nombre
+
         </div>
+
+
+        <div
+          style="
+            font-weight:700;
+            min-width:0;
+            overflow-wrap:anywhere;
+          "
+        >
+
+          ${nombre}
+
+        </div>
+
+
+        <div
+          style="
+            opacity:.75;
+            font-weight:700;
+          "
+        >
+
+          Código predial
+
+        </div>
+
+
+        <div
+          style="
+            min-width:0;
+            overflow-wrap:anywhere;
+            word-break:break-word;
+          "
+        >
+
+          ${codigo}
+
+        </div>
+
+
       </div>
+
 
       ${fotoHTML}
 
-      <div style="margin-top:10px;">
-        <a href="${streetViewUrl(lngLat)}" target="_blank"
-           style="display:inline-block; padding:6px 10px; border-radius:6px;
-                  background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+
+      <div
+        style="
+          margin-top:10px;
+        "
+      >
+
+        <a
+          href="${streetViewUrl(lngLat)}"
+
+          target="_blank"
+
+          rel="noopener"
+
+          style="
+            display:inline-block;
+            padding:6px 10px;
+            border-radius:6px;
+            background:#00bcd4;
+            color:#000;
+            font-weight:700;
+            font-size:12px;
+            text-decoration:none;
+          "
+        >
+
           📷 Street View
+
         </a>
+
       </div>
 
-      <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
+
+      <br>
+
+
+      <a
+        style="
+          font-size:9px;
+        "
+      >
+
+        &#9400; EffectiveActions
+
+      </a>
+
+
     </div>
+
   `;
+
 }
 
-// =====================================================
-// ✅ POPUP "Fachadas con letreros encontradas" (antes: construcciones que coinciden)
-// (mismos atributos/foto que ICA)
-// =====================================================
-function popupHTMLCoinciden(props, lngLat) {
-  props = props || {};
 
-  const nombre = (props.NOMBRE ?? "N/A").toString().trim() || "N/A";
-  const codigo = (props.codigo ?? "N/A").toString().trim() || "N/A";
-  const fotoUrl = buildIcaPhotoUrl(props);
+// =====================================================
+// POPUP: LETREROS ENCONTRADOS
+// =====================================================
+
+function popupHTMLCoinciden(
+  props,
+  lngLat
+) {
+
+  props =
+    props || {};
+
+
+  const nombre =
+
+    (
+      props.NOMBRE ??
+      "N/A"
+    )
+
+      .toString()
+
+      .trim()
+
+    || "N/A";
+
+
+  const codigo =
+
+    (
+      props.codigo ??
+      "N/A"
+    )
+
+      .toString()
+
+      .trim()
+
+    || "N/A";
+
+
+  const fotoUrl =
+    buildIcaPhotoUrl(
+      props
+    );
+
+
+  // ===================================================
+  // FOTO
+  // ===================================================
 
   const fotoHTML = `
-    <div style="
-      margin-top:10px;
-      border-radius:14px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,0.12);
-      background:rgba(255,255,255,0.06);
-    ">
+
+    <div
+      style="
+        margin-top:10px;
+        border-radius:14px;
+        overflow:hidden;
+        border:1px solid rgba(255,255,255,0.12);
+        background:rgba(255,255,255,0.06);
+      "
+    >
+
       ${
         fotoUrl
-          ? `<img
-               src="${fotoUrl}"
-               alt="Foto"
-               loading="lazy"
-               style="width:100%; height:320px; object-fit:cover; display:block; cursor:zoom-in;"
-               onclick="openLightbox('${fotoUrl}')"
-               onload="ensurePopupVisibleSmart()"
-               onerror="this.outerHTML='<div style=&quot;height:320px;display:flex;align-items:center;justify-content:center;opacity:.75;font-size:12px;padding:12px;text-align:center;&quot;>Sin foto disponible</div>';"
-             />`
-          : `<div style="height:320px;display:flex;align-items:center;justify-content:center;opacity:.75;font-size:12px;padding:12px;text-align:center;">
-               Sin foto disponible
-             </div>`
+
+          ? `
+
+            <img
+              src="${fotoUrl}"
+
+              alt="Foto"
+
+              loading="lazy"
+
+              style="
+                width:100%;
+                height:320px;
+                object-fit:cover;
+                display:block;
+                cursor:zoom-in;
+              "
+
+              onclick="openLightbox('${fotoUrl}')"
+
+              onload="ensurePopupVisibleSmart()"
+
+              onerror="
+                this.outerHTML=
+                '<div style=&quot;
+                  height:320px;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  opacity:.75;
+                  font-size:12px;
+                  padding:12px;
+                  text-align:center;
+                &quot;>
+                  Sin foto disponible
+                </div>'
+              "
+            />
+
+          `
+
+          : `
+
+            <div
+              style="
+                height:320px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                opacity:.75;
+                font-size:12px;
+                padding:12px;
+                text-align:center;
+              "
+            >
+
+              Sin foto disponible
+
+            </div>
+
+          `
       }
+
     </div>
+
   `;
 
+
+  // ===================================================
+  // HTML
+  // ===================================================
+
   return `
-    <div style="
-      width: 340px;
-      max-width: 340px;
-      padding: 12px;
-      box-sizing: border-box;
-      border-radius: 14px;
-      background: rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(6px);
-      color:#fff;
-    ">
-      <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
-        Fachadas con letreros encontradas
+
+    <div
+      style="
+        width:340px;
+        max-width:340px;
+        padding:12px;
+        box-sizing:border-box;
+        border-radius:14px;
+        background:rgba(0,0,0,0.45);
+        border:1px solid rgba(255,255,255,0.12);
+        backdrop-filter:blur(6px);
+        color:#fff;
+      "
+    >
+
+
+      <div
+        style="
+          font-weight:800;
+          font-size:14px;
+          margin-bottom:8px;
+        "
+      >
+
+        Letreros encontrados
+
       </div>
 
-      <div style="
-        display:grid;
-        grid-template-columns: 120px 1fr;
-        gap: 6px 10px;
-        font-size:12px;
-        line-height:1.25;
-        min-width:0;
-      ">
-        <div style="opacity:.75; font-weight:700;">Nombre</div>
-        <div style="font-weight:700; min-width:0;">${nombre}</div>
 
-        <div style="opacity:.75; font-weight:700;">Código predial</div>
-        <div style="min-width:0; overflow-wrap:anywhere; word-break:break-word;">
-          ${codigo}
+      <div
+        style="
+          display:grid;
+          grid-template-columns:120px 1fr;
+          gap:6px 10px;
+          font-size:12px;
+          line-height:1.25;
+          min-width:0;
+        "
+      >
+
+
+        <div
+          style="
+            opacity:.75;
+            font-weight:700;
+          "
+        >
+
+          Nombre
+
         </div>
+
+
+        <div
+          style="
+            font-weight:700;
+            min-width:0;
+            overflow-wrap:anywhere;
+          "
+        >
+
+          ${nombre}
+
+        </div>
+
+
+        <div
+          style="
+            opacity:.75;
+            font-weight:700;
+          "
+        >
+
+          Código predial
+
+        </div>
+
+
+        <div
+          style="
+            min-width:0;
+            overflow-wrap:anywhere;
+            word-break:break-word;
+          "
+        >
+
+          ${codigo}
+
+        </div>
+
+
       </div>
+
 
       ${fotoHTML}
 
-      <div style="margin-top:10px;">
-        <a href="${streetViewUrl(lngLat)}" target="_blank"
-           style="display:inline-block; padding:6px 10px; border-radius:6px;
-                  background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+
+      <div
+        style="
+          margin-top:10px;
+        "
+      >
+
+        <a
+          href="${streetViewUrl(lngLat)}"
+
+          target="_blank"
+
+          rel="noopener"
+
+          style="
+            display:inline-block;
+            padding:6px 10px;
+            border-radius:6px;
+            background:#00bcd4;
+            color:#000;
+            font-weight:700;
+            font-size:12px;
+            text-decoration:none;
+          "
+        >
+
           📷 Street View
+
         </a>
+
       </div>
 
-      <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
+
+      <br>
+
+
+      <a
+        style="
+          font-size:9px;
+        "
+      >
+
+        &#9400; EffectiveActions
+
+      </a>
+
+
     </div>
+
   `;
+
 }
 
-// =====================================================
-// ✅ POPUP CONTRIBUYENTES ACTIVOS (Jurídica + Natural)
-// ✅ MISMO TITULO: "Contribuyentes activos"
-// =====================================================
-function popupHTMLContribActivos(props, lngLat) {
-  props = props || {};
 
-  const codigoPredial =
-    props["Código predial"] ??
-    props["CODIGO_PREDIAL"] ??
-    props["codigo_predial"] ??
-    props["codigo"] ??
-    "N/A";
+// =====================================================
+// POPUP: CONTRIBUYENTES ACTIVOS
+// =====================================================
+//
+// SOLO:
+// 1. Documento
+// 2. Naturaleza
+// 3. Razón social
+// 4. Estado
+//
+// =====================================================
 
-  const numDoc =
+function popupHTMLContribActivos(
+  props,
+  lngLat
+) {
+
+  props =
+    props || {};
+
+
+  // ===================================================
+  // DOCUMENTO
+  // ===================================================
+
+  const documento =
+
     props["Número documento"] ??
+
     props["NUMERO_DOCUMENTO"] ??
+
     props["No Documento"] ??
+
     props["NO_DOCUMENTO"] ??
+
+    props["Documento"] ??
+
+    props["DOCUMENTO"] ??
+
     "N/A";
 
-  const contribuyente =
-    props["Contribuyente"] ??
-    props["NOMBRE"] ??
-    props["Nombre"] ??
-    props["RAZON_SOCIAL"] ??
-    "N/A";
+
+  // ===================================================
+  // NATURALEZA
+  // ===================================================
 
   const naturaleza =
+
     props["Naturaleza jurídica"] ??
+
     props["NATURALEZA_JURIDICA"] ??
+
     props["Naturaleza Juridica"] ??
+
+    props["Naturaleza"] ??
+
+    props["NATURALEZA"] ??
+
     "N/A";
+
+
+  // ===================================================
+  // RAZÓN SOCIAL
+  // ===================================================
 
   const razonSocial =
+
     props["Razón social"] ??
+
     props["RAZON_SOCIAL"] ??
+
     props["Razon Social"] ??
+
+    props["Contribuyente"] ??
+
+    props["NOMBRE"] ??
+
+    props["Nombre"] ??
+
     "N/A";
 
-  const estado = props["Estado"] ?? props["ESTADO"] ?? "N/A";
 
-  const wrap = (v) =>
-    `<div style="min-width:0; overflow-wrap:anywhere; word-break:break-word;">${(v ?? "N/A").toString()}</div>`;
+  // ===================================================
+  // ESTADO
+  // ===================================================
+
+  const estado =
+
+    props["Estado"] ??
+
+    props["ESTADO"] ??
+
+    "N/A";
+
+
+  // ===================================================
+  // WRAP PARA TEXTOS LARGOS
+  // ===================================================
+
+  const wrap =
+    (v) => `
+
+      <div
+        style="
+          min-width:0;
+          overflow-wrap:anywhere;
+          word-break:break-word;
+        "
+      >
+
+        ${
+          (
+            v ??
+            "N/A"
+          )
+            .toString()
+        }
+
+      </div>
+
+    `;
+
+
+  // ===================================================
+  // HTML
+  // ===================================================
 
   return `
-    <div style="
-      width: 340px;
-      max-width: 340px;
-      padding: 12px;
-      box-sizing: border-box;
-      border-radius: 14px;
-      background: rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(6px);
-      color:#fff;
-    ">
-      <div style="font-weight:800; font-size:14px; margin-bottom:8px;">
+
+    <div
+      style="
+        width:340px;
+        max-width:340px;
+        padding:12px;
+        box-sizing:border-box;
+        border-radius:14px;
+        background:rgba(0,0,0,0.45);
+        border:1px solid rgba(255,255,255,0.12);
+        backdrop-filter:blur(6px);
+        color:#fff;
+      "
+    >
+
+
+      <div
+        style="
+          font-weight:800;
+          font-size:14px;
+          margin-bottom:10px;
+        "
+      >
+
         Contribuyentes activos
+
       </div>
 
-      <div style="
-        display:grid;
-        grid-template-columns: 120px 1fr;
-        gap: 6px 10px;
-        font-size:12px;
-        line-height:1.25;
-        min-width:0;
-      ">
-        <div style="opacity:.75; font-weight:700;">Código predial</div>
-        ${wrap(codigoPredial)}
 
-        <div style="opacity:.75; font-weight:700;">Número documento</div>
-        ${wrap(numDoc)}
+      <div
+        style="
+          display:grid;
+          grid-template-columns:105px 1fr;
+          gap:8px 10px;
+          font-size:12px;
+          line-height:1.3;
+          min-width:0;
+        "
+      >
 
-        <div style="opacity:.75; font-weight:700;">Contribuyente</div>
-        ${wrap(contribuyente)}
 
-        <div style="opacity:.75; font-weight:700;">Naturaleza</div>
+        <!-- DOCUMENTO -->
+
+        <div
+          style="
+            opacity:.75;
+            font-weight:700;
+          "
+        >
+
+          Documento
+
+        </div>
+
+        ${wrap(documento)}
+
+
+        <!-- NATURALEZA -->
+
+        <div
+          style="
+            opacity:.75;
+            font-weight:700;
+          "
+        >
+
+          Naturaleza
+
+        </div>
+
         ${wrap(naturaleza)}
 
-        <div style="opacity:.75; font-weight:700;">Razón social</div>
+
+        <!-- RAZÓN SOCIAL -->
+
+        <div
+          style="
+            opacity:.75;
+            font-weight:700;
+          "
+        >
+
+          Razón social
+
+        </div>
+
         ${wrap(razonSocial)}
 
-        <div style="opacity:.75; font-weight:700;">Estado</div>
+
+        <!-- ESTADO -->
+
+        <div
+          style="
+            opacity:.75;
+            font-weight:700;
+          "
+        >
+
+          Estado
+
+        </div>
+
         ${wrap(estado)}
+
+
       </div>
 
-      <div style="margin-top:10px;">
-        <a href="${streetViewUrl(lngLat)}" target="_blank"
-           style="display:inline-block; padding:6px 10px; border-radius:6px;
-                  background:#00bcd4; color:#000; font-weight:700; font-size:12px; text-decoration:none;">
+
+      <!-- STREET VIEW -->
+
+      <div
+        style="
+          margin-top:12px;
+        "
+      >
+
+        <a
+          href="${streetViewUrl(lngLat)}"
+
+          target="_blank"
+
+          rel="noopener"
+
+          style="
+            display:inline-block;
+            padding:6px 10px;
+            border-radius:6px;
+            background:#00bcd4;
+            color:#000;
+            font-weight:700;
+            font-size:12px;
+            text-decoration:none;
+          "
+        >
+
           📷 Street View
+
         </a>
+
       </div>
 
-      <br><a style="font-size:9px;">&#9400 EffectiveActions</a>
-    </div>
-  `;
-}
 
+      <br>
+
+
+      <a
+        style="
+          font-size:9px;
+        "
+      >
+
+        &#9400; EffectiveActions
+
+      </a>
+
+
+    </div>
+
+  `;
+
+}
 // =====================================================
-// CAPA PREDIOS BASE (SOLO VISUAL)
+// CAPA PREDIOS BASE
+// SOLO VISUAL
 // =====================================================
+
 function addPrediosBase() {
+
   fetch("../src/data/PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson")
     .then((r) => r.json())
     .then((data) => {
+
       PREDIOS_DATA = data;
 
-      if (map.getSource("predios_base")) map.getSource("predios_base").setData(data);
-      else map.addSource("predios_base", { type: "geojson", data });
+      // SOURCE
+      if (map.getSource("predios_base")) {
+
+        map
+          .getSource("predios_base")
+          .setData(data);
+
+      } else {
+
+        map.addSource("predios_base", {
+          type: "geojson",
+          data: data
+        });
+
+      }
+
+
+      // =================================================
+      // PREDIOS
+      //
+      // Antes:
+      // line-width: 1.2
+      // line-opacity: 0.9
+      //
+      // Ahora:
+      // line-width: 0.6
+      // line-opacity: 0.50
+      // =================================================
 
       if (!map.getLayer("predios_base_outline")) {
+
         map.addLayer({
+
           id: "predios_base_outline",
+
           type: "line",
+
           source: "predios_base",
-          minzoom: 12,
+
           paint: {
+
             "line-color": "#ffffff",
-            "line-width": 1.2,
-            "line-opacity": 0.9,
-          },
+
+            "line-width": 0.6,
+
+            "line-opacity": 0.50
+
+          }
+
         });
+
       }
+
     })
-    .catch((err) => console.error("Error cargando predios:", err));
+
+    .catch((err) => {
+
+      console.error(
+        "Error cargando predios:",
+        err
+      );
+
+    });
+
 }
 
+
 // =====================================================
-// CAPA ICA (imagenes_limpias) — ✅ VERDE
+// CAPA POSIBLE RECAUDO ICA
+// Archivo: imagenes_limpias.geojson
+// Color: VERDE
 // =====================================================
+
 function addICALayer() {
+
   fetch("../src/data/imagenes_limpias.geojson")
+
     .then((r) => r.json())
+
     .then((data) => {
+
       ICA_DATA = data;
 
-      if (map.getSource("ica_points")) map.getSource("ica_points").setData(data);
-      else map.addSource("ica_points", { type: "geojson", data });
+
+      // =================================================
+      // SOURCE
+      // =================================================
+
+      if (map.getSource("ica_points")) {
+
+        map
+          .getSource("ica_points")
+          .setData(data);
+
+      } else {
+
+        map.addSource("ica_points", {
+
+          type: "geojson",
+
+          data: data
+
+        });
+
+      }
+
+
+      // =================================================
+      // 🎯 ZOOM INICIAL A POSIBLE RECAUDO ICA
+      // =================================================
+      //
+      // El visor ya NO abre en un zoom fijo.
+      //
+      // Calculamos la extensión real de todos los puntos
+      // de posible recaudo y Mapbox ajusta la cámara.
+      // =================================================
+
+      if (
+        !ICA_INITIAL_ZOOM_DONE &&
+        data &&
+        Array.isArray(data.features) &&
+        data.features.length > 0
+      ) {
+
+        try {
+
+          const bounds =
+            turf.bbox(data);
+
+
+          if (
+            Array.isArray(bounds) &&
+            bounds.length === 4 &&
+            bounds.every(Number.isFinite)
+          ) {
+
+            map.fitBounds(
+              bounds,
+              {
+
+                // Espacio alrededor de los puntos
+                padding: 55,
+
+                // Animación suave
+                duration: 1200,
+
+                // Evita acercamiento excesivo
+                maxZoom: 17
+
+              }
+            );
+
+
+            ICA_INITIAL_ZOOM_DONE = true;
+
+          }
+
+        } catch (error) {
+
+          console.error(
+            "Error haciendo zoom inicial a Posible recaudo ICA:",
+            error
+          );
+
+        }
+
+      }
+
+
+      // =================================================
+      // PUNTOS POSIBLE RECAUDO
+      // =================================================
+      //
+      // Antes:
+      // circle-radius: 6
+      // circle-stroke-width: 1.5
+      //
+      // Ahora:
+      // circle-radius: 4
+      // circle-stroke-width: 0.75
+      // =================================================
 
       if (!map.getLayer("ica_points_layer")) {
+
         map.addLayer({
+
           id: "ica_points_layer",
+
           type: "circle",
+
           source: "ica_points",
+
           paint: {
-            "circle-radius": 6,
+
+            "circle-radius": 4,
+
             "circle-color": "#00c853",
-            "circle-stroke-width": 1.5,
+
+            "circle-stroke-width": 0.75,
+
             "circle-stroke-color": "#ffffff",
-            "circle-opacity": 0.95,
-          },
+
+            "circle-opacity": 0.95
+
+          }
+
         });
+
       }
+
+
+      // =================================================
+      // SOURCE PARA SELECCIÓN
+      // =================================================
 
       if (!map.getSource("highlight_ica")) {
+
         map.addSource("highlight_ica", {
+
           type: "geojson",
-          data: { type: "FeatureCollection", features: [] },
+
+          data: {
+
+            type: "FeatureCollection",
+
+            features: []
+
+          }
+
         });
+
       }
+
+
+      // =================================================
+      // SÍMBOLO DE ELEMENTO SELECCIONADO
+      // =================================================
+      //
+      // También lo hacemos más pequeño que antes.
+      //
+      // Antes:
+      // radius 11
+      // stroke 4
+      //
+      // Ahora:
+      // radius 7
+      // stroke 2
+      // =================================================
+
       if (!map.getLayer("highlight_ica_circle")) {
+
         map.addLayer({
+
           id: "highlight_ica_circle",
+
           type: "circle",
+
           source: "highlight_ica",
+
           paint: {
-            "circle-radius": 11,
+
+            "circle-radius": 7,
+
             "circle-color": "#ffff00",
-            "circle-opacity": 0.35,
-            "circle-stroke-width": 4,
-            "circle-stroke-color": "#ffff00",
-          },
+
+            "circle-opacity": 0.30,
+
+            "circle-stroke-width": 2,
+
+            "circle-stroke-color": "#ffff00"
+
+          }
+
         });
+
       }
 
-      safeOff("mouseenter", "ica_points_layer");
-      safeOff("mouseleave", "ica_points_layer");
-      safeOff("click", "ica_points_layer");
 
-      map.on("mouseenter", "ica_points_layer", () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", "ica_points_layer", () => (map.getCanvas().style.cursor = ""));
+      // =================================================
+      // LIMPIAR EVENTOS ANTERIORES
+      // =================================================
 
-      map.on("click", "ica_points_layer", (e) => {
-        const f = e.features && e.features[0];
-        if (!f) return;
+      safeOff(
+        "mouseenter",
+        "ica_points_layer"
+      );
 
-        const lngLat = getPointLngLat(f);
+      safeOff(
+        "mouseleave",
+        "ica_points_layer"
+      );
 
-        const hs = map.getSource("highlight_ica");
-        if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
+      safeOff(
+        "click",
+        "ica_points_layer"
+      );
 
-        popup.setLngLat(lngLat).setHTML(popupHTMLICA(f.properties || {}, lngLat)).addTo(map);
-        ensurePopupVisibleSmart();
-      });
+
+      // =================================================
+      // CURSOR
+      // =================================================
+
+      map.on(
+        "mouseenter",
+        "ica_points_layer",
+        () => {
+
+          map.getCanvas().style.cursor =
+            "pointer";
+
+        }
+      );
+
+
+      map.on(
+        "mouseleave",
+        "ica_points_layer",
+        () => {
+
+          map.getCanvas().style.cursor =
+            "";
+
+        }
+      );
+
+
+      // =================================================
+      // CLICK SOBRE POSIBLE RECAUDO
+      // =================================================
+
+      map.on(
+        "click",
+        "ica_points_layer",
+        (e) => {
+
+          const f =
+            e.features &&
+            e.features[0];
+
+
+          if (!f) {
+
+            return;
+
+          }
+
+
+          const lngLat =
+            getPointLngLat(f);
+
+
+          // =============================================
+          // CORRECCIÓN:
+          // BORRAR SELECCIONES ANTERIORES
+          // Y DEJAR SOLO ESTA
+          // =============================================
+
+          setSingleHighlight(
+            "highlight_ica",
+            f
+          );
+
+
+          // =============================================
+          // POPUP
+          // =============================================
+
+          popup
+
+            .setLngLat(lngLat)
+
+            .setHTML(
+
+              popupHTMLICA(
+                f.properties || {},
+                lngLat
+              )
+
+            )
+
+            .addTo(map);
+
+
+          ensurePopupVisibleSmart();
+
+        }
+      );
+
     })
-    .catch((err) => console.error("Error cargando ICA:", err));
-}
 
+
+    .catch((err) => {
+
+      console.error(
+        "Error cargando Posible recaudo ICA:",
+        err
+      );
+
+    });
+
+}
 // =====================================================
-// ✅ "Fachadas con letreros encontradas" (PUNTOS) — ✅ AZUL
-// ✅ FIX: nombre real del archivo en tu repo: "Contrucciones_que_coinciden.geojson"
+// CAPA LETREROS ENCONTRADOS
+// Archivo:
+// Contrucciones_que_coinciden.geojson
+// Color: AZUL
 // =====================================================
+
 function addCoincidenLayer() {
-  fetch("../src/data/Contrucciones_que_coinciden.geojson")
-    .then((r) => r.json())
+
+  fetch(
+    "../src/data/Contrucciones_que_coinciden.geojson"
+  )
+
+    .then(
+      (r) => r.json()
+    )
+
     .then((data) => {
-      COINCIDEN_DATA = data;
 
-      if (map.getSource("coinciden_points")) map.getSource("coinciden_points").setData(data);
-      else map.addSource("coinciden_points", { type: "geojson", data });
 
-      if (!map.getLayer("coinciden_points_layer")) {
+      // =================================================
+      // GUARDAR DATASET
+      // =================================================
+
+      COINCIDEN_DATA =
+        data;
+
+
+      // =================================================
+      // SOURCE
+      // =================================================
+
+      if (
+        map.getSource(
+          "coinciden_points"
+        )
+      ) {
+
+        map
+          .getSource(
+            "coinciden_points"
+          )
+          .setData(
+            data
+          );
+
+      } else {
+
+        map.addSource(
+
+          "coinciden_points",
+
+          {
+
+            type:
+              "geojson",
+
+            data:
+              data
+
+          }
+
+        );
+
+      }
+
+
+      // =================================================
+      // CAPA DE PUNTOS
+      // =================================================
+      //
+      // Antes:
+      // radius: 6
+      // stroke: 1.5
+      //
+      // Ahora:
+      // radius: 4
+      // stroke: 0.75
+      // =================================================
+
+      if (
+        !map.getLayer(
+          "coinciden_points_layer"
+        )
+      ) {
+
         map.addLayer({
-          id: "coinciden_points_layer",
-          type: "circle",
-          source: "coinciden_points",
+
+          id:
+            "coinciden_points_layer",
+
+          type:
+            "circle",
+
+          source:
+            "coinciden_points",
+
           paint: {
-            "circle-radius": 6,
-            "circle-color": "#00b0ff",
-            "circle-stroke-width": 1.5,
-            "circle-stroke-color": "#ffffff",
-            "circle-opacity": 0.95,
-          },
+
+            "circle-radius":
+              4,
+
+            "circle-color":
+              "#00b0ff",
+
+            "circle-stroke-width":
+              0.75,
+
+            "circle-stroke-color":
+              "#ffffff",
+
+            "circle-opacity":
+              0.95
+
+          }
+
         });
+
       }
 
-      if (!map.getSource("highlight_coinciden")) {
-        map.addSource("highlight_coinciden", {
-          type: "geojson",
-          data: { type: "FeatureCollection", features: [] },
-        });
+
+      // =================================================
+      // SOURCE PARA SELECCIÓN
+      // =================================================
+
+      if (
+        !map.getSource(
+          "highlight_coinciden"
+        )
+      ) {
+
+        map.addSource(
+
+          "highlight_coinciden",
+
+          {
+
+            type:
+              "geojson",
+
+            data: {
+
+              type:
+                "FeatureCollection",
+
+              features:
+                []
+
+            }
+
+          }
+
+        );
+
       }
-      if (!map.getLayer("highlight_coinciden_circle")) {
+
+
+      // =================================================
+      // SÍMBOLO DE ELEMENTO SELECCIONADO
+      // =================================================
+
+      if (
+        !map.getLayer(
+          "highlight_coinciden_circle"
+        )
+      ) {
+
         map.addLayer({
-          id: "highlight_coinciden_circle",
-          type: "circle",
-          source: "highlight_coinciden",
+
+          id:
+            "highlight_coinciden_circle",
+
+          type:
+            "circle",
+
+          source:
+            "highlight_coinciden",
+
           paint: {
-            "circle-radius": 11,
-            "circle-color": "#ffff00",
-            "circle-opacity": 0.35,
-            "circle-stroke-width": 4,
-            "circle-stroke-color": "#ffff00",
-          },
+
+            "circle-radius":
+              7,
+
+            "circle-color":
+              "#ffff00",
+
+            "circle-opacity":
+              0.30,
+
+            "circle-stroke-width":
+              2,
+
+            "circle-stroke-color":
+              "#ffff00"
+
+          }
+
         });
+
       }
 
-      safeOff("mouseenter", "coinciden_points_layer");
-      safeOff("mouseleave", "coinciden_points_layer");
-      safeOff("click", "coinciden_points_layer");
 
-      map.on("mouseenter", "coinciden_points_layer", () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", "coinciden_points_layer", () => (map.getCanvas().style.cursor = ""));
+      // =================================================
+      // LIMPIAR EVENTOS ANTERIORES
+      // =================================================
 
-      map.on("click", "coinciden_points_layer", (e) => {
-        const f = e.features && e.features[0];
-        if (!f) return;
+      safeOff(
+        "mouseenter",
+        "coinciden_points_layer"
+      );
 
-        const lngLat = getPointLngLat(f);
+      safeOff(
+        "mouseleave",
+        "coinciden_points_layer"
+      );
 
-        const hs = map.getSource("highlight_coinciden");
-        if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
+      safeOff(
+        "click",
+        "coinciden_points_layer"
+      );
 
-        popup
-          .setLngLat(lngLat)
-          .setHTML(popupHTMLCoinciden(f.properties || {}, lngLat))
-          .addTo(map);
 
-        ensurePopupVisibleSmart();
-      });
+      // =================================================
+      // CURSOR
+      // =================================================
+
+      map.on(
+
+        "mouseenter",
+
+        "coinciden_points_layer",
+
+        () => {
+
+          map
+            .getCanvas()
+            .style
+            .cursor =
+            "pointer";
+
+        }
+
+      );
+
+
+      map.on(
+
+        "mouseleave",
+
+        "coinciden_points_layer",
+
+        () => {
+
+          map
+            .getCanvas()
+            .style
+            .cursor =
+            "";
+
+        }
+
+      );
+
+
+      // =================================================
+      // CLICK SOBRE LETRERO
+      // =================================================
+
+      map.on(
+
+        "click",
+
+        "coinciden_points_layer",
+
+        (e) => {
+
+
+          const f =
+
+            e.features &&
+
+            e.features[0];
+
+
+          if (
+            !f
+          ) {
+
+            return;
+
+          }
+
+
+          const lngLat =
+            getPointLngLat(
+              f
+            );
+
+
+          // =============================================
+          // SELECCIÓN ÚNICA
+          //
+          // clearAllHighlights() se ejecuta dentro de
+          // setSingleHighlight().
+          //
+          // Por eso desaparece cualquier selección
+          // anterior de ICA, letreros o contribuyentes.
+          // =============================================
+
+          setSingleHighlight(
+
+            "highlight_coinciden",
+
+            f
+
+          );
+
+
+          // =============================================
+          // POPUP
+          // =============================================
+
+          popup
+
+            .setLngLat(
+              lngLat
+            )
+
+            .setHTML(
+
+              popupHTMLCoinciden(
+
+                f.properties || {},
+
+                lngLat
+
+              )
+
+            )
+
+            .addTo(map);
+
+
+          ensurePopupVisibleSmart();
+
+        }
+
+      );
+
     })
-    .catch((err) => console.error("Error cargando fachadas con letreros:", err));
-}
 
+
+    // ===================================================
+    // ERROR
+    // ===================================================
+
+    .catch((err) => {
+
+      console.error(
+
+        "Error cargando letreros encontrados:",
+
+        err
+
+      );
+
+    });
+
+}
 // =====================================================
-// ✅ CONTRIBUYENTES PERSONA JURÍDICA (PUNTOS) — ✅ MORADO
+// CONTRIBUYENTES ACTIVOS
+// PERSONA JURÍDICA
+// Color: MORADO
 // =====================================================
+
 function addContribJuridicaLayer() {
-  fetch("../src/data/Contribuyentes_Persona_Juridica.geojson")
-    .then((r) => r.json())
+
+  fetch(
+    "../src/data/Contribuyentes_Persona_Juridica.geojson"
+  )
+
+    .then(
+      (r) => r.json()
+    )
+
     .then((data) => {
-      CONTRIB_JURIDICA_DATA = data;
 
-      if (map.getSource("contrib_juridica")) map.getSource("contrib_juridica").setData(data);
-      else map.addSource("contrib_juridica", { type: "geojson", data });
 
-      if (!map.getLayer("contrib_juridica_layer")) {
+      // =================================================
+      // GUARDAR DATASET
+      // =================================================
+
+      CONTRIB_JURIDICA_DATA =
+        data;
+
+
+      // =================================================
+      // SOURCE
+      // =================================================
+
+      if (
+        map.getSource(
+          "contrib_juridica"
+        )
+      ) {
+
+        map
+          .getSource(
+            "contrib_juridica"
+          )
+          .setData(
+            data
+          );
+
+      } else {
+
+        map.addSource(
+
+          "contrib_juridica",
+
+          {
+
+            type:
+              "geojson",
+
+            data:
+              data
+
+          }
+
+        );
+
+      }
+
+
+      // =================================================
+      // CAPA DE PUNTOS
+      // =================================================
+      //
+      // Antes:
+      // radius: 6
+      // stroke: 1.5
+      //
+      // Ahora:
+      // radius: 4
+      // stroke: 0.75
+      // =================================================
+
+      if (
+        !map.getLayer(
+          "contrib_juridica_layer"
+        )
+      ) {
+
         map.addLayer({
-          id: "contrib_juridica_layer",
-          type: "circle",
-          source: "contrib_juridica",
+
+          id:
+            "contrib_juridica_layer",
+
+          type:
+            "circle",
+
+          source:
+            "contrib_juridica",
+
           paint: {
-            "circle-radius": 6,
-            "circle-color": "#ff00ff",
-            "circle-stroke-width": 1.5,
-            "circle-stroke-color": "#ffffff",
-            "circle-opacity": 0.95,
-          },
+
+            "circle-radius":
+              4,
+
+            "circle-color":
+              "#ff00ff",
+
+            "circle-stroke-width":
+              0.75,
+
+            "circle-stroke-color":
+              "#ffffff",
+
+            "circle-opacity":
+              0.95
+
+          }
+
         });
+
       }
 
-      if (!map.getSource("highlight_contrib_juridica")) {
-        map.addSource("highlight_contrib_juridica", {
-          type: "geojson",
-          data: { type: "FeatureCollection", features: [] },
-        });
+
+      // =================================================
+      // SOURCE PARA SELECCIÓN
+      // =================================================
+
+      if (
+        !map.getSource(
+          "highlight_contrib_juridica"
+        )
+      ) {
+
+        map.addSource(
+
+          "highlight_contrib_juridica",
+
+          {
+
+            type:
+              "geojson",
+
+            data: {
+
+              type:
+                "FeatureCollection",
+
+              features:
+                []
+
+            }
+
+          }
+
+        );
+
       }
-      if (!map.getLayer("highlight_contrib_juridica_circle")) {
+
+
+      // =================================================
+      // SÍMBOLO DE SELECCIÓN
+      // =================================================
+
+      if (
+        !map.getLayer(
+          "highlight_contrib_juridica_circle"
+        )
+      ) {
+
         map.addLayer({
-          id: "highlight_contrib_juridica_circle",
-          type: "circle",
-          source: "highlight_contrib_juridica",
+
+          id:
+            "highlight_contrib_juridica_circle",
+
+          type:
+            "circle",
+
+          source:
+            "highlight_contrib_juridica",
+
           paint: {
-            "circle-radius": 11,
-            "circle-color": "#ffff00",
-            "circle-opacity": 0.35,
-            "circle-stroke-width": 4,
-            "circle-stroke-color": "#ffff00",
-          },
+
+            "circle-radius":
+              7,
+
+            "circle-color":
+              "#ffff00",
+
+            "circle-opacity":
+              0.30,
+
+            "circle-stroke-width":
+              2,
+
+            "circle-stroke-color":
+              "#ffff00"
+
+          }
+
         });
+
       }
 
-      safeOff("mouseenter", "contrib_juridica_layer");
-      safeOff("mouseleave", "contrib_juridica_layer");
-      safeOff("click", "contrib_juridica_layer");
 
-      map.on("mouseenter", "contrib_juridica_layer", () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", "contrib_juridica_layer", () => (map.getCanvas().style.cursor = ""));
+      // =================================================
+      // LIMPIAR EVENTOS ANTERIORES
+      // =================================================
 
-      map.on("click", "contrib_juridica_layer", (e) => {
-        const f = e.features && e.features[0];
-        if (!f) return;
+      safeOff(
+        "mouseenter",
+        "contrib_juridica_layer"
+      );
 
-        const lngLat = getPointLngLat(f);
+      safeOff(
+        "mouseleave",
+        "contrib_juridica_layer"
+      );
 
-        const hs = map.getSource("highlight_contrib_juridica");
-        if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
+      safeOff(
+        "click",
+        "contrib_juridica_layer"
+      );
 
-        popup
-          .setLngLat(lngLat)
-          .setHTML(popupHTMLContribActivos(f.properties || {}, lngLat))
-          .addTo(map);
 
-        ensurePopupVisibleSmart();
-      });
+      // =================================================
+      // CURSOR
+      // =================================================
+
+      map.on(
+
+        "mouseenter",
+
+        "contrib_juridica_layer",
+
+        () => {
+
+          map
+            .getCanvas()
+            .style
+            .cursor =
+            "pointer";
+
+        }
+
+      );
+
+
+      map.on(
+
+        "mouseleave",
+
+        "contrib_juridica_layer",
+
+        () => {
+
+          map
+            .getCanvas()
+            .style
+            .cursor =
+            "";
+
+        }
+
+      );
+
+
+      // =================================================
+      // CLICK CONTRIBUYENTE JURÍDICO
+      // =================================================
+
+      map.on(
+
+        "click",
+
+        "contrib_juridica_layer",
+
+        (e) => {
+
+
+          const f =
+
+            e.features &&
+
+            e.features[0];
+
+
+          if (
+            !f
+          ) {
+
+            return;
+
+          }
+
+
+          const lngLat =
+            getPointLngLat(
+              f
+            );
+
+
+          // =============================================
+          // SELECCIÓN ÚNICA
+          // =============================================
+
+          setSingleHighlight(
+
+            "highlight_contrib_juridica",
+
+            f
+
+          );
+
+
+          // =============================================
+          // POPUP SIMPLIFICADO
+          // =============================================
+
+          popup
+
+            .setLngLat(
+              lngLat
+            )
+
+            .setHTML(
+
+              popupHTMLContribActivos(
+
+                f.properties || {},
+
+                lngLat
+
+              )
+
+            )
+
+            .addTo(map);
+
+
+          ensurePopupVisibleSmart();
+
+        }
+
+      );
+
     })
-    .catch((err) => console.error("Error cargando contribuyentes jurídicos:", err));
+
+
+    // ===================================================
+    // ERROR
+    // ===================================================
+
+    .catch((err) => {
+
+      console.error(
+
+        "Error cargando contribuyentes jurídicos:",
+
+        err
+
+      );
+
+    });
+
 }
 
+
 // =====================================================
-// ✅ CONTRIBUYENTES PERSONA NATURAL (PUNTOS) — ✅ MISMO MORADO + MISMO POPUP
+// CONTRIBUYENTES ACTIVOS
+// PERSONA NATURAL
+// Color: MORADO
 // =====================================================
+
 function addContribNaturalLayer() {
-  fetch("../src/data/Contribuyentes_Persona_Natural.geojson")
-    .then((r) => r.json())
+
+  fetch(
+    "../src/data/Contribuyentes_Persona_Natural.geojson"
+  )
+
+    .then(
+      (r) => r.json()
+    )
+
     .then((data) => {
-      CONTRIB_NATURAL_DATA = data;
 
-      if (map.getSource("contrib_natural")) map.getSource("contrib_natural").setData(data);
-      else map.addSource("contrib_natural", { type: "geojson", data });
 
-      if (!map.getLayer("contrib_natural_layer")) {
+      // =================================================
+      // GUARDAR DATASET
+      // =================================================
+
+      CONTRIB_NATURAL_DATA =
+        data;
+
+
+      // =================================================
+      // SOURCE
+      // =================================================
+
+      if (
+        map.getSource(
+          "contrib_natural"
+        )
+      ) {
+
+        map
+          .getSource(
+            "contrib_natural"
+          )
+          .setData(
+            data
+          );
+
+      } else {
+
+        map.addSource(
+
+          "contrib_natural",
+
+          {
+
+            type:
+              "geojson",
+
+            data:
+              data
+
+          }
+
+        );
+
+      }
+
+
+      // =================================================
+      // CAPA DE PUNTOS
+      // =================================================
+
+      if (
+        !map.getLayer(
+          "contrib_natural_layer"
+        )
+      ) {
+
         map.addLayer({
-          id: "contrib_natural_layer",
-          type: "circle",
-          source: "contrib_natural",
+
+          id:
+            "contrib_natural_layer",
+
+          type:
+            "circle",
+
+          source:
+            "contrib_natural",
+
           paint: {
-            "circle-radius": 6,
-            "circle-color": "#ff00ff", // ✅ mismo color que jurídica
-            "circle-stroke-width": 1.5,
-            "circle-stroke-color": "#ffffff",
-            "circle-opacity": 0.95,
-          },
+
+            "circle-radius":
+              4,
+
+            "circle-color":
+              "#ff00ff",
+
+            "circle-stroke-width":
+              0.75,
+
+            "circle-stroke-color":
+              "#ffffff",
+
+            "circle-opacity":
+              0.95
+
+          }
+
         });
+
       }
 
-      if (!map.getSource("highlight_contrib_natural")) {
-        map.addSource("highlight_contrib_natural", {
-          type: "geojson",
-          data: { type: "FeatureCollection", features: [] },
-        });
+
+      // =================================================
+      // SOURCE PARA SELECCIÓN
+      // =================================================
+
+      if (
+        !map.getSource(
+          "highlight_contrib_natural"
+        )
+      ) {
+
+        map.addSource(
+
+          "highlight_contrib_natural",
+
+          {
+
+            type:
+              "geojson",
+
+            data: {
+
+              type:
+                "FeatureCollection",
+
+              features:
+                []
+
+            }
+
+          }
+
+        );
+
       }
-      if (!map.getLayer("highlight_contrib_natural_circle")) {
+
+
+      // =================================================
+      // SÍMBOLO DE SELECCIÓN
+      // =================================================
+
+      if (
+        !map.getLayer(
+          "highlight_contrib_natural_circle"
+        )
+      ) {
+
         map.addLayer({
-          id: "highlight_contrib_natural_circle",
-          type: "circle",
-          source: "highlight_contrib_natural",
+
+          id:
+            "highlight_contrib_natural_circle",
+
+          type:
+            "circle",
+
+          source:
+            "highlight_contrib_natural",
+
           paint: {
-            "circle-radius": 11,
-            "circle-color": "#ffff00",
-            "circle-opacity": 0.35,
-            "circle-stroke-width": 4,
-            "circle-stroke-color": "#ffff00",
-          },
+
+            "circle-radius":
+              7,
+
+            "circle-color":
+              "#ffff00",
+
+            "circle-opacity":
+              0.30,
+
+            "circle-stroke-width":
+              2,
+
+            "circle-stroke-color":
+              "#ffff00"
+
+          }
+
         });
+
       }
 
-      safeOff("mouseenter", "contrib_natural_layer");
-      safeOff("mouseleave", "contrib_natural_layer");
-      safeOff("click", "contrib_natural_layer");
 
-      map.on("mouseenter", "contrib_natural_layer", () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", "contrib_natural_layer", () => (map.getCanvas().style.cursor = ""));
+      // =================================================
+      // LIMPIAR EVENTOS ANTERIORES
+      // =================================================
 
-      map.on("click", "contrib_natural_layer", (e) => {
-        const f = e.features && e.features[0];
-        if (!f) return;
+      safeOff(
+        "mouseenter",
+        "contrib_natural_layer"
+      );
 
-        const lngLat = getPointLngLat(f);
+      safeOff(
+        "mouseleave",
+        "contrib_natural_layer"
+      );
 
-        const hs = map.getSource("highlight_contrib_natural");
-        if (hs) hs.setData({ type: "FeatureCollection", features: [f] });
+      safeOff(
+        "click",
+        "contrib_natural_layer"
+      );
 
-        popup
-          .setLngLat(lngLat)
-          .setHTML(popupHTMLContribActivos(f.properties || {}, lngLat))
-          .addTo(map);
 
-        ensurePopupVisibleSmart();
-      });
+      // =================================================
+      // CURSOR
+      // =================================================
+
+      map.on(
+
+        "mouseenter",
+
+        "contrib_natural_layer",
+
+        () => {
+
+          map
+            .getCanvas()
+            .style
+            .cursor =
+            "pointer";
+
+        }
+
+      );
+
+
+      map.on(
+
+        "mouseleave",
+
+        "contrib_natural_layer",
+
+        () => {
+
+          map
+            .getCanvas()
+            .style
+            .cursor =
+            "";
+
+        }
+
+      );
+
+
+      // =================================================
+      // CLICK CONTRIBUYENTE NATURAL
+      // =================================================
+
+      map.on(
+
+        "click",
+
+        "contrib_natural_layer",
+
+        (e) => {
+
+
+          const f =
+
+            e.features &&
+
+            e.features[0];
+
+
+          if (
+            !f
+          ) {
+
+            return;
+
+          }
+
+
+          const lngLat =
+            getPointLngLat(
+              f
+            );
+
+
+          // =============================================
+          // SELECCIÓN ÚNICA
+          // =============================================
+
+          setSingleHighlight(
+
+            "highlight_contrib_natural",
+
+            f
+
+          );
+
+
+          // =============================================
+          // POPUP SIMPLIFICADO
+          // =============================================
+
+          popup
+
+            .setLngLat(
+              lngLat
+            )
+
+            .setHTML(
+
+              popupHTMLContribActivos(
+
+                f.properties || {},
+
+                lngLat
+
+              )
+
+            )
+
+            .addTo(map);
+
+
+          ensurePopupVisibleSmart();
+
+        }
+
+      );
+
     })
-    .catch((err) => console.error("Error cargando contribuyentes natural:", err));
+
+
+    // ===================================================
+    // ERROR
+    // ===================================================
+
+    .catch((err) => {
+
+      console.error(
+
+        "Error cargando contribuyentes naturales:",
+
+        err
+
+      );
+
+    });
+
 }
+// =====================================================
+// PARTE 4A
+// LEYENDA ON/OFF + ORDEN DE CAPAS
+// =====================================================
+
 
 // =====================================================
-// ✅ LEYENDA (ON/OFF) + ORDEN FIJO DE CAPAS
+// MOSTRAR / OCULTAR CAPA
 // =====================================================
-function setLayerVisible(layerId, visible) {
-  if (!map.getLayer(layerId)) return;
-  map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
+
+function setLayerVisible(
+  layerId,
+  visible
+) {
+
+  if (
+    !map.getLayer(layerId)
+  ) {
+    return;
+  }
+
+
+  map.setLayoutProperty(
+    layerId,
+    "visibility",
+    visible
+      ? "visible"
+      : "none"
+  );
+
 }
 
-function isLayerVisible(layerId) {
-  if (!map.getLayer(layerId)) return false;
-  const v = map.getLayoutProperty(layerId, "visibility");
-  return v !== "none";
+
+// =====================================================
+// SABER SI UNA CAPA ESTÁ VISIBLE
+// =====================================================
+
+function isLayerVisible(
+  layerId
+) {
+
+  if (
+    !map.getLayer(layerId)
+  ) {
+    return false;
+  }
+
+
+  const visibility =
+    map.getLayoutProperty(
+      layerId,
+      "visibility"
+    );
+
+
+  return (
+    visibility !== "none"
+  );
+
 }
 
-// Orden fijo: Predios (abajo) -> Letreros -> Posible recaudo -> Contribuyentes (arriba) -> Highlights (arriba del todo)
+
+// =====================================================
+// ORDEN VISUAL FIJO DE LAS CAPAS
+// =====================================================
+//
+// De abajo hacia arriba:
+//
+// Predios
+// Contribuyentes activos
+// Letreros encontrados
+// Posible recaudo ICA
+// Highlights
+//
+// Por eso la leyenda se mostrará:
+//
+// Posible recaudo ICA
+// Letreros encontrados
+// Contribuyentes activos
+// Predios
+//
+// =====================================================
+
 function applyFixedOrder() {
-  try {
-    if (map.getLayer("predios_base_outline")) map.moveLayer("predios_base_outline");
-    if (map.getLayer("coinciden_points_layer")) map.moveLayer("coinciden_points_layer");
-    if (map.getLayer("ica_points_layer")) map.moveLayer("ica_points_layer");
-    if (map.getLayer("contrib_juridica_layer")) map.moveLayer("contrib_juridica_layer");
-    if (map.getLayer("contrib_natural_layer")) map.moveLayer("contrib_natural_layer");
 
-    if (map.getLayer("highlight_ica_circle")) map.moveLayer("highlight_ica_circle");
-    if (map.getLayer("highlight_coinciden_circle")) map.moveLayer("highlight_coinciden_circle");
-    if (map.getLayer("highlight_contrib_juridica_circle"))
-      map.moveLayer("highlight_contrib_juridica_circle");
-    if (map.getLayer("highlight_contrib_natural_circle"))
-      map.moveLayer("highlight_contrib_natural_circle");
-  } catch (e) {}
+  try {
+
+
+    // =================================================
+    // 1. PREDIOS
+    // =================================================
+
+    if (
+      map.getLayer(
+        "predios_base_outline"
+      )
+    ) {
+
+      map.moveLayer(
+        "predios_base_outline"
+      );
+
+    }
+
+
+    // =================================================
+    // 2. CONTRIBUYENTES ACTIVOS
+    // =================================================
+
+    if (
+      map.getLayer(
+        "contrib_juridica_layer"
+      )
+    ) {
+
+      map.moveLayer(
+        "contrib_juridica_layer"
+      );
+
+    }
+
+
+    if (
+      map.getLayer(
+        "contrib_natural_layer"
+      )
+    ) {
+
+      map.moveLayer(
+        "contrib_natural_layer"
+      );
+
+    }
+
+
+    // =================================================
+    // 3. LETREROS
+    // =================================================
+
+    if (
+      map.getLayer(
+        "coinciden_points_layer"
+      )
+    ) {
+
+      map.moveLayer(
+        "coinciden_points_layer"
+      );
+
+    }
+
+
+    // =================================================
+    // 4. POSIBLE RECAUDO ICA
+    // =================================================
+
+    if (
+      map.getLayer(
+        "ica_points_layer"
+      )
+    ) {
+
+      map.moveLayer(
+        "ica_points_layer"
+      );
+
+    }
+
+
+    // =================================================
+    // HIGHLIGHTS SIEMPRE ENCIMA
+    // =================================================
+
+    if (
+      map.getLayer(
+        "highlight_ica_circle"
+      )
+    ) {
+
+      map.moveLayer(
+        "highlight_ica_circle"
+      );
+
+    }
+
+
+    if (
+      map.getLayer(
+        "highlight_coinciden_circle"
+      )
+    ) {
+
+      map.moveLayer(
+        "highlight_coinciden_circle"
+      );
+
+    }
+
+
+    if (
+      map.getLayer(
+        "highlight_contrib_juridica_circle"
+      )
+    ) {
+
+      map.moveLayer(
+        "highlight_contrib_juridica_circle"
+      );
+
+    }
+
+
+    if (
+      map.getLayer(
+        "highlight_contrib_natural_circle"
+      )
+    ) {
+
+      map.moveLayer(
+        "highlight_contrib_natural_circle"
+      );
+
+    }
+
+
+  } catch (error) {
+
+    console.warn(
+      "No fue posible reorganizar alguna capa:",
+      error
+    );
+
+  }
+
 }
+
+
+// =====================================================
+// CONSTRUIR LEYENDA
+// =====================================================
 
 function buildLegend() {
-  const el = document.getElementById("ea-legend");
-  if (!el) return;
+
+  const el =
+    document.getElementById(
+      "ea-legend"
+    );
+
+
+  if (
+    !el
+  ) {
+
+    return;
+
+  }
+
 
   el.innerHTML = `
-    <div style="font-weight:900; font-size:13px; margin-bottom:8px;">Capas</div>
 
-    <div class="row">
-      <div class="left">
-        <span class="dot" style="background:#ffffff;"></span>
-        <span class="name">Predios</span>
-      </div>
-      <input id="tg_predios" type="checkbox" checked />
+    <div
+      style="
+        font-weight:900;
+        font-size:13px;
+        margin-bottom:8px;
+      "
+    >
+      Capas
     </div>
 
-    <div class="row">
-      <div class="left">
-        <span class="dot" style="background:#00b0ff;"></span>
-        <span class="name">Letreros encontrados</span>
-      </div>
-      <input id="tg_letreros" type="checkbox" checked />
-    </div>
+
+    <!-- ============================================= -->
+    <!-- POSIBLE RECAUDO ICA -->
+    <!-- ============================================= -->
 
     <div class="row">
+
       <div class="left">
-        <span class="dot" style="background:#00c853;"></span>
-        <span class="name">Posible recaudo ICA</span>
+
+        <span
+          class="dot"
+          style="background:#00c853;">
+        </span>
+
+        <span class="name">
+          Posible recaudo ICA
+        </span>
+
       </div>
-      <input id="tg_recaudo" type="checkbox" checked />
+
+      <input
+        id="tg_recaudo"
+        type="checkbox"
+        checked
+      />
+
     </div>
 
+
+    <!-- ============================================= -->
+    <!-- LETREROS ENCONTRADOS -->
+    <!-- ============================================= -->
+
     <div class="row">
+
       <div class="left">
-        <span class="dot" style="background:#ff00ff;"></span>
-        <span class="name">Contribuyentes activos</span>
+
+        <span
+          class="dot"
+          style="background:#00b0ff;">
+        </span>
+
+        <span class="name">
+          Letreros encontrados
+        </span>
+
       </div>
-      <input id="tg_contrib" type="checkbox" checked />
+
+      <input
+        id="tg_letreros"
+        type="checkbox"
+        checked
+      />
+
     </div>
+
+
+    <!-- ============================================= -->
+    <!-- CONTRIBUYENTES ACTIVOS -->
+    <!-- ============================================= -->
+
+    <div class="row">
+
+      <div class="left">
+
+        <span
+          class="dot"
+          style="background:#ff00ff;">
+        </span>
+
+        <span class="name">
+          Contribuyentes activos
+        </span>
+
+      </div>
+
+      <input
+        id="tg_contrib"
+        type="checkbox"
+        checked
+      />
+
+    </div>
+
+
+    <!-- ============================================= -->
+    <!-- PREDIOS -->
+    <!-- ============================================= -->
+
+    <div class="row">
+
+      <div class="left">
+
+        <span
+          class="dot"
+          style="background:#ffffff;">
+        </span>
+
+        <span class="name">
+          Predios
+        </span>
+
+      </div>
+
+      <input
+        id="tg_predios"
+        type="checkbox"
+        checked
+      />
+
+    </div>
+
   `;
 
-  const tg_predios = el.querySelector("#tg_predios");
-  const tg_letreros = el.querySelector("#tg_letreros");
-  const tg_recaudo = el.querySelector("#tg_recaudo");
-  const tg_contrib = el.querySelector("#tg_contrib");
 
-  tg_predios.checked = isLayerVisible("predios_base_outline");
-  tg_letreros.checked = isLayerVisible("coinciden_points_layer");
-  tg_recaudo.checked = isLayerVisible("ica_points_layer");
+  // ===================================================
+  // OBTENER CHECKBOXES
+  // ===================================================
+
+  const tg_recaudo =
+    el.querySelector(
+      "#tg_recaudo"
+    );
+
+
+  const tg_letreros =
+    el.querySelector(
+      "#tg_letreros"
+    );
+
+
+  const tg_contrib =
+    el.querySelector(
+      "#tg_contrib"
+    );
+
+
+  const tg_predios =
+    el.querySelector(
+      "#tg_predios"
+    );
+
+
+  // ===================================================
+  // ESTADO INICIAL
+  // ===================================================
+
+  tg_recaudo.checked =
+    isLayerVisible(
+      "ica_points_layer"
+    );
+
+
+  tg_letreros.checked =
+    isLayerVisible(
+      "coinciden_points_layer"
+    );
+
+
   tg_contrib.checked =
-    isLayerVisible("contrib_juridica_layer") || isLayerVisible("contrib_natural_layer");
 
-  tg_predios.addEventListener("change", () => {
-    setLayerVisible("predios_base_outline", tg_predios.checked);
-    applyFixedOrder();
-  });
+    isLayerVisible(
+      "contrib_juridica_layer"
+    )
 
-  tg_letreros.addEventListener("change", () => {
-    setLayerVisible("coinciden_points_layer", tg_letreros.checked);
-    applyFixedOrder();
-  });
+    ||
 
-  tg_recaudo.addEventListener("change", () => {
-    setLayerVisible("ica_points_layer", tg_recaudo.checked);
-    applyFixedOrder();
-  });
+    isLayerVisible(
+      "contrib_natural_layer"
+    );
 
-  tg_contrib.addEventListener("change", () => {
-    setLayerVisible("contrib_juridica_layer", tg_contrib.checked);
-    setLayerVisible("contrib_natural_layer", tg_contrib.checked);
-    applyFixedOrder();
-  });
-}
 
-// =====================================================
-// BUSCADOR LOCAL (ICA + Fachadas + Contribuyentes activos)
-// =====================================================
-const geocoder = new MapboxGeocoder({
-  accessToken: mapboxgl.accessToken,
-  mapboxgl,
-  marker: false,
-  localGeocoderOnly: true,
-  placeholder: "Buscar ICA / fachadas / contribuyentes activos",
-  localGeocoder: (q) => {
-    const query = norm(q);
-    if (!query) return [];
+  tg_predios.checked =
+    isLayerVisible(
+      "predios_base_outline"
+    );
 
-    const results = [];
 
-    // --- ICA (Posibilidades) ---
-    if (ICA_DATA && Array.isArray(ICA_DATA.features)) {
-      for (const f of ICA_DATA.features) {
-        const p = f.properties || {};
-        const txt = norm(p.NOMBRE);
-        if (txt && txt.includes(query)) {
-          const center = getPointLngLat(f);
-          results.push({
-            type: "Feature",
-            geometry: f.geometry,
-            center,
-            properties: { ...p, __tipo: "ICA" },
-            place_name: `Posibilidades ICA: ${(p.NOMBRE ?? "N/A").toString()}`,
-            text: (p.NOMBRE ?? "Posibilidades ICA").toString(),
-            place_type: ["place"],
-          });
-          if (results.length >= 10) break;
-        }
-      }
-    }
+  // ===================================================
+  // TOGGLE POSIBLE RECAUDO ICA
+  // ===================================================
 
-    // --- Fachadas con letreros encontradas ---
-    if (COINCIDEN_DATA && Array.isArray(COINCIDEN_DATA.features) && results.length < 10) {
-      for (const f of COINCIDEN_DATA.features) {
-        const p = f.properties || {};
-        const txt = norm(p.NOMBRE);
-        if (txt && txt.includes(query)) {
-          const center = getPointLngLat(f);
-          results.push({
-            type: "Feature",
-            geometry: f.geometry,
-            center,
-            properties: { ...p, __tipo: "COINCIDEN" },
-            place_name: `Fachadas: ${(p.NOMBRE ?? "N/A").toString()}`,
-            text: (p.NOMBRE ?? "Fachadas").toString(),
-            place_type: ["place"],
-          });
-          if (results.length >= 10) break;
-        }
-      }
-    }
+  tg_recaudo.addEventListener(
+    "change",
+    () => {
 
-    function matchContrib(p) {
-      const cod = norm(p["Código predial"] ?? p.CODIGO_PREDIAL ?? p.codigo_predial ?? p.codigo);
-      const doc = norm(
-        p["Número documento"] ?? p.NUMERO_DOCUMENTO ?? p["No Documento"] ?? p.NO_DOCUMENTO
+
+      setLayerVisible(
+
+        "ica_points_layer",
+
+        tg_recaudo.checked
+
       );
-      const razon = norm(p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Razon Social"]);
-      const contrib = norm(p["Contribuyente"] ?? p.NOMBRE ?? p.Nombre ?? p.RAZON_SOCIAL);
 
-      return (
-        (cod && cod.includes(query)) ||
-        (doc && doc.includes(query)) ||
-        (razon && razon.includes(query)) ||
-        (contrib && contrib.includes(query))
-      );
-    }
 
-    // --- Contribuyentes activos (Jurídica) ---
-    if (CONTRIB_JURIDICA_DATA && Array.isArray(CONTRIB_JURIDICA_DATA.features) && results.length < 10) {
-      for (const f of CONTRIB_JURIDICA_DATA.features) {
-        const p = f.properties || {};
-        if (!matchContrib(p)) continue;
+      // Si se oculta la capa,
+      // eliminar también su selección amarilla
+      if (
+        !tg_recaudo.checked
+      ) {
 
-        const center = getPointLngLat(f);
-        results.push({
-          type: "Feature",
-          geometry: f.geometry,
-          center,
-          properties: { ...p, __tipo: "CONTRIB_ACTIVOS" },
-          place_name: `Contribuyentes activos: ${(
-            p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A"
-          ).toString()}`,
-          text: (p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "Activos").toString(),
-          place_type: ["place"],
-        });
+        const hs =
+          map.getSource(
+            "highlight_ica"
+          );
 
-        if (results.length >= 10) break;
+
+        if (
+          hs
+        ) {
+
+          hs.setData({
+
+            type:
+              "FeatureCollection",
+
+            features:
+              []
+
+          });
+
+        }
+
       }
-    }
 
-    // --- Contribuyentes activos (Natural) ---
-    if (CONTRIB_NATURAL_DATA && Array.isArray(CONTRIB_NATURAL_DATA.features) && results.length < 10) {
-      for (const f of CONTRIB_NATURAL_DATA.features) {
-        const p = f.properties || {};
-        if (!matchContrib(p)) continue;
 
-        const center = getPointLngLat(f);
-        results.push({
-          type: "Feature",
-          geometry: f.geometry,
-          center,
-          properties: { ...p, __tipo: "CONTRIB_ACTIVOS" },
-          place_name: `Contribuyentes activos: ${(
-            p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "N/A"
-          ).toString()}`,
-          text: (p["Razón social"] ?? p.RAZON_SOCIAL ?? p["Contribuyente"] ?? "Activos").toString(),
-          place_type: ["place"],
-        });
-
-        if (results.length >= 10) break;
-      }
-    }
-
-    return results;
-  },
-});
-
-map.addControl(geocoder, "top-left");
-
-geocoder.on("result", (e) => {
-  const r = e.result;
-  if (!r) return;
-
-  const tipo = r.properties?.__tipo;
-
-  if (tipo === "ICA") {
-    const lngLat = r.center || getPointLngLat(r);
-
-    const hs = map.getSource("highlight_ica");
-    if (hs) hs.setData({ type: "FeatureCollection", features: [r] });
-
-    map.flyTo({ center: lngLat, zoom: 18 });
-
-    popup.setLngLat(lngLat).setHTML(popupHTMLICA(r.properties || {}, lngLat)).addTo(map);
-    ensurePopupVisibleSmart();
-    return;
-  }
-
-  if (tipo === "COINCIDEN") {
-    const lngLat = r.center || getPointLngLat(r);
-
-    const hs = map.getSource("highlight_coinciden");
-    if (hs) hs.setData({ type: "FeatureCollection", features: [r] });
-
-    map.flyTo({ center: lngLat, zoom: 18 });
-
-    popup.setLngLat(lngLat).setHTML(popupHTMLCoinciden(r.properties || {}, lngLat)).addTo(map);
-    ensurePopupVisibleSmart();
-    return;
-  }
-
-  if (tipo === "CONTRIB_ACTIVOS") {
-    const lngLat = r.center || getPointLngLat(r);
-
-    const hsJ = map.getSource("highlight_contrib_juridica");
-    if (hsJ) hsJ.setData({ type: "FeatureCollection", features: [r] });
-
-    const hsN = map.getSource("highlight_contrib_natural");
-    if (hsN) hsN.setData({ type: "FeatureCollection", features: [r] });
-
-    map.flyTo({ center: lngLat, zoom: 18 });
-
-    popup.setLngLat(lngLat).setHTML(popupHTMLContribActivos(r.properties || {}, lngLat)).addTo(map);
-    ensurePopupVisibleSmart();
-    return;
-  }
-});
-
-// =====================================================
-// CARGA FINAL (orden)
-// =====================================================
-map.on("style.load", () => {
-  addPrediosBase();
-  addICALayer();             // ✅ verde = Posibilidades ICA
-  addCoincidenLayer();       // ✅ azul  = Letreros encontrados
-  addContribJuridicaLayer(); // ✅ morado = Activos (jurídica)
-  addContribNaturalLayer();  // ✅ morado = Activos (natural)
-
-  setTimeout(() => {
-    try {
-      // ✅ orden fijo
       applyFixedOrder();
 
-      // ✅ construir leyenda cuando ya existan capas
-      buildLegend();
-    } catch (e) {}
-  }, 650);
-});
+    }
+  );
+
+
+  // ===================================================
+  // TOGGLE LETREROS
+  // ===================================================
+
+  tg_letreros.addEventListener(
+    "change",
+    () => {
+
+
+      setLayerVisible(
+
+        "coinciden_points_layer",
+
+        tg_letreros.checked
+
+      );
+
+
+      if (
+        !tg_letreros.checked
+      ) {
+
+        const hs =
+          map.getSource(
+            "highlight_coinciden"
+          );
+
+
+        if (
+          hs
+        ) {
+
+          hs.setData({
+
+            type:
+              "FeatureCollection",
+
+            features:
+              []
+
+          });
+
+        }
+
+      }
+
+
+      applyFixedOrder();
+
+    }
+  );
+
+
+  // ===================================================
+  // TOGGLE CONTRIBUYENTES ACTIVOS
+  // ===================================================
+
+  tg_contrib.addEventListener(
+    "change",
+    () => {
+
+
+      setLayerVisible(
+
+        "contrib_juridica_layer",
+
+        tg_contrib.checked
+
+      );
+
+
+      setLayerVisible(
+
+        "contrib_natural_layer",
+
+        tg_contrib.checked
+
+      );
+
+
+      // Si se ocultan los contribuyentes,
+      // eliminar ambas posibles selecciones
+      if (
+        !tg_contrib.checked
+      ) {
+
+
+        const hsJ =
+          map.getSource(
+            "highlight_contrib_juridica"
+          );
+
+
+        const hsN =
+          map.getSource(
+            "highlight_contrib_natural"
+          );
+
+
+        if (
+          hsJ
+        ) {
+
+          hsJ.setData({
+
+            type:
+              "FeatureCollection",
+
+            features:
+              []
+
+          });
+
+        }
+
+
+        if (
+          hsN
+        ) {
+
+          hsN.setData({
+
+            type:
+              "FeatureCollection",
+
+            features:
+              []
+
+          });
+
+        }
+
+      }
+
+
+      applyFixedOrder();
+
+    }
+  );
+
+
+  // ===================================================
+  // TOGGLE PREDIOS
+  // ===================================================
+
+  tg_predios.addEventListener(
+    "change",
+    () => {
+
+
+      setLayerVisible(
+
+        "predios_base_outline",
+
+        tg_predios.checked
+
+      );
+
+
+      applyFixedOrder();
+
+    }
+  );
+
+}
+// =====================================================
+// PARTE 4B
+// BUSCADOR LOCAL
+// Posible recaudo ICA
+// Letreros encontrados
+// Contribuyentes activos
+// =====================================================
+
+const geocoder =
+  new MapboxGeocoder({
+
+    accessToken:
+      mapboxgl.accessToken,
+
+    mapboxgl:
+      mapboxgl,
+
+    marker:
+      false,
+
+    localGeocoderOnly:
+      true,
+
+    placeholder:
+      "Buscar ICA / letreros / contribuyentes activos",
+
+
+    // =================================================
+    // FUNCIÓN DE BÚSQUEDA
+    // =================================================
+
+    localGeocoder:
+      (q) => {
+
+
+        const query =
+          norm(q);
+
+
+        if (
+          !query
+        ) {
+
+          return [];
+
+        }
+
+
+        const results =
+          [];
+
+
+        // =================================================
+        // 1. POSIBLE RECAUDO ICA
+        // =================================================
+
+        if (
+
+          ICA_DATA &&
+
+          Array.isArray(
+            ICA_DATA.features
+          )
+
+        ) {
+
+
+          for (
+            const f
+            of ICA_DATA.features
+          ) {
+
+
+            const p =
+              f.properties || {};
+
+
+            const nombre =
+              norm(
+                p.NOMBRE
+              );
+
+
+            const codigo =
+              norm(
+                p.codigo
+              );
+
+
+            const coincide =
+
+              (
+                nombre &&
+                nombre.includes(
+                  query
+                )
+              )
+
+              ||
+
+              (
+                codigo &&
+                codigo.includes(
+                  query
+                )
+              );
+
+
+            if (
+              !coincide
+            ) {
+
+              continue;
+
+            }
+
+
+            const center =
+              getPointLngLat(
+                f
+              );
+
+
+            results.push({
+
+              type:
+                "Feature",
+
+              geometry:
+                f.geometry,
+
+              center:
+                center,
+
+              properties: {
+
+                ...p,
+
+                __tipo:
+                  "ICA"
+
+              },
+
+              place_name:
+
+                `Posible recaudo ICA: ${
+                  (
+                    p.NOMBRE ??
+                    "N/A"
+                  ).toString()
+                }`,
+
+              text:
+
+                (
+                  p.NOMBRE ??
+                  p.codigo ??
+                  "Posible recaudo ICA"
+                ).toString(),
+
+              place_type:
+                ["place"]
+
+            });
+
+
+            if (
+              results.length >= 10
+            ) {
+
+              break;
+
+            }
+
+          }
+
+        }
+
+
+        // =================================================
+        // 2. LETREROS ENCONTRADOS
+        // =================================================
+
+        if (
+
+          COINCIDEN_DATA &&
+
+          Array.isArray(
+            COINCIDEN_DATA.features
+          ) &&
+
+          results.length < 10
+
+        ) {
+
+
+          for (
+            const f
+            of COINCIDEN_DATA.features
+          ) {
+
+
+            const p =
+              f.properties || {};
+
+
+            const nombre =
+              norm(
+                p.NOMBRE
+              );
+
+
+            const codigo =
+              norm(
+                p.codigo
+              );
+
+
+            const coincide =
+
+              (
+                nombre &&
+                nombre.includes(
+                  query
+                )
+              )
+
+              ||
+
+              (
+                codigo &&
+                codigo.includes(
+                  query
+                )
+              );
+
+
+            if (
+              !coincide
+            ) {
+
+              continue;
+
+            }
+
+
+            const center =
+              getPointLngLat(
+                f
+              );
+
+
+            results.push({
+
+              type:
+                "Feature",
+
+              geometry:
+                f.geometry,
+
+              center:
+                center,
+
+              properties: {
+
+                ...p,
+
+                __tipo:
+                  "COINCIDEN"
+
+              },
+
+              place_name:
+
+                `Letreros encontrados: ${
+                  (
+                    p.NOMBRE ??
+                    "N/A"
+                  ).toString()
+                }`,
+
+              text:
+
+                (
+                  p.NOMBRE ??
+                  p.codigo ??
+                  "Letreros"
+                ).toString(),
+
+              place_type:
+                ["place"]
+
+            });
+
+
+            if (
+              results.length >= 10
+            ) {
+
+              break;
+
+            }
+
+          }
+
+        }
+
+
+        // =================================================
+        // FUNCIÓN PARA BUSCAR CONTRIBUYENTES
+        // =================================================
+
+        function matchContrib(
+          p
+        ) {
+
+
+          // Código predial
+          const codigo =
+            norm(
+
+              p["Código predial"] ??
+
+              p["CODIGO_PREDIAL"] ??
+
+              p["codigo_predial"] ??
+
+              p["codigo"]
+
+            );
+
+
+          // Documento
+          const documento =
+            norm(
+
+              p["Número documento"] ??
+
+              p["NUMERO_DOCUMENTO"] ??
+
+              p["No Documento"] ??
+
+              p["NO_DOCUMENTO"] ??
+
+              p["Documento"] ??
+
+              p["DOCUMENTO"]
+
+            );
+
+
+          // Razón social
+          const razonSocial =
+            norm(
+
+              p["Razón social"] ??
+
+              p["RAZON_SOCIAL"] ??
+
+              p["Razon Social"]
+
+            );
+
+
+          // Contribuyente / nombre
+          const contribuyente =
+            norm(
+
+              p["Contribuyente"] ??
+
+              p["NOMBRE"] ??
+
+              p["Nombre"] ??
+
+              p["RAZON_SOCIAL"]
+
+            );
+
+
+          // Naturaleza
+          const naturaleza =
+            norm(
+
+              p["Naturaleza jurídica"] ??
+
+              p["NATURALEZA_JURIDICA"] ??
+
+              p["Naturaleza Juridica"] ??
+
+              p["Naturaleza"] ??
+
+              p["NATURALEZA"]
+
+            );
+
+
+          // Estado
+          const estado =
+            norm(
+
+              p["Estado"] ??
+
+              p["ESTADO"]
+
+            );
+
+
+          return (
+
+            (
+              codigo &&
+              codigo.includes(
+                query
+              )
+            )
+
+            ||
+
+            (
+              documento &&
+              documento.includes(
+                query
+              )
+            )
+
+            ||
+
+            (
+              razonSocial &&
+              razonSocial.includes(
+                query
+              )
+            )
+
+            ||
+
+            (
+              contribuyente &&
+              contribuyente.includes(
+                query
+              )
+            )
+
+            ||
+
+            (
+              naturaleza &&
+              naturaleza.includes(
+                query
+              )
+            )
+
+            ||
+
+            (
+              estado &&
+              estado.includes(
+                query
+              )
+            )
+
+          );
+
+        }
+
+
+        // =================================================
+        // 3. CONTRIBUYENTES ACTIVOS
+        // PERSONA JURÍDICA
+        // =================================================
+
+        if (
+
+          CONTRIB_JURIDICA_DATA &&
+
+          Array.isArray(
+            CONTRIB_JURIDICA_DATA.features
+          ) &&
+
+          results.length < 10
+
+        ) {
+
+
+          for (
+            const f
+            of CONTRIB_JURIDICA_DATA.features
+          ) {
+
+
+            const p =
+              f.properties || {};
+
+
+            if (
+              !matchContrib(
+                p
+              )
+            ) {
+
+              continue;
+
+            }
+
+
+            const center =
+              getPointLngLat(
+                f
+              );
+
+
+            const razon =
+
+              p["Razón social"] ??
+
+              p["RAZON_SOCIAL"] ??
+
+              p["Razon Social"] ??
+
+              p["Contribuyente"] ??
+
+              p["NOMBRE"] ??
+
+              "N/A";
+
+
+            results.push({
+
+              type:
+                "Feature",
+
+              geometry:
+                f.geometry,
+
+              center:
+                center,
+
+              properties: {
+
+                ...p,
+
+                // IMPORTANTE:
+                // diferenciamos jurídica y natural
+                // para saber qué highlight utilizar.
+                __tipo:
+                  "CONTRIB_JURIDICA"
+
+              },
+
+              place_name:
+
+                `Contribuyentes activos: ${
+                  razon.toString()
+                }`,
+
+              text:
+                razon.toString(),
+
+              place_type:
+                ["place"]
+
+            });
+
+
+            if (
+              results.length >= 10
+            ) {
+
+              break;
+
+            }
+
+          }
+
+        }
+
+
+        // =================================================
+        // 4. CONTRIBUYENTES ACTIVOS
+        // PERSONA NATURAL
+        // =================================================
+
+        if (
+
+          CONTRIB_NATURAL_DATA &&
+
+          Array.isArray(
+            CONTRIB_NATURAL_DATA.features
+          ) &&
+
+          results.length < 10
+
+        ) {
+
+
+          for (
+            const f
+            of CONTRIB_NATURAL_DATA.features
+          ) {
+
+
+            const p =
+              f.properties || {};
+
+
+            if (
+              !matchContrib(
+                p
+              )
+            ) {
+
+              continue;
+
+            }
+
+
+            const center =
+              getPointLngLat(
+                f
+              );
+
+
+            const razon =
+
+              p["Razón social"] ??
+
+              p["RAZON_SOCIAL"] ??
+
+              p["Razon Social"] ??
+
+              p["Contribuyente"] ??
+
+              p["NOMBRE"] ??
+
+              p["Nombre"] ??
+
+              "N/A";
+
+
+            results.push({
+
+              type:
+                "Feature",
+
+              geometry:
+                f.geometry,
+
+              center:
+                center,
+
+              properties: {
+
+                ...p,
+
+                __tipo:
+                  "CONTRIB_NATURAL"
+
+              },
+
+              place_name:
+
+                `Contribuyentes activos: ${
+                  razon.toString()
+                }`,
+
+              text:
+                razon.toString(),
+
+              place_type:
+                ["place"]
+
+            });
+
+
+            if (
+              results.length >= 10
+            ) {
+
+              break;
+
+            }
+
+          }
+
+        }
+
+
+        // =================================================
+        // DEVOLVER RESULTADOS
+        // =================================================
+
+        return results;
+
+      }
+
+  });
+
+
+// =====================================================
+// AGREGAR BUSCADOR AL MAPA
+// =====================================================
+
+map.addControl(
+
+  geocoder,
+
+  "top-left"
+
+);
+// =====================================================
+// PARTE 4C — FINAL
+// RESULTADO DEL BUSCADOR + CARGA FINAL
+// =====================================================
+
+
+// =====================================================
+// CUANDO EL USUARIO SELECCIONA UN RESULTADO
+// =====================================================
+
+geocoder.on(
+  "result",
+  (e) => {
+
+
+    const r =
+      e.result;
+
+
+    if (
+      !r
+    ) {
+
+      return;
+
+    }
+
+
+    // =================================================
+    // IDENTIFICAR TIPO DE RESULTADO
+    // =================================================
+
+    const tipo =
+      r.properties?.__tipo;
+
+
+    // =================================================
+    // COORDENADA DEL RESULTADO
+    // =================================================
+
+    const lngLat =
+
+      r.center ||
+
+      getPointLngLat(
+        r
+      );
+
+
+    // =================================================
+    // POSIBLE RECAUDO ICA
+    // =================================================
+
+    if (
+      tipo === "ICA"
+    ) {
+
+
+      // ===============================================
+      // LIMPIAR SELECCIONES ANTERIORES
+      // Y MARCAR SOLO ESTE ELEMENTO
+      // ===============================================
+
+      setSingleHighlight(
+
+        "highlight_ica",
+
+        r
+
+      );
+
+
+      // ===============================================
+      // ACERCAR AL RESULTADO
+      // ===============================================
+
+      map.flyTo({
+
+        center:
+          lngLat,
+
+        zoom:
+          18
+
+      });
+
+
+      // ===============================================
+      // POPUP
+      // ===============================================
+
+      popup
+
+        .setLngLat(
+          lngLat
+        )
+
+        .setHTML(
+
+          popupHTMLICA(
+
+            r.properties || {},
+
+            lngLat
+
+          )
+
+        )
+
+        .addTo(map);
+
+
+      ensurePopupVisibleSmart();
+
+
+      return;
+
+    }
+
+
+    // =================================================
+    // LETREROS ENCONTRADOS
+    // =================================================
+
+    if (
+      tipo === "COINCIDEN"
+    ) {
+
+
+      // ===============================================
+      // SELECCIÓN ÚNICA
+      // ===============================================
+
+      setSingleHighlight(
+
+        "highlight_coinciden",
+
+        r
+
+      );
+
+
+      // ===============================================
+      // ACERCAR
+      // ===============================================
+
+      map.flyTo({
+
+        center:
+          lngLat,
+
+        zoom:
+          18
+
+      });
+
+
+      // ===============================================
+      // POPUP
+      // ===============================================
+
+      popup
+
+        .setLngLat(
+          lngLat
+        )
+
+        .setHTML(
+
+          popupHTMLCoinciden(
+
+            r.properties || {},
+
+            lngLat
+
+          )
+
+        )
+
+        .addTo(map);
+
+
+      ensurePopupVisibleSmart();
+
+
+      return;
+
+    }
+
+
+    // =================================================
+    // CONTRIBUYENTE ACTIVO
+    // PERSONA JURÍDICA
+    // =================================================
+
+    if (
+      tipo ===
+      "CONTRIB_JURIDICA"
+    ) {
+
+
+      // ===============================================
+      // SELECCIÓN ÚNICA
+      // ===============================================
+
+      setSingleHighlight(
+
+        "highlight_contrib_juridica",
+
+        r
+
+      );
+
+
+      // ===============================================
+      // ACERCAR
+      // ===============================================
+
+      map.flyTo({
+
+        center:
+          lngLat,
+
+        zoom:
+          18
+
+      });
+
+
+      // ===============================================
+      // POPUP SIMPLIFICADO
+      // ===============================================
+
+      popup
+
+        .setLngLat(
+          lngLat
+        )
+
+        .setHTML(
+
+          popupHTMLContribActivos(
+
+            r.properties || {},
+
+            lngLat
+
+          )
+
+        )
+
+        .addTo(map);
+
+
+      ensurePopupVisibleSmart();
+
+
+      return;
+
+    }
+
+
+    // =================================================
+    // CONTRIBUYENTE ACTIVO
+    // PERSONA NATURAL
+    // =================================================
+
+    if (
+      tipo ===
+      "CONTRIB_NATURAL"
+    ) {
+
+
+      // ===============================================
+      // SELECCIÓN ÚNICA
+      // ===============================================
+
+      setSingleHighlight(
+
+        "highlight_contrib_natural",
+
+        r
+
+      );
+
+
+      // ===============================================
+      // ACERCAR
+      // ===============================================
+
+      map.flyTo({
+
+        center:
+          lngLat,
+
+        zoom:
+          18
+
+      });
+
+
+      // ===============================================
+      // POPUP SIMPLIFICADO
+      // ===============================================
+
+      popup
+
+        .setLngLat(
+          lngLat
+        )
+
+        .setHTML(
+
+          popupHTMLContribActivos(
+
+            r.properties || {},
+
+            lngLat
+
+          )
+
+        )
+
+        .addTo(map);
+
+
+      ensurePopupVisibleSmart();
+
+
+      return;
+
+    }
+
+  }
+
+);
+
+
+// =====================================================
+// CARGA FINAL DE TODAS LAS CAPAS
+// =====================================================
+
+map.on(
+  "style.load",
+  () => {
+
+
+    // =================================================
+    // 1. PREDIOS
+    // =================================================
+
+    addPrediosBase();
+
+
+    // =================================================
+    // 2. POSIBLE RECAUDO ICA
+    //
+    // Esta función también ejecuta el zoom inicial
+    // automático a la extensión de esta capa.
+    // =================================================
+
+    addICALayer();
+
+
+    // =================================================
+    // 3. LETREROS ENCONTRADOS
+    // =================================================
+
+    addCoincidenLayer();
+
+
+    // =================================================
+    // 4. CONTRIBUYENTES ACTIVOS
+    // PERSONA JURÍDICA
+    // =================================================
+
+    addContribJuridicaLayer();
+
+
+    // =================================================
+    // 5. CONTRIBUYENTES ACTIVOS
+    // PERSONA NATURAL
+    // =================================================
+
+    addContribNaturalLayer();
+
+
+    // =================================================
+    // ESPERAR A QUE LAS CAPAS EXISTAN
+    // =================================================
+
+    setTimeout(
+      () => {
+
+
+        try {
+
+
+          // ===========================================
+          // ORDENAR CAPAS
+          // ===========================================
+
+          applyFixedOrder();
+
+
+          // ===========================================
+          // CONSTRUIR LEYENDA
+          // ===========================================
+
+          buildLegend();
+
+
+        } catch (error) {
+
+
+          console.error(
+
+            "Error configurando orden o leyenda:",
+
+            error
+
+          );
+
+
+        }
+
+      },
+
+      650
+
+    );
+
+  }
+
+);
