@@ -74,7 +74,8 @@ body {
 
 /* 🟢 Predios activos públicos */
 .legend-color.predios-publicos {
-    background-color: #2ec4b6;
+    background-color: #ff2d95 !important;
+    border: 2px solid #ffffff !important;
 }
 
 /* 🟡 Predio seleccionado (resaltado) */
