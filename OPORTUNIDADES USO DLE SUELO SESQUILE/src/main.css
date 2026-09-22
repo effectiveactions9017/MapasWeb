@@ -1,11 +1,21 @@
-/* =========================
+/* =====================================================
    CONFIGURACIÓN GENERAL
-   ========================= */
+   ===================================================== */
+
+html,
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  height: 100%;
   font-family: 'Libre Franklin', sans-serif;
+  overflow: hidden;
 }
+
+
+/* =====================================================
+   MAPA
+   ===================================================== */
 
 #map {
   position: absolute;
@@ -14,250 +24,560 @@ body {
   width: 100%;
 }
 
-/* =========================
-   LEYENDA
-   ========================= */
+
+/* =====================================================
+   LEYENDA — DESTINO ECONÓMICO R1
+   ===================================================== */
+
 .legend-container {
   position: absolute;
-  bottom: 25px;
-  right: 5px;
-  z-index: 10;
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 15px;
-  border-radius: 8px;
-  width: 260px; /* ✅ antes 200px, ahora cabe DESTINO */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-  color: white;
+
+  right: 10px;
+  bottom: 20px;
+
+  z-index: 20;
+
+  width: 220px;
+  max-width: calc(100vw - 20px);
+
+  padding: 11px;
+
+  background: rgba(0, 0, 0, 0.78);
+
+  color: #ffffff;
+
+  border-radius: 9px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.40);
+
+  box-sizing: border-box;
+
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 
-.legend-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 10px;
-  text-align: left;
-  color: white;
-}
 
-.legend-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+/* =====================================================
+   TÍTULO DE LA LEYENDA
+   ===================================================== */
 
-.legend-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-  color: white;
-}
+.legend-subtitle {
+  margin: 0 0 8px 0;
 
-.legend-color {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
-  min-height: 18px;
-  border-radius: 3px;
-  border: 1px solid #ffffff;
-  flex: 0 0 18px;
-}
-
-/* =========================
-   COLORES LEYENDA (FIJA)
-   ========================= */
-.legend-color.predios-municipales {
-  background-color: #2ec4b6;
-}
-
-.legend-color.predio-seleccionado {
-  background-color: #ffff00;
-}
-
-/* =========================
-   ✅ DESTINO (R1) - LEYENDA DINÁMICA
-   ========================= */
-
-/* Contenedor donde el JS inyecta los items */
-#destino-legend-list {
-  max-height: 220px;
-  overflow: auto;
-  padding-right: 6px;
-}
-
-/* Scroll bonito (Chrome/Edge) */
-#destino-legend-list::-webkit-scrollbar {
-  width: 6px;
-}
-#destino-legend-list::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.08);
-  border-radius: 8px;
-}
-#destino-legend-list::-webkit-scrollbar-thumb {
-  background: rgba(0,188,212,0.45);
-  border-radius: 8px;
-}
-#destino-legend-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(0,188,212,0.7);
-}
-
-/* Label de cada opción destino */
-.destino-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 6px 0;
-  cursor: pointer;
-  user-select: none;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 700;
   line-height: 1.2;
+
+  color: #ffffff;
 }
 
-/* cuadrito de color (swatch) */
-.destino-swatch {
-  width: 14px;
-  height: 14px;
-  min-width: 14px;
-  min-height: 14px;
-  border-radius: 3px;
-  border: 1px solid rgba(255,255,255,0.35);
+
+/* =====================================================
+   BOTONES TODOS / NINGUNO
+   ===================================================== */
+
+.destino-controls {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  margin-bottom: 9px;
 }
 
-/* checkbox */
-.destino-item input[type="checkbox"] {
-  transform: scale(1.05);
-  cursor: pointer;
-}
 
-/* Botones Todos/Ninguno */
 #destino-all,
 #destino-none {
-  background: #00bcd4;
-  color: #000;
-  font-weight: 800;
+  flex: 1;
+
+  min-width: 0;
+
+  padding: 5px 6px;
+
   border: 0;
-  border-radius: 6px;
-  padding: 6px 8px;
+  border-radius: 5px;
+
+  background: #00bcd4;
+
+  color: #000000;
+
+  font-family: 'Libre Franklin', sans-serif;
+
+  font-size: 10px;
+  font-weight: 700;
+
   cursor: pointer;
-  transition: transform 0.12s ease, opacity 0.12s ease;
+
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease;
 }
+
 
 #destino-all:hover,
 #destino-none:hover {
-  opacity: 0.9;
+  opacity: 0.88;
   transform: translateY(-1px);
 }
 
+
 #destino-all:active,
 #destino-none:active {
-  transform: translateY(0px);
+  transform: translateY(0);
 }
 
-/* Separador */
-.legend-divider {
-  margin: 10px 0;
-  height: 1px;
-  background: rgba(255,255,255,0.2);
+
+/* =====================================================
+   CONTENEDOR DE CATEGORÍAS
+   ===================================================== */
+
+#destino-legend-list {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+
+  max-height: 230px;
+
+  padding-right: 3px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-/* Subtítulo */
-.legend-subtitle {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 8px;
+
+/* =====================================================
+   CADA FILA DE LA LEYENDA
+   ===================================================== */
+
+.destino-item {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  min-height: 20px;
+
+  margin: 0;
+
+  padding: 2px 0;
+
+  font-size: 11px;
+  line-height: 1.15;
+
+  color: #ffffff;
+
+  cursor: pointer;
+
+  user-select: none;
 }
 
-/* =========================
+
+/* =====================================================
+   CHECKBOX
+   ===================================================== */
+
+.destino-item input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+
+  min-width: 13px;
+
+  margin: 0;
+
+  cursor: pointer;
+
+  flex-shrink: 0;
+
+  accent-color: #00bcd4;
+}
+
+
+/* =====================================================
+   CUADRO DE COLOR
+   IMPORTANTE:
+   El JS utiliza la clase .destino-color
+   ===================================================== */
+
+.destino-color {
+  display: inline-block;
+
+  width: 13px;
+  height: 13px;
+
+  min-width: 13px;
+  min-height: 13px;
+
+  border-radius: 3px;
+
+  border: 1px solid rgba(255, 255, 255, 0.90);
+
+  box-sizing: border-box;
+
+  flex-shrink: 0;
+}
+
+
+/* =====================================================
+   TEXTO DEL DESTINO
+   ===================================================== */
+
+.destino-texto {
+  flex: 1;
+
+  min-width: 0;
+
+  color: #ffffff;
+
+  white-space: normal;
+
+  overflow-wrap: break-word;
+}
+
+
+/* =====================================================
+   SCROLL DE LA LEYENDA
+   ===================================================== */
+
+#destino-legend-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+
+#destino-legend-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.07);
+
+  border-radius: 6px;
+}
+
+
+#destino-legend-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 188, 212, 0.50);
+
+  border-radius: 6px;
+}
+
+
+#destino-legend-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 188, 212, 0.75);
+}
+
+
+/* =====================================================
+   CRÉDITO
+   ===================================================== */
+
+.legend-credit {
+  margin-top: 8px;
+
+  padding-top: 6px;
+
+  border-top:
+    1px solid rgba(255, 255, 255, 0.12);
+
+  font-size: 8px;
+
+  color: #00bcd4;
+}
+
+
+/* =====================================================
    CAJA DE INFORMACIÓN
-   ========================= */
+   ===================================================== */
+
 .info-box {
   position: absolute;
+
   left: 10px;
   top: 310px;
+
   z-index: 10;
+
   width: 200px;
+
   padding: 10px;
-  background-color: rgba(0, 0, 0, 0.7);
+
+  background-color:
+    rgba(0, 0, 0, 0.75);
+
   color: white;
-  font-family: Arial, sans-serif;
+
+  font-family:
+    'Libre Franklin',
+    sans-serif;
+
   font-size: 10px;
+
   border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.5);
+
   display: none;
 }
 
+
 .info-box h3 {
-  margin: 0 0 10px 0;
-  font-weight: bold;
+  margin:
+    0 0 10px 0;
+
+  font-weight: 700;
+
   font-size: 14px;
 }
 
-/* =========================
-   POPUP PERSONALIZADO
-   ========================= */
+
+/* =====================================================
+   POPUP
+   ===================================================== */
+
 .custom-popup .mapboxgl-popup-content {
-  font-size: 0.8rem;
-  padding: 10px 15px;
-  background-color: rgba(0, 0, 0, 0.8);
-  color: #fff;
+  padding: 10px 14px;
+
+  max-width: 270px;
+
+  background-color:
+    rgba(0, 0, 0, 0.86);
+
+  color: #ffffff;
+
   border-radius: 8px;
-  max-width: 260px; /* ✅ un poquito más ancho */
+
+  font-family:
+    'Libre Franklin',
+    sans-serif;
+
+  font-size: 12px;
+
+  line-height: 1.35;
+
+  box-shadow:
+    0 3px 12px rgba(0, 0, 0, 0.35);
 }
 
-.mapboxgl-popup-content a {
+
+/* LINKS DEL POPUP */
+
+.custom-popup .mapboxgl-popup-content a {
   color: #00bcd4;
+
   text-decoration: none;
 }
 
-.mapboxgl-popup-content a:hover {
+
+.custom-popup .mapboxgl-popup-content a:hover {
   text-decoration: underline;
 }
 
-/* Flechas del popup */
-.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
-  border-bottom-color: rgba(0, 0, 0, 0.8);
+
+/* BOTÓN CERRAR */
+
+.custom-popup .mapboxgl-popup-close-button {
+  color: #ffffff;
+
+  font-size: 18px;
+
+  padding: 2px 6px;
 }
 
-.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
-  border-top-color: rgba(0, 0, 0, 0.8);
+
+/* =====================================================
+   FLECHAS DEL POPUP
+   ===================================================== */
+
+.mapboxgl-popup-anchor-top
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-top-left
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-top-right
+.mapboxgl-popup-tip {
+
+  border-bottom-color:
+    rgba(0, 0, 0, 0.86);
 }
 
-.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
-  border-right-color: rgba(0, 0, 0, 0.8);
+
+.mapboxgl-popup-anchor-bottom
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-bottom-left
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-bottom-right
+.mapboxgl-popup-tip {
+
+  border-top-color:
+    rgba(0, 0, 0, 0.86);
 }
 
-.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
-  border-left-color: rgba(0, 0, 0, 0.8);
+
+.mapboxgl-popup-anchor-left
+.mapboxgl-popup-tip {
+
+  border-right-color:
+    rgba(0, 0, 0, 0.86);
 }
 
-/* =========================
+
+.mapboxgl-popup-anchor-right
+.mapboxgl-popup-tip {
+
+  border-left-color:
+    rgba(0, 0, 0, 0.86);
+}
+
+
+/* =====================================================
    GEOCODER
-   ========================= */
+   ===================================================== */
+
 .mapboxgl-ctrl-geocoder {
   width: 300px !important;
+  max-width: calc(100vw - 70px) !important;
 }
 
-/* =========================
-   RESPONSIVE (móvil)
-   ========================= */
+
+/* =====================================================
+   RESPONSIVE — CELULAR
+   ===================================================== */
+
 @media (max-width: 600px) {
+
+
+  /* ===================================================
+     LEYENDA MÁS PEQUEÑA
+     =================================================== */
+
   .legend-container {
-    width: 220px;
-    bottom: 15px;
-    right: 10px;
-    padding: 12px;
+    right: 7px;
+    bottom: 10px;
+
+    width: 190px;
+
+    max-width:
+      calc(100vw - 14px);
+
+    max-height: 46vh;
+
+    padding: 8px;
+
+    border-radius: 8px;
   }
 
-  .mapboxgl-ctrl-geocoder {
-    width: 240px !important;
+
+  .legend-subtitle {
+    margin-bottom: 6px;
+
+    font-size: 11px;
   }
+
+
+  /* ===================================================
+     BOTONES
+     =================================================== */
+
+  .destino-controls {
+    gap: 4px;
+
+    margin-bottom: 6px;
+  }
+
+
+  #destino-all,
+  #destino-none {
+    padding: 4px 4px;
+
+    font-size: 9px;
+  }
+
+
+  /* ===================================================
+     LISTA
+     =================================================== */
 
   #destino-legend-list {
-    max-height: 180px;
+    max-height: 170px;
+
+    gap: 2px;
   }
+
+
+  .destino-item {
+    min-height: 17px;
+
+    gap: 4px;
+
+    padding: 1px 0;
+
+    font-size: 9.5px;
+  }
+
+
+  /* ===================================================
+     CHECKBOX
+     =================================================== */
+
+  .destino-item input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+
+    min-width: 12px;
+  }
+
+
+  /* ===================================================
+     COLOR
+     =================================================== */
+
+  .destino-color {
+    width: 11px;
+    height: 11px;
+
+    min-width: 11px;
+    min-height: 11px;
+  }
+
+
+  /* ===================================================
+     CRÉDITO
+     =================================================== */
+
+  .legend-credit {
+    margin-top: 5px;
+
+    padding-top: 4px;
+
+    font-size: 7px;
+  }
+
+
+  /* ===================================================
+     BUSCADOR
+     =================================================== */
+
+  .mapboxgl-ctrl-geocoder {
+    width: 230px !important;
+
+    max-width:
+      calc(100vw - 70px) !important;
+  }
+
+
+  /* ===================================================
+     POPUP
+     =================================================== */
+
+  .custom-popup .mapboxgl-popup-content {
+    max-width: 220px;
+
+    padding: 8px 10px;
+
+    font-size: 11px;
+  }
+
 }
