@@ -2,118 +2,222 @@
 <html lang="es">
 
 <head>
-  <meta charset="utf-8">
-  <title>Bonos de Carbono - Sesquilé</title>
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
 
-  <!-- Mapbox CSS -->
+  <meta charset="utf-8">
+
+  <title>
+    Bonos de Carbono - Sesquilé
+  </title>
+
+  <meta
+    name="viewport"
+    content="initial-scale=1,maximum-scale=1,user-scalable=no"
+  >
+
+
+  <!-- ============================================== -->
+  <!-- MAPBOX -->
+  <!-- ============================================== -->
+
   <link
     href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css"
     rel="stylesheet"
   />
-  <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
-  <!-- Turf.js (lo usas en index.js para bbox/centroid si lo necesitas) -->
-  <script src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js"></script>
+  <script
+    src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js">
+  </script>
 
-  <!-- Fuentes y estilos adicionales -->
+
+  <!-- ============================================== -->
+  <!-- TURF.JS -->
+  <!-- ============================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js">
+  </script>
+
+
+  <!-- ============================================== -->
+  <!-- FUENTE -->
+  <!-- ============================================== -->
+
   <link
     href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap"
     rel="stylesheet"
   >
+
+
+  <!-- ============================================== -->
+  <!-- MAPBOX ASSEMBLY -->
+  <!-- ============================================== -->
+
   <link
     href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css"
     rel="stylesheet"
   >
-  <script async defer src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"></script>
 
-  <!-- CSS personalizado -->
-  <link rel="stylesheet" href="../src/main.css" />
+  <script
+    async
+    defer
+    src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js">
+  </script>
 
-  <!-- (Opcional) Estilos mínimos de leyenda si no los tienes en main.css -->
-  <style>
-    .legend-container{
-      position:absolute;
-      bottom:20px;
-      right:10px;
-      z-index:10;
-      background:rgba(0,0,0,0.70);
-      color:#fff;
-      padding:12px 14px;
-      border-radius:10px;
-      font-family:'Libre Franklin', sans-serif;
-      font-size:12px;
-      max-width:260px;
-    }
-    .legend-title{
-      font-weight:700;
-      margin-bottom:8px;
-      font-size:13px;
-      line-height:1.15;
-    }
-    .legend-list{
-      list-style:none;
-      padding:0;
-      margin:0;
-    }
-    .legend-list li{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      margin:6px 0;
-    }
-    .legend-color{
-      width:14px;
-      height:14px;
-      border-radius:3px;
-      border:1px solid rgba(255,255,255,0.6);
-      display:inline-block;
-    }
-    /* Colores de la leyenda (deben coincidir con index.js) */
-    .bonos-oportunidad{ background:#2ec4b6; }
-    .bonos-perdidas{ background:#ff595e; }
-  </style>
+
+  <!-- ============================================== -->
+  <!-- CSS PERSONALIZADO -->
+  <!-- ============================================== -->
+
+  <link
+    rel="stylesheet"
+    href="../src/main.css"
+  />
+
 </head>
+
 
 <body>
 
-  <!-- CONTENEDOR DEL MAPA -->
+
+  <!-- ============================================== -->
+  <!-- MAPA -->
+  <!-- ============================================== -->
+
   <div id="map"></div>
 
-  <!-- LEYENDA (Actualizada a 2 capas) -->
+
+  <!-- ============================================== -->
+  <!-- LEYENDA -->
+  <!-- ============================================== -->
+
   <div class="legend-container">
+
+
     <div class="legend-title">
-      Bonos de Carbono<br>Sesquilé
+
+      Bonos de Carbono
+      <br>
+      Sesquilé
+
     </div>
+
 
     <ul class="legend-list">
-      <li>
-        <span class="legend-color bonos-oportunidad"></span>
-        Oportunidad de bonos de carbono
-      </li>
+
+
+      <!-- ========================================== -->
+      <!-- OPORTUNIDAD -->
+      <!-- ========================================== -->
 
       <li>
-        <span class="legend-color bonos-perdidas"></span>
-        Pérdidas de bonos de carbono
+
+        <span
+          class="legend-color bonos-oportunidad">
+        </span>
+
+        <span>
+          Oportunidad de bonos de carbono
+        </span>
+
       </li>
+
+
+      <!-- ========================================== -->
+      <!-- PÉRDIDAS -->
+      <!-- ========================================== -->
+
+      <li>
+
+        <span
+          class="legend-color bonos-perdidas">
+        </span>
+
+        <span>
+          Pérdidas de bonos de carbono
+        </span>
+
+      </li>
+
+
+      <!-- ========================================== -->
+      <!-- LÍMITE MUNICIPAL -->
+      <!-- ========================================== -->
+
+      <li>
+
+        <span
+          class="legend-line limite-municipal">
+        </span>
+
+        <span>
+          Límite municipal
+        </span>
+
+      </li>
+
+
+      <!-- ========================================== -->
+      <!-- LÍMITE URBANO -->
+      <!-- ========================================== -->
+
+      <li>
+
+        <span
+          class="legend-line limite-urbano">
+        </span>
+
+        <span>
+          Límite urbano
+        </span>
+
+      </li>
+
+
     </ul>
 
-    <a style="font-size:9px; color:#00bcd4;">&#9400 EffectiveActions</a>
-  </div>
 
-  <!-- ========================= -->
-  <!-- CAJA DE INFORMACIÓN (Opcional) -->
-  <!-- Si ya no la usas, la puedes borrar. Si la mantienes, puedes llenarla al hacer clic. -->
-  <!-- ========================= -->
-  <div class="info-box">
-    <h3>Información del polígono</h3>
-    <div class="info-content">
-      Da clic sobre un polígono para ver detalles
+    <!-- ============================================ -->
+    <!-- CRÉDITO -->
+    <!-- ============================================ -->
+
+    <div class="legend-credit">
+
+      &#9400; EffectiveActions
+
     </div>
+
+
   </div>
 
+
+  <!-- ============================================== -->
+  <!-- CAJA DE INFORMACIÓN -->
+  <!-- ============================================== -->
+
+  <div class="info-box">
+
+    <h3>
+      Información del polígono
+    </h3>
+
+    <div class="info-content">
+
+      Da clic sobre un polígono para ver detalles
+
+    </div>
+
+  </div>
+
+
+  <!-- ============================================== -->
   <!-- SCRIPT PRINCIPAL -->
-  <script src="../src/index.js"></script>
+  <!-- ============================================== -->
+
+  <script
+    src="../src/index.js">
+  </script>
+
 
 </body>
+
 </html>
