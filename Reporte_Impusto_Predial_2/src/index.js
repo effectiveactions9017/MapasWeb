@@ -1,13 +1,38 @@
 // =====================================================
-// ✅ Predial Sesquilé - Mapbox GL JS (ACTUALIZADO)
-// ✅ Mapa base SATELITAL
-// ✅ Vista inicial automática de TODO el municipio
-// ✅ Búsqueda por: codigo, NOMBRE, NUMERO_DOCUMENTO
-// ✅ Resalta 1 o varios predios
-// ✅ POPUP SOLO POR CLICK + SELECCIÓN DEL BUSCADOR
-// ✅ Destino eliminado del popup
-// ✅ Dirección agregada y formateada
+// VISOR PREDIAL SESQUILÉ
+// =====================================================
+//
+// CLASIFICACIÓN:
+//
+// 🔵 Predios públicos
+// 🟣 Predios exentos
+// 🔴 Predios con mora
+// 🟢 Predios al día
+// 🟠 Posibles sin pagar
+//
+// PRIORIDAD:
+//
+// 1. PÚBLICO
+// 2. EXENTO
+// 3. MORA
+// 4. AL DÍA
+// 5. POSIBLE SIN PAGAR
+//
+// FUNCIONES:
+//
+// ✅ Mapa satelital
+// ✅ Zoom automático a todo Sesquilé
+// ✅ Leyenda ON / OFF
+// ✅ Buscador por código, nombre y documento
+// ✅ Highlight amarillo
+// ✅ Popup corregido
+// ✅ Dirección formateada
 // ✅ Street View
+// =====================================================
+
+
+// =====================================================
+// MAPBOX TOKEN
 // =====================================================
 
 mapboxgl.accessToken =
@@ -15,120 +40,621 @@ mapboxgl.accessToken =
 
 
 // =====================================================
+// RUTAS
+// =====================================================
+
+const DATA_PATH =
+  '../src/data/';
+
+
+const PREDIOS_URL =
+  `${DATA_PATH}PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson`;
+
+
+const EXENTOS_URL =
+  `${DATA_PATH}predios_exentos.json`;
+
+
+// =====================================================
 // MAPA
 // =====================================================
 
-const map = new mapboxgl.Map({
-  style: 'mapbox://styles/mapbox/satellite-streets-v12',
-  center: [-73.79724, 5.04463],
-  zoom: 11,
-  pitch: 0,
-  bearing: 0,
-  container: 'map',
-  antialias: true
-});
+const map =
+  new mapboxgl.Map({
+
+    container:
+      'map',
+
+    style:
+      'mapbox://styles/mapbox/satellite-streets-v12',
+
+    // Vista temporal.
+    // Luego se ajusta automáticamente a todo Sesquilé.
+    center:
+      [-73.79724, 5.04463],
+
+    zoom:
+      11,
+
+    pitch:
+      0,
+
+    bearing:
+      0,
+
+    antialias:
+      true
+
+  });
+
+
+// =====================================================
+// CONTROLES
+// =====================================================
+
+map.addControl(
+
+  new mapboxgl.NavigationControl(),
+
+  'top-right'
+
+);
 
 
 // =====================================================
 // POPUP
 // =====================================================
 
-let popup = new mapboxgl.Popup({
-  closeButton: true,
-  closeOnClick: true,
-  className: 'custom-popup'
-});
+const popup =
+  new mapboxgl.Popup({
+
+    closeButton:
+      true,
+
+    closeOnClick:
+      true,
+
+    className:
+      'custom-popup'
+
+  });
 
 
 // =====================================================
-// DATASET COMPLETO PARA BÚSQUEDAS
+// DATASETS EN MEMORIA
 // =====================================================
 
-let PREDIOS_DATA = null;
+let PREDIOS_DATA =
+  null;
+
+
+let EXENTOS_DATA =
+  null;
+
+
+// Set con números prediales exentos.
+// Esto permite búsquedas rápidas.
+let EXENTOS_SET =
+  new Set();
+
+
+// =====================================================
+// CONFIGURACIÓN DE ESTADOS
+// =====================================================
+
+const ESTADOS = {
+
+  PUBLICO: {
+
+    codigo:
+      'PUBLICO',
+
+    nombre:
+      'Predios públicos',
+
+    color:
+      '#48b9e8',
+
+    layerId:
+      'predios_publicos'
+
+  },
+
+
+  EXENTO: {
+
+    codigo:
+      'EXENTO',
+
+    nombre:
+      'Predios exentos',
+
+    color:
+      '#9b5de5',
+
+    layerId:
+      'predios_exentos'
+
+  },
+
+
+  MORA: {
+
+    codigo:
+      'MORA',
+
+    nombre:
+      'Predios con mora',
+
+    color:
+      '#ef3340',
+
+    layerId:
+      'predios_mora'
+
+  },
+
+
+  AL_DIA: {
+
+    codigo:
+      'AL_DIA',
+
+    nombre:
+      'Predios al día',
+
+    color:
+      '#2ec4b6',
+
+    layerId:
+      'predios_al_dia'
+
+  },
+
+
+  POSIBLE_SIN_PAGAR: {
+
+    codigo:
+      'POSIBLE_SIN_PAGAR',
+
+    nombre:
+      'Posibles sin pagar',
+
+    color:
+      '#ffb000',
+
+    layerId:
+      'predios_sin_pagar'
+
+  }
+
+};
+
+
+// =====================================================
+// ORDEN DE LA LEYENDA
+// =====================================================
+
+const ORDEN_ESTADOS = [
+
+  ESTADOS.PUBLICO,
+
+  ESTADOS.EXENTO,
+
+  ESTADOS.MORA,
+
+  ESTADOS.AL_DIA,
+
+  ESTADOS.POSIBLE_SIN_PAGAR
+
+];
+
+
+// =====================================================
+// NORMALIZAR TEXTO
+// =====================================================
+
+function norm(
+  value
+) {
+
+  return (
+    value ??
+    ''
+  )
+
+    .toString()
+
+    .toUpperCase()
+
+    .replace(
+      /\s+/g,
+      ' '
+    )
+
+    .trim();
+
+}
+
+
+// =====================================================
+// NORMALIZAR NÚMERO PREDIAL
+// =====================================================
+//
+// MUY IMPORTANTE:
+//
+// NUMERO_PREDIAL debe tratarse como TEXTO.
+//
+// No lo convertimos a Number porque puede contener
+// ceros iniciales.
+//
+// =====================================================
+
+function normalizarNumeroPredial(
+  value
+) {
+
+  if (
+    value === null ||
+    value === undefined
+  ) {
+
+    return '';
+
+  }
+
+
+  return value
+
+    .toString()
+
+    .trim()
+
+    .replace(
+      /\s+/g,
+      ''
+    );
+
+}
+
+
+// =====================================================
+// CONVERTIR VALOR A NÚMERO
+// =====================================================
+//
+// Soporta:
+//
+// 123456
+// "123456"
+// "123.456"
+// "$ 123.456"
+// "1,234.56"
+//
+// =====================================================
+
+function numeroSeguro(
+  value
+) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ''
+  ) {
+
+    return 0;
+
+  }
+
+
+  if (
+    typeof value ===
+    'number'
+  ) {
+
+    return Number.isFinite(value)
+      ? value
+      : 0;
+
+  }
+
+
+  let texto =
+    value
+      .toString()
+      .trim();
+
+
+  if (
+    !texto
+  ) {
+
+    return 0;
+
+  }
+
+
+  // Eliminar símbolo monetario y espacios
+  texto =
+    texto.replace(
+      /[$\s]/g,
+      ''
+    );
+
+
+  // Formato colombiano:
+  // 1.234.567
+  if (
+    /^\d{1,3}(\.\d{3})+$/.test(texto)
+  ) {
+
+    texto =
+      texto.replace(
+        /\./g,
+        ''
+      );
+
+  }
+
+
+  // 1.234.567,89
+  else if (
+    /^\d{1,3}(\.\d{3})+,\d+$/.test(texto)
+  ) {
+
+    texto =
+      texto
+        .replace(
+          /\./g,
+          ''
+        )
+        .replace(
+          ',',
+          '.'
+        );
+
+  }
+
+
+  // 1234,56
+  else if (
+    /^\d+,\d+$/.test(texto)
+  ) {
+
+    texto =
+      texto.replace(
+        ',',
+        '.'
+      );
+
+  }
+
+
+  // Eliminar cualquier carácter restante
+  // que no corresponda a número.
+  texto =
+    texto.replace(
+      /[^0-9.-]/g,
+      ''
+    );
+
+
+  const n =
+    Number(texto);
+
+
+  return Number.isFinite(n)
+    ? n
+    : 0;
+
+}
+
+
+// =====================================================
+// FORMATEAR MONEDA
+// =====================================================
+
+function formatoMoneda(
+  value
+) {
+
+  const n =
+    numeroSeguro(
+      value
+    );
+
+
+  if (
+    !Number.isFinite(n)
+  ) {
+
+    return 'N/A';
+
+  }
+
+
+  return '$ ' +
+
+    Math.round(n)
+
+      .toLocaleString(
+        'es-CO'
+      );
+
+}
+
+
+// =====================================================
+// FORMATEAR ÁREA
+// =====================================================
+
+function formatoArea(
+  value
+) {
+
+  const n =
+    numeroSeguro(
+      value
+    );
+
+
+  if (
+    !Number.isFinite(n)
+  ) {
+
+    return 'N/A';
+
+  }
+
+
+  return Math.round(n)
+
+    .toLocaleString(
+      'es-CO'
+    ) +
+
+    ' m²';
+
+}
 
 
 // =====================================================
 // FORMATEAR DIRECCIÓN
 // =====================================================
 
-function formatearDireccion(direccion) {
+function formatearDireccion(
+  direccion
+) {
 
-  // Si no hay dirección
   if (
     direccion === null ||
     direccion === undefined ||
     direccion === ''
   ) {
+
     return 'N/A';
+
   }
 
 
-  // Limpiar espacios
-  let dir = direccion
-    .toString()
-    .trim()
-    .replace(/\s+/g, ' ');
+  let dir =
+    direccion
+
+      .toString()
+
+      .trim()
+
+      .replace(
+        /\s+/g,
+        ' '
+      );
 
 
   // ===================================================
-  // IDENTIFICAR TIPO DE VÍA
+  // TIPO DE VÍA
   // ===================================================
 
-  dir = dir
-    .replace(/^C\s+/i, 'Calle ')
-    .replace(/^CL\s+/i, 'Calle ')
-    .replace(/^CLL\s+/i, 'Calle ')
-    .replace(/^CR\s+/i, 'Carrera ')
-    .replace(/^CRA\s+/i, 'Carrera ')
-    .replace(/^KR\s+/i, 'Carrera ')
-    .replace(/^K\s+/i, 'Carrera ');
+  dir =
+    dir
+
+      .replace(
+        /^C\s+/i,
+        'Calle '
+      )
+
+      .replace(
+        /^CL\s+/i,
+        'Calle '
+      )
+
+      .replace(
+        /^CLL\s+/i,
+        'Calle '
+      )
+
+      .replace(
+        /^CR\s+/i,
+        'Carrera '
+      )
+
+      .replace(
+        /^CRA\s+/i,
+        'Carrera '
+      )
+
+      .replace(
+        /^KR\s+/i,
+        'Carrera '
+      )
+
+      .replace(
+        /^K\s+/i,
+        'Carrera '
+      );
 
 
   // ===================================================
-  // FORMATEAR NOMENCLATURA
+  // NOMENCLATURA
+  // ===================================================
   //
-  // Ejemplo:
   // Calle 8 3 35
-  //
-  // Resultado:
+  // →
   // Calle 8 # 3-35
   //
-  // También conserva lo que exista después:
-  // Calle 8 7 39 Lo 4 LA GLORIA
-  // →
-  // Calle 8 # 7-39 Lo 4 LA GLORIA
   // ===================================================
 
-  dir = dir.replace(
-    /^(Calle|Carrera)\s+(\d+[A-Za-z]?)\s+(\d+[A-Za-z]?)\s+(\d+[A-Za-z]?)(.*)$/i,
-    '$1 $2 # $3-$4$5'
-  );
+  dir =
+    dir.replace(
+
+      /^(Calle|Carrera)\s+(\d+[A-Za-z]?)\s+(\d+[A-Za-z]?)\s+(\d+[A-Za-z]?)(.*)$/i,
+
+      '$1 $2 # $3-$4$5'
+
+    );
 
 
   // ===================================================
   // COMPLEMENTOS
   // ===================================================
 
-  dir = dir
-    .replace(/\bLo\b/gi, 'Lote')
-    .replace(/\bLt\b/gi, 'Lote')
-    .replace(/\bIn\b/gi, 'Interior')
-    .replace(/\bInt\b/gi, 'Interior');
+  dir =
+    dir
+
+      .replace(
+        /\bLo\b/gi,
+        'Lote'
+      )
+
+      .replace(
+        /\bLt\b/gi,
+        'Lote'
+      )
+
+      .replace(
+        /\bIn\b/gi,
+        'Interior'
+      )
+
+      .replace(
+        /\bInt\b/gi,
+        'Interior'
+      );
 
 
-  // Limpiar espacios nuevamente
-  dir = dir
-    .replace(/\s+/g, ' ')
+  return dir
+
+    .replace(
+      /\s+/g,
+      ' '
+    )
+
     .trim();
 
-
-  return dir;
 }
 
 
 // =====================================================
-// STREET VIEW
-// Obtener coordenada representativa
+// OBTENER COORDENADA PARA STREET VIEW
 // =====================================================
 
 function getFeatureLngLat(
@@ -136,65 +662,52 @@ function getFeatureLngLat(
   fallbackLngLat = null
 ) {
 
-  // ===================================================
-  // 1. SI VIENE DEL CLICK
-  // ===================================================
 
+  // Si viene del click
   if (
+
     fallbackLngLat &&
-    typeof fallbackLngLat.lng === 'number' &&
-    typeof fallbackLngLat.lat === 'number'
+
+    typeof fallbackLngLat.lng ===
+      'number' &&
+
+    typeof fallbackLngLat.lat ===
+      'number'
+
   ) {
 
     return [
+
       fallbackLngLat.lng,
+
       fallbackLngLat.lat
+
     ];
 
   }
 
 
-  // ===================================================
-  // 2. SI LA GEOMETRÍA ES UN PUNTO
-  // ===================================================
-
-  const c =
-    feature?.geometry?.coordinates;
-
-
-  if (
-    Array.isArray(c) &&
-    c.length >= 2 &&
-    c[0] != null &&
-    c[1] != null &&
-    typeof c[0] === 'number' &&
-    typeof c[1] === 'number'
-  ) {
-
-    return [
-      Number(c[0]),
-      Number(c[1])
-    ];
-
-  }
-
-
-  // ===================================================
-  // 3. SI ES POLÍGONO
-  // ===================================================
-
+  // Punto representativo del polígono
   try {
 
     const pt =
       turf
-        .pointOnFeature(feature)
+
+        .pointOnFeature(
+          feature
+        )
+
         .geometry
+
         .coordinates;
 
 
     return [
+
       Number(pt[0]),
+
       Number(pt[1])
+
     ];
 
   }
@@ -202,13 +715,12 @@ function getFeatureLngLat(
   catch (e) {}
 
 
-  // ===================================================
-  // RESPALDO
-  // ===================================================
-
   return [
+
     -73.79724,
+
     5.04463
+
   ];
 
 }
@@ -218,610 +730,722 @@ function getFeatureLngLat(
 // URL STREET VIEW
 // =====================================================
 
-function streetViewUrl([lng, lat]) {
+function streetViewUrl(
+  [lng, lat]
+) {
 
   return (
+
     `https://www.google.com/maps/@?api=1` +
+
     `&map_action=pano` +
+
     `&viewpoint=${lat},${lng}`
+
   );
 
 }
 
 
 // =====================================================
-// CONSTRUIR POPUP
+// OBTENER NOMBRE DEL ESTADO
 // =====================================================
 
-function buildPopupFromFields(
-  feature,
-  lngLatForPopup,
-  popupFields,
-  lngLatForSV
+function nombreEstado(
+  codigo
+) {
+
+  const estado =
+    ORDEN_ESTADOS.find(
+      item =>
+        item.codigo === codigo
+    );
+
+
+  return estado
+    ? estado.nombre
+    : 'Sin clasificar';
+
+}
+// =====================================================
+// PARTE 2
+// CARGA DE EXENTOS + CLASIFICACIÓN + CAPAS
+// =====================================================
+
+
+// =====================================================
+// COMPROBAR SI EL PREDIO ES PÚBLICO
+// =====================================================
+
+function esPredioPublico(
+  props
+) {
+
+  const nombre =
+    norm(
+      props?.NOMBRE
+    );
+
+
+  return (
+    nombre ===
+    'MUNICIPIO DE SESQUILE'
+  );
+
+}
+
+
+// =====================================================
+// COMPROBAR SI EL PREDIO ES EXENTO
+// =====================================================
+
+function esPredioExento(
+  props
+) {
+
+  const numeroPredial =
+    normalizarNumeroPredial(
+      props?.NUMERO_PREDIAL
+    );
+
+
+  if (
+    !numeroPredial
+  ) {
+
+    return false;
+
+  }
+
+
+  return EXENTOS_SET.has(
+    numeroPredial
+  );
+
+}
+
+
+// =====================================================
+// COMPROBAR SI TIENE MORA
+// =====================================================
+
+function predioTieneMora(
+  props
+) {
+
+  // Campo principal de la base
+  const mora =
+    numeroSeguro(
+      props?.['total.valor.mora']
+    );
+
+
+  return (
+    mora > 0
+  );
+
+}
+
+
+// =====================================================
+// COMPROBAR SI TIENE ALGÚN PAGO
+// =====================================================
+
+function predioTienePago(
+  props
+) {
+
+  // ===================================================
+  // VALOR ÚLTIMO PAGO
+  // ===================================================
+
+  const ultimoPago =
+    numeroSeguro(
+      props?.['valor.ultimo.pago']
+    );
+
+
+  // ===================================================
+  // PAGO MARZO
+  // ===================================================
+
+  const pagoMarzo =
+    numeroSeguro(
+      props?.['pago.marzo']
+    );
+
+
+  return (
+
+    ultimoPago > 0
+
+    ||
+
+    pagoMarzo > 0
+
+  );
+
+}
+
+
+// =====================================================
+// CLASIFICAR UN PREDIO
+// =====================================================
+//
+// PRIORIDAD:
+//
+// 1. PÚBLICO
+// 2. EXENTO
+// 3. MORA
+// 4. AL DÍA
+// 5. POSIBLE SIN PAGAR
+//
+// Cada predio queda en UNA SOLA categoría.
+//
+// =====================================================
+
+function clasificarPredio(
+  feature
 ) {
 
   const props =
     feature.properties || {};
 
 
-  const popupContent =
-    popupFields
-
-      .map((field) => {
-
-
-        let value =
-          props?.[field.key];
-
-
-        // =============================================
-        // DIRECCIÓN
-        // =============================================
-
-        if (
-          field.key === 'DIRECCION' &&
-          value !== null &&
-          value !== undefined
-        ) {
-
-          value =
-            formatearDireccion(value);
-
-        }
-
-
-        // =============================================
-        // ÁREA
-        // =============================================
-
-        if (
-          field.key === 'Shape_Area' &&
-          value !== null &&
-          value !== undefined
-        ) {
-
-          const numero =
-            Number(value);
-
-
-          value =
-            isNaN(numero)
-
-              ? value
-
-              : Math
-                  .round(numero)
-                  .toLocaleString('es-CO');
-
-        }
-
-
-        // =============================================
-        // AVALÚO 2026
-        // =============================================
-
-        if (
-          field.key === 'AVALUO 2026' &&
-          value !== null &&
-          value !== undefined &&
-          value !== ''
-        ) {
-
-          const n =
-            Number(value);
-
-
-          value =
-            isNaN(n)
-
-              ? value
-
-              : n.toLocaleString(
-                  'es-CO'
-                );
-
-        }
-
-
-        // =============================================
-        // CONSTRUIR FILA
-        // =============================================
-
-        return (
-          `<strong>${field.label}:</strong> ` +
-          `${value ?? 'N/A'}`
-        );
-
-      })
-
-      .join('<br>');
-
-
   // ===================================================
-  // BOTÓN STREET VIEW
+  // 1. PÚBLICO
   // ===================================================
 
-  const svBtn = `
-
-    <div style="margin-top:10px;">
-
-      <a
-        href="${streetViewUrl(lngLatForSV)}"
-        target="_blank"
-        rel="noopener"
-
-        style="
-          display:inline-block;
-          padding:6px 10px;
-          border-radius:6px;
-          background:#00bcd4;
-          color:#000;
-          font-weight:700;
-          font-size:12px;
-          text-decoration:none;
-        "
-      >
-
-        📷 Street View
-
-      </a>
-
-    </div>
-
-  `;
-
-
-  // ===================================================
-  // MOSTRAR POPUP
-  // ===================================================
-
-  popup
-
-    .setLngLat(
-      lngLatForPopup
+  if (
+    esPredioPublico(
+      props
     )
+  ) {
 
-    .setHTML(
+    return 'PUBLICO';
 
-      `${popupContent}
-       ${svBtn}
-       <br>
-       <a style="font-size:9px;">
-         &#9400 EffectiveActions
-       </a>`
+  }
 
+
+  // ===================================================
+  // 2. EXENTO
+  // ===================================================
+
+  if (
+    esPredioExento(
+      props
     )
+  ) {
 
-    .addTo(map);
+    return 'EXENTO';
+
+  }
+
+
+  // ===================================================
+  // 3. MORA
+  // ===================================================
+
+  if (
+    predioTieneMora(
+      props
+    )
+  ) {
+
+    return 'MORA';
+
+  }
+
+
+  // ===================================================
+  // 4. AL DÍA
+  // ===================================================
+
+  if (
+    predioTienePago(
+      props
+    )
+  ) {
+
+    return 'AL_DIA';
+
+  }
+
+
+  // ===================================================
+  // 5. POSIBLE SIN PAGAR
+  // ===================================================
+
+  return 'POSIBLE_SIN_PAGAR';
 
 }
 
 
 // =====================================================
-// FUNCIÓN PARA AGREGAR LA CAPA
+// PREPARAR GEOJSON CLASIFICADO
 // =====================================================
 
-function addLayer(
-  geojsonFile,
-  sourceId,
-  layerId,
-  color,
-  popupFields
+function clasificarGeoJSON(
+  data
 ) {
 
-
-  fetch(
-    `../src/data/${geojsonFile}`
-  )
-
-
-    .then(
-      (response) =>
-        response.json()
+  if (
+    !data ||
+    !Array.isArray(
+      data.features
     )
+  ) {
+
+    return data;
+
+  }
 
 
-    .then((data) => {
+  data.features.forEach(
+    (feature) => {
 
-
-      // =================================================
-      // GUARDAR DATASET PREDIAL
-      // =================================================
 
       if (
-        sourceId === 'predios_ssk'
+        !feature.properties
       ) {
 
-
-        PREDIOS_DATA =
-          data;
-
-
-        // ===============================================
-        // VISTA INICIAL:
-        // MOSTRAR TODO EL MUNICIPIO
-        // ===============================================
-
-        try {
-
-
-          if (
-            data &&
-            Array.isArray(
-              data.features
-            ) &&
-            data.features.length > 0
-          ) {
-
-
-            const municipioBounds =
-              turf.bbox(data);
-
-
-            if (
-              Array.isArray(
-                municipioBounds
-              ) &&
-              municipioBounds.length === 4 &&
-              municipioBounds.every(
-                Number.isFinite
-              )
-            ) {
-
-
-              map.fitBounds(
-
-                municipioBounds,
-
-                {
-
-                  padding:
-                    40,
-
-                  duration:
-                    1200
-
-                }
-
-              );
-
-            }
-
-          }
-
-        }
-
-        catch (error) {
-
-          console.error(
-            'Error ajustando la vista del municipio:',
-            error
-          );
-
-        }
+        feature.properties =
+          {};
 
       }
 
 
-      // =================================================
-      // SOURCE
-      // =================================================
+      // ===============================================
+      // ASIGNAR ESTADO
+      // ===============================================
 
-      if (
-        map.getSource(
-          sourceId
-        )
-      ) {
-
-
-        map
-          .getSource(
-            sourceId
-          )
-          .setData(
-            data
-          );
-
-      }
-
-      else {
-
-
-        map.addSource(
-
-          sourceId,
-
-          {
-
-            type:
-              'geojson',
-
-            data:
-              data
-
-          }
-
+      const estado =
+        clasificarPredio(
+          feature
         );
 
+
+      feature.properties.__ESTADO_PREDIAL =
+        estado;
+
+
+      feature.properties.__ESTADO_NOMBRE =
+        nombreEstado(
+          estado
+        );
+
+    }
+  );
+
+
+  return data;
+
+}
+
+
+// =====================================================
+// CONTAR CLASIFICACIÓN
+// =====================================================
+
+function mostrarResumenClasificacion(
+  data
+) {
+
+  const resumen = {
+
+    PUBLICO:
+      0,
+
+    EXENTO:
+      0,
+
+    MORA:
+      0,
+
+    AL_DIA:
+      0,
+
+    POSIBLE_SIN_PAGAR:
+      0
+
+  };
+
+
+  if (
+    data &&
+    Array.isArray(
+      data.features
+    )
+  ) {
+
+    data.features.forEach(
+      (feature) => {
+
+        const estado =
+          feature
+            .properties
+            ?.__ESTADO_PREDIAL;
+
+
+        if (
+          Object.prototype.hasOwnProperty.call(
+            resumen,
+            estado
+          )
+        ) {
+
+          resumen[estado] +=
+            1;
+
+        }
+
+      }
+    );
+
+  }
+
+
+  console.log(
+    '=============================='
+  );
+
+  console.log(
+    'RESUMEN PREDIAL SESQUILÉ'
+  );
+
+  console.log(
+    'Públicos:',
+    resumen.PUBLICO
+  );
+
+  console.log(
+    'Exentos:',
+    resumen.EXENTO
+  );
+
+  console.log(
+    'Con mora:',
+    resumen.MORA
+  );
+
+  console.log(
+    'Al día:',
+    resumen.AL_DIA
+  );
+
+  console.log(
+    'Posibles sin pagar:',
+    resumen.POSIBLE_SIN_PAGAR
+  );
+
+  console.log(
+    'Total:',
+    Object
+      .values(resumen)
+      .reduce(
+        (a, b) =>
+          a + b,
+        0
+      )
+  );
+
+  console.log(
+    '=============================='
+  );
+
+}
+
+
+// =====================================================
+// CREAR SOURCE PREDIAL
+// =====================================================
+
+function crearSourcePredial(
+  data
+) {
+
+  if (
+    map.getSource(
+      'predios_ssk'
+    )
+  ) {
+
+    map
+      .getSource(
+        'predios_ssk'
+      )
+      .setData(
+        data
+      );
+
+    return;
+
+  }
+
+
+  map.addSource(
+
+    'predios_ssk',
+
+    {
+
+      type:
+        'geojson',
+
+      data:
+        data
+
+    }
+
+  );
+
+}
+
+
+// =====================================================
+// CREAR CAPA PARA UN ESTADO
+// =====================================================
+
+function crearCapaEstado(
+  estado
+) {
+
+  if (
+    map.getLayer(
+      estado.layerId
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  map.addLayer({
+
+    id:
+      estado.layerId,
+
+    type:
+      'fill',
+
+    source:
+      'predios_ssk',
+
+
+    // =================================================
+    // FILTRAR POR ESTADO
+    // =================================================
+
+    filter: [
+
+      '==',
+
+      [
+        'get',
+        '__ESTADO_PREDIAL'
+      ],
+
+      estado.codigo
+
+    ],
+
+
+    paint: {
+
+      // ===============================================
+      // COLOR DE LA CATEGORÍA
+      // ===============================================
+
+      'fill-color':
+        estado.color,
+
+
+      // ===============================================
+      // TRANSPARENCIA
+      // ===============================================
+      //
+      // Se conserva visible el mapa satelital.
+      //
+      // ===============================================
+
+      'fill-opacity':
+        0.68,
+
+
+      // ===============================================
+      // BORDE FINO BLANCO
+      // ===============================================
+
+      'fill-outline-color':
+        'rgba(255,255,255,0.70)'
+
+    }
+
+  });
+
+
+  // ===================================================
+  // CURSOR
+  // ===================================================
+
+  map.on(
+
+    'mouseenter',
+
+    estado.layerId,
+
+    () => {
+
+      map
+        .getCanvas()
+        .style
+        .cursor =
+        'pointer';
+
+    }
+
+  );
+
+
+  map.on(
+
+    'mouseleave',
+
+    estado.layerId,
+
+    () => {
+
+      map
+        .getCanvas()
+        .style
+        .cursor =
+        '';
+
+    }
+
+  );
+
+
+  // ===================================================
+  // CLICK EN EL PREDIO
+  // ===================================================
+
+  map.on(
+
+    'click',
+
+    estado.layerId,
+
+    (e) => {
+
+
+      const feature =
+
+        e.features &&
+
+        e.features[0];
+
+
+      if (
+        !feature
+      ) {
+
+        return;
+
       }
 
 
-      // =================================================
-      // CAPA PREDIAL
-      // =================================================
+      // ===============================================
+      // RESALTAR EL PREDIO
+      // ===============================================
+
+      const source =
+        map.getSource(
+          'predios_highlight'
+        );
+
 
       if (
-        !map.getLayer(
-          layerId
-        )
+        source
       ) {
 
-
-        map.addLayer({
-
-          id:
-            layerId,
-
-          source:
-            sourceId,
+        source.setData({
 
           type:
-            'fill',
+            'FeatureCollection',
 
-
-          // No usamos minzoom.
-          // Así los predios aparecen también
-          // cuando vemos todo Sesquilé.
-
-
-          paint: {
-
-            'fill-color':
-              color,
-
-            'fill-opacity':
-              0.75,
-
-            'fill-outline-color':
-              '#ffffff'
-
-          }
+          features:
+            [feature]
 
         });
 
       }
 
 
-      // =================================================
-      // QUITAR EVENTOS ANTERIORES
-      // =================================================
-
-      try {
-
-        map.off(
-          'mousemove',
-          layerId
-        );
-
-      }
-
-      catch (e) {}
-
-
-      try {
-
-        map.off(
-          'mouseenter',
-          layerId
-        );
-
-      }
-
-      catch (e) {}
-
-
-      try {
-
-        map.off(
-          'mouseleave',
-          layerId
-        );
-
-      }
-
-      catch (e) {}
-
-
-      try {
-
-        map.off(
-          'click',
-          layerId
-        );
-
-      }
-
-      catch (e) {}
-
-
-      // =================================================
-      // CURSOR
-      // =================================================
-
-      map.on(
-
-        'mouseenter',
-
-        layerId,
-
-        () => {
-
-          map
-            .getCanvas()
-            .style
-            .cursor =
-            'pointer';
-
-        }
-
-      );
-
-
-      map.on(
-
-        'mouseleave',
-
-        layerId,
-
-        () => {
-
-          map
-            .getCanvas()
-            .style
-            .cursor =
-            '';
-
-        }
-
-      );
-
-
-      // =================================================
-      // POPUP SOLO POR CLICK
-      // =================================================
-
-      map.on(
-
-        'click',
-
-        layerId,
-
-        (e) => {
-
-
-          const feature =
-
-            e.features &&
-            e.features[0];
-
-
-          if (!feature) {
-
-            return;
-
-          }
-
-
-          const svLngLat =
-
-            getFeatureLngLat(
-
-              feature,
-
-              e.lngLat
-
-            );
-
-
-          buildPopupFromFields(
-
-            feature,
-
-            e.lngLat,
-
-            popupFields,
-
-            svLngLat
-
-          );
-
-        }
-
-      );
-
-    })
-
-
-    // ===================================================
-    // ERROR DE CARGA
-    // ===================================================
-
-    .catch((err) => {
-
-      console.error(
-        'Error cargando GeoJSON:',
-        err
-      );
-
-    });
-
-}
-// =====================================================
-// CARGAR CAPA PREDIAL + RESALTADO
-// =====================================================
-
-map.on('style.load', () => {
-
-
-  // ===================================================
-  // CAPA DE PREDIOS
-  // ===================================================
-
-  addLayer(
-
-    'PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson',
-
-    'predios_ssk',
-
-    'predios_ssk_layer',
-
-    '#2ec4b6',
-
-    [
-
-      {
-        label: 'Código',
-        key: 'codigo'
-      },
-
       // ===============================================
-      // NUEVO: DIRECCIÓN
-      // Se formatea automáticamente con
-      // formatearDireccion() de la Parte 1
+      // STREET VIEW
       // ===============================================
 
-      {
-        label: 'Dirección',
-        key: 'DIRECCION'
-      },
+      const svLngLat =
+        getFeatureLngLat(
 
-      {
-        label: 'Nombre',
-        key: 'NOMBRE'
-      },
+          feature,
 
-      {
-        label: 'Documento',
-        key: 'NUMERO_DOCUMENTO'
-      },
+          e.lngLat
 
-      {
-        label: 'Avalúo 2026',
-        key: 'AVALUO 2026'
-      },
+        );
 
-      {
-        label: 'Área (㎡)',
-        key: 'Shape_Area'
-      }
 
-    ]
+      // ===============================================
+      // MOSTRAR POPUP
+      // ===============================================
+
+      mostrarPopupPredial(
+
+        feature,
+
+        e.lngLat,
+
+        svLngLat
+
+      );
+
+    }
 
   );
 
+}
+
+
+// =====================================================
+// CREAR LAS CINCO CAPAS
+// =====================================================
+
+function crearCapasPrediales() {
+
+  ORDEN_ESTADOS.forEach(
+    (estado) => {
+
+      crearCapaEstado(
+        estado
+      );
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// CREAR HIGHLIGHT
+// =====================================================
+
+function crearHighlight() {
+
 
   // ===================================================
-  // SOURCE PARA RESALTAR PREDIOS
+  // SOURCE
   // ===================================================
 
   if (
@@ -857,7 +1481,7 @@ map.on('style.load', () => {
 
 
   // ===================================================
-  // RELLENO AMARILLO DEL PREDIO SELECCIONADO
+  // RELLENO AMARILLO
   // ===================================================
 
   if (
@@ -893,7 +1517,7 @@ map.on('style.load', () => {
 
 
   // ===================================================
-  // BORDE AMARILLO DEL PREDIO SELECCIONADO
+  // BORDE AMARILLO
   // ===================================================
 
   if (
@@ -919,7 +1543,7 @@ map.on('style.load', () => {
           '#ffff00',
 
         'line-width':
-          4
+          2
 
       }
 
@@ -927,11 +1551,1121 @@ map.on('style.load', () => {
 
   }
 
-});
+}
 
 
 // =====================================================
-// GEOCODER / BUSCADOR LOCAL
+// LIMPIAR HIGHLIGHT
+// =====================================================
+
+function limpiarHighlight() {
+
+  const source =
+    map.getSource(
+      'predios_highlight'
+    );
+
+
+  if (
+    source
+  ) {
+
+    source.setData({
+
+      type:
+        'FeatureCollection',
+
+      features:
+        []
+
+    });
+
+  }
+
+}
+
+
+// =====================================================
+// ZOOM INICIAL A TODO SESQUILÉ
+// =====================================================
+
+function ajustarVistaMunicipio(
+  data
+) {
+
+  if (
+    !data ||
+    !Array.isArray(
+      data.features
+    ) ||
+    !data.features.length
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+
+    const bounds =
+      turf.bbox(
+        data
+      );
+
+
+    if (
+
+      Array.isArray(bounds)
+
+      &&
+
+      bounds.length === 4
+
+      &&
+
+      bounds.every(
+        Number.isFinite
+      )
+
+    ) {
+
+      map.fitBounds(
+
+        bounds,
+
+        {
+
+          // Margen pequeño para que Sesquilé
+          // ocupe la mayor parte de la pantalla.
+          padding:
+            12,
+
+          duration:
+            1000,
+
+          maxZoom:
+            16
+
+        }
+
+      );
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+
+      'Error ajustando vista a Sesquilé:',
+
+      error
+
+    );
+
+  }
+
+}
+// =====================================================
+// PARTE 3
+// CARGA DE DATOS + CLASIFICACIÓN + POPUP
+// =====================================================
+
+
+// =====================================================
+// OBTENER UNA PROPIEDAD ENTRE VARIAS ALTERNATIVAS
+// =====================================================
+//
+// Esto nos ayuda porque algunas versiones de la base
+// pueden tener:
+//
+// AVALUO 2026
+// AVALUO.2026
+//
+// =====================================================
+
+function obtenerPropiedad(
+  props,
+  alternativas
+) {
+
+  for (
+    const key of alternativas
+  ) {
+
+    if (
+      props[key] !== undefined &&
+      props[key] !== null &&
+      props[key] !== ''
+    ) {
+
+      return props[key];
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+// =====================================================
+// CREAR SET DE PREDIOS EXENTOS
+// =====================================================
+
+function prepararExentos(
+  data
+) {
+
+  EXENTOS_SET =
+    new Set();
+
+
+  if (
+    !data
+  ) {
+
+    return;
+
+  }
+
+
+  // ===================================================
+  // FORMATO 1:
+  //
+  // [
+  //   "25736...",
+  //   "25736..."
+  // ]
+  // ===================================================
+
+  if (
+    Array.isArray(data)
+  ) {
+
+    data.forEach(
+      (item) => {
+
+
+        // Si es directamente un string/número
+        if (
+          typeof item === 'string' ||
+          typeof item === 'number'
+        ) {
+
+          const numero =
+            normalizarNumeroPredial(
+              item
+            );
+
+
+          if (
+            numero
+          ) {
+
+            EXENTOS_SET.add(
+              numero
+            );
+
+          }
+
+
+          return;
+
+        }
+
+
+        // Si es objeto
+        if (
+          item &&
+          typeof item === 'object'
+        ) {
+
+          const numero =
+            normalizarNumeroPredial(
+
+              item.NUMERO_PREDIAL ??
+
+              item.numero_predial ??
+
+              item.Numero_Predial ??
+
+              ''
+
+            );
+
+
+          if (
+            numero
+          ) {
+
+            EXENTOS_SET.add(
+              numero
+            );
+
+          }
+
+        }
+
+      }
+    );
+
+  }
+
+
+  // ===================================================
+  // FORMATO 2:
+  //
+  // {
+  //   "exentos": [...]
+  // }
+  // ===================================================
+
+  else if (
+    Array.isArray(
+      data.exentos
+    )
+  ) {
+
+    data.exentos.forEach(
+      (item) => {
+
+
+        const numero =
+          normalizarNumeroPredial(
+
+            typeof item === 'object'
+
+              ? (
+                  item.NUMERO_PREDIAL ??
+                  item.numero_predial ??
+                  ''
+                )
+
+              : item
+
+          );
+
+
+        if (
+          numero
+        ) {
+
+          EXENTOS_SET.add(
+            numero
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+
+  console.log(
+    'Predios exentos cargados:',
+    EXENTOS_SET.size
+  );
+
+}
+
+
+// =====================================================
+// POPUP PREDIAL
+// =====================================================
+
+function mostrarPopupPredial(
+  feature,
+  lngLatPopup,
+  lngLatStreetView
+) {
+
+  const props =
+    feature.properties || {};
+
+
+  // ===================================================
+  // CÓDIGO
+  // ===================================================
+
+  const codigo =
+    obtenerPropiedad(
+      props,
+      [
+        'codigo',
+        'CODIGO'
+      ]
+    ) ?? 'N/A';
+
+
+  // ===================================================
+  // NÚMERO PREDIAL
+  // ===================================================
+
+  const numeroPredial =
+    obtenerPropiedad(
+      props,
+      [
+        'NUMERO_PREDIAL',
+        'Numero_Predial',
+        'numero_predial'
+      ]
+    ) ?? 'N/A';
+
+
+  // ===================================================
+  // DIRECCIÓN
+  // ===================================================
+
+  const direccionRaw =
+    obtenerPropiedad(
+      props,
+      [
+        'DIRECCION',
+        'direccion',
+        'Dirección',
+        'DIRECCIÓN'
+      ]
+    );
+
+
+  const direccion =
+    formatearDireccion(
+      direccionRaw
+    );
+
+
+  // ===================================================
+  // NOMBRE
+  // ===================================================
+
+  const nombre =
+    obtenerPropiedad(
+      props,
+      [
+        'NOMBRE',
+        'nombre'
+      ]
+    ) ?? 'N/A';
+
+
+  // ===================================================
+  // DOCUMENTO
+  // ===================================================
+
+  const documento =
+    obtenerPropiedad(
+      props,
+      [
+        'NUMERO_DOCUMENTO',
+        'numero_documento'
+      ]
+    ) ?? 'N/A';
+
+
+  // ===================================================
+  // ESTADO
+  // ===================================================
+
+  const estadoCodigo =
+    props.__ESTADO_PREDIAL ??
+    '';
+
+
+  const estadoNombre =
+    props.__ESTADO_NOMBRE ??
+    nombreEstado(
+      estadoCodigo
+    );
+
+
+  // ===================================================
+  // AVALÚO 2026
+  // ===================================================
+
+  const avaluoRaw =
+    obtenerPropiedad(
+      props,
+      [
+        'AVALUO 2026',
+        'AVALUO.2026',
+        'AVALUO_2026',
+        'AVALUO2026'
+      ]
+    );
+
+
+  const avaluo =
+    avaluoRaw !== null
+
+      ? formatoMoneda(
+          avaluoRaw
+        )
+
+      : 'N/A';
+
+
+  // ===================================================
+  // ÁREA
+  // ===================================================
+
+  const areaRaw =
+    obtenerPropiedad(
+      props,
+      [
+        'Shape_Area',
+        'SHAPE_AREA',
+        'shape_area'
+      ]
+    );
+
+
+  const area =
+    areaRaw !== null
+
+      ? formatoArea(
+          areaRaw
+        )
+
+      : 'N/A';
+
+
+  // ===================================================
+  // HTML DEL POPUP
+  // ===================================================
+
+  const html = `
+
+    <div
+      style="
+        font-size:14px;
+        font-weight:700;
+        margin-bottom:8px;
+      "
+    >
+      Información del predio
+    </div>
+
+
+    <strong>
+      Código:
+    </strong>
+    ${codigo}
+
+    <br>
+
+
+    <strong>
+      Número predial:
+    </strong>
+    ${numeroPredial}
+
+    <br>
+
+
+    <strong>
+      Dirección:
+    </strong>
+    ${direccion}
+
+    <br>
+
+
+    <strong>
+      Nombre:
+    </strong>
+    ${nombre}
+
+    <br>
+
+
+    <strong>
+      Documento:
+    </strong>
+    ${documento}
+
+    <br>
+
+
+    <strong>
+      Estado:
+    </strong>
+    ${estadoNombre}
+
+    <br>
+
+
+    <strong>
+      Avalúo 2026:
+    </strong>
+    ${avaluo}
+
+    <br>
+
+
+    <strong>
+      Área:
+    </strong>
+    ${area}
+
+
+    <div
+      style="
+        margin-top:10px;
+      "
+    >
+
+      <a
+        href="${streetViewUrl(lngLatStreetView)}"
+        target="_blank"
+        rel="noopener"
+
+        style="
+          display:inline-block;
+          padding:6px 10px;
+          border-radius:6px;
+          background:#00bcd4;
+          color:#000;
+          font-weight:700;
+          font-size:12px;
+          text-decoration:none;
+        "
+      >
+        📷 Street View
+      </a>
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:8px;
+        font-size:9px;
+        color:#00bcd4;
+      "
+    >
+      &#9400; EffectiveActions
+    </div>
+
+  `;
+
+
+  popup
+
+    .setLngLat(
+      lngLatPopup
+    )
+
+    .setHTML(
+      html
+    )
+
+    .addTo(map);
+
+}
+
+
+// =====================================================
+// CARGAR GEOJSON + EXENTOS
+// =====================================================
+
+function cargarDatosPrediales() {
+
+
+  Promise.all([
+
+    // Base predial
+    fetch(
+      PREDIOS_URL
+    )
+      .then(
+        response => {
+
+          if (
+            !response.ok
+          ) {
+
+            throw new Error(
+              `Error cargando predios: ${response.status}`
+            );
+
+          }
+
+
+          return response.json();
+
+        }
+      ),
+
+
+    // Predios exentos
+    fetch(
+      EXENTOS_URL
+    )
+      .then(
+        response => {
+
+          if (
+            !response.ok
+          ) {
+
+            throw new Error(
+              `Error cargando exentos: ${response.status}`
+            );
+
+          }
+
+
+          return response.json();
+
+        }
+      )
+
+  ])
+
+
+    .then(
+      ([
+        predios,
+        exentos
+      ]) => {
+
+
+        // =============================================
+        // GUARDAR EXENTOS
+        // =============================================
+
+        EXENTOS_DATA =
+          exentos;
+
+
+        // =============================================
+        // PREPARAR SET DE EXENTOS
+        // =============================================
+
+        prepararExentos(
+          exentos
+        );
+
+
+        // =============================================
+        // CLASIFICAR GEOJSON
+        // =============================================
+
+        const prediosClasificados =
+          clasificarGeoJSON(
+            predios
+          );
+
+
+        // =============================================
+        // GUARDAR DATASET
+        // =============================================
+
+        PREDIOS_DATA =
+          prediosClasificados;
+
+
+        // =============================================
+        // MOSTRAR RESUMEN EN CONSOLA
+        // =============================================
+
+        mostrarResumenClasificacion(
+          PREDIOS_DATA
+        );
+
+
+        // =============================================
+        // CREAR SOURCE
+        // =============================================
+
+        crearSourcePredial(
+          PREDIOS_DATA
+        );
+
+
+        // =============================================
+        // CREAR LAS CINCO CAPAS
+        // =============================================
+
+        crearCapasPrediales();
+
+
+        // =============================================
+        // CREAR HIGHLIGHT
+        // =============================================
+
+        crearHighlight();
+
+
+        // =============================================
+        // ASEGURAR HIGHLIGHT ENCIMA
+        // =============================================
+
+        try {
+
+
+          if (
+            map.getLayer(
+              'predios_highlight_fill'
+            )
+          ) {
+
+            map.moveLayer(
+              'predios_highlight_fill'
+            );
+
+          }
+
+
+          if (
+            map.getLayer(
+              'predios_highlight_line'
+            )
+          ) {
+
+            map.moveLayer(
+              'predios_highlight_line'
+            );
+
+          }
+
+
+        } catch (e) {}
+
+
+        // =============================================
+        // ZOOM A TODO SESQUILÉ
+        // =============================================
+
+        ajustarVistaMunicipio(
+          PREDIOS_DATA
+        );
+
+
+        // =============================================
+        // CREAR LEYENDA INTERACTIVA
+        // =============================================
+
+        crearLeyendaEstados();
+
+      }
+
+    )
+
+
+    .catch(
+      error => {
+
+        console.error(
+          'Error cargando datos prediales:',
+          error
+        );
+
+      }
+    );
+
+}
+// =====================================================
+// PARTE 4
+// LEYENDA INTERACTIVA + BUSCADOR
+// =====================================================
+
+
+// =====================================================
+// CREAR LEYENDA DE ESTADOS
+// =====================================================
+//
+// Requiere en el HTML:
+//
+// <div id="estado-legend-list"></div>
+//
+// =====================================================
+
+function crearLeyendaEstados() {
+
+  const container =
+    document.getElementById(
+      'estado-legend-list'
+    );
+
+
+  if (
+    !container
+  ) {
+
+    console.warn(
+      'No existe #estado-legend-list en el HTML.'
+    );
+
+    return;
+
+  }
+
+
+  // Limpiar para evitar duplicados
+  container.innerHTML =
+    '';
+
+
+  // ===================================================
+  // CREAR UNA FILA POR CATEGORÍA
+  // ===================================================
+
+  ORDEN_ESTADOS.forEach(
+    (estado) => {
+
+
+      // ===============================================
+      // FILA
+      // ===============================================
+
+      const item =
+        document.createElement(
+          'div'
+        );
+
+
+      item.className =
+        'estado-item';
+
+
+      // ===============================================
+      // LADO IZQUIERDO
+      // ===============================================
+
+      const info =
+        document.createElement(
+          'div'
+        );
+
+
+      info.className =
+        'estado-info';
+
+
+      // ===============================================
+      // COLOR
+      // ===============================================
+
+      const color =
+        document.createElement(
+          'span'
+        );
+
+
+      color.className =
+        'estado-color';
+
+
+      color.style.backgroundColor =
+        estado.color;
+
+
+      // ===============================================
+      // NOMBRE
+      // ===============================================
+
+      const texto =
+        document.createElement(
+          'span'
+        );
+
+
+      texto.className =
+        'estado-texto';
+
+
+      texto.textContent =
+        estado.nombre;
+
+
+      // ===============================================
+      // ARMAR INFORMACIÓN
+      // ===============================================
+
+      info.appendChild(
+        color
+      );
+
+
+      info.appendChild(
+        texto
+      );
+
+
+      // ===============================================
+      // BOTÓN ON / OFF
+      // ===============================================
+
+      const boton =
+        document.createElement(
+          'button'
+        );
+
+
+      boton.type =
+        'button';
+
+
+      boton.className =
+        'estado-toggle activo';
+
+
+      boton.textContent =
+        'ON';
+
+
+      boton.dataset.layer =
+        estado.layerId;
+
+
+      boton.dataset.visible =
+        'true';
+
+
+      // ===============================================
+      // EVENTO ON / OFF
+      // ===============================================
+
+      boton.addEventListener(
+        'click',
+        () => {
+
+
+          const visibleActual =
+
+            boton.dataset.visible ===
+            'true';
+
+
+          const nuevaVisibilidad =
+            !visibleActual;
+
+
+          boton.dataset.visible =
+            nuevaVisibilidad
+              ? 'true'
+              : 'false';
+
+
+          // ===========================================
+          // CAMBIAR CAPA
+          // ===========================================
+
+          if (
+            map.getLayer(
+              estado.layerId
+            )
+          ) {
+
+            map.setLayoutProperty(
+
+              estado.layerId,
+
+              'visibility',
+
+              nuevaVisibilidad
+                ? 'visible'
+                : 'none'
+
+            );
+
+          }
+
+
+          // ===========================================
+          // CAMBIAR BOTÓN
+          // ===========================================
+
+          boton.textContent =
+            nuevaVisibilidad
+              ? 'ON'
+              : 'OFF';
+
+
+          boton.classList.toggle(
+            'activo',
+            nuevaVisibilidad
+          );
+
+
+          boton.classList.toggle(
+            'inactivo',
+            !nuevaVisibilidad
+          );
+
+
+          // ===========================================
+          // LIMPIAR SELECCIÓN
+          // ===========================================
+
+          limpiarHighlight();
+
+
+          try {
+
+            popup.remove();
+
+          } catch (e) {}
+
+        }
+      );
+
+
+      // ===============================================
+      // ARMAR FILA
+      // ===============================================
+
+      item.appendChild(
+        info
+      );
+
+
+      item.appendChild(
+        boton
+      );
+
+
+      container.appendChild(
+        item
+      );
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// NORMALIZAR TEXTO PARA EL BUSCADOR
+// =====================================================
+
+function normalizarBusqueda(
+  value
+) {
+
+  return (
+    value ??
+    ''
+  )
+
+    .toString()
+
+    .toLowerCase()
+
+    .trim();
+
+}
+
+
+// =====================================================
+// GEOCODER LOCAL
 // =====================================================
 
 const geocoder =
@@ -954,39 +2688,36 @@ const geocoder =
 
 
     // =================================================
-    // FUNCIÓN DE BÚSQUEDA
+    // BÚSQUEDA LOCAL
     // =================================================
 
     localGeocoder:
-      function (query) {
+      function (
+        query
+      ) {
 
 
-        const matchingFeatures =
+        const resultados =
           [];
 
 
-        // =============================================
-        // NORMALIZAR TEXTO BUSCADO
-        // =============================================
-
         const q =
-
-          (query || '')
-
-            .toString()
-            .toLowerCase()
-            .trim();
+          normalizarBusqueda(
+            query
+          );
 
 
-        if (!q) {
+        if (
+          !q
+        ) {
 
-          return matchingFeatures;
+          return resultados;
 
         }
 
 
         // =============================================
-        // OBTENER TODOS LOS PREDIOS
+        // VALIDAR DATASET
         // =============================================
 
         const features =
@@ -1003,16 +2734,17 @@ const geocoder =
             : [];
 
 
-        // Si todavía no cargó el GeoJSON
-        if (!features.length) {
+        if (
+          !features.length
+        ) {
 
-          return matchingFeatures;
+          return resultados;
 
         }
 
 
         // =============================================
-        // RECORRER TODOS LOS PREDIOS
+        // RECORRER PREDIOS
         // =============================================
 
         features.forEach(
@@ -1020,259 +2752,235 @@ const geocoder =
 
 
             const props =
-              feature.properties ||
-              {};
+              feature.properties || {};
 
 
             // =========================================
-            // CAMPOS PARA BÚSQUEDA
+            // CAMPOS
             // =========================================
 
             const codigo =
-
-              (
-                props.codigo ??
-                ''
-              )
-
-                .toString()
-                .toLowerCase();
+              normalizarBusqueda(
+                props.codigo
+              );
 
 
             const nombre =
-
-              (
-                props.NOMBRE ??
-                ''
-              )
-
-                .toString()
-                .toLowerCase();
+              normalizarBusqueda(
+                props.NOMBRE
+              );
 
 
             const documento =
-
-              (
-                props.NUMERO_DOCUMENTO ??
-                ''
-              )
-
-                .toString()
-                .toLowerCase();
+              normalizarBusqueda(
+                props.NUMERO_DOCUMENTO
+              );
 
 
-            // =========================================
-            // COMPROBAR COINCIDENCIA
-            // =========================================
-
-            const match =
-
-              (
-                codigo &&
-                codigo.includes(q)
-              )
-
-              ||
-
-              (
-                nombre &&
-                nombre.includes(q)
-              )
-
-              ||
-
-              (
-                documento &&
-                documento.includes(q)
+            const numeroPredial =
+              normalizarBusqueda(
+                props.NUMERO_PREDIAL
               );
 
 
             // =========================================
-            // SI HAY COINCIDENCIA
+            // COINCIDENCIA
             // =========================================
 
-            if (match) {
+            const coincideCodigo =
+              codigo &&
+              codigo.includes(q);
 
 
-              // =======================================
-              // CENTRO DEL PREDIO
-              // =======================================
+            const coincideNombre =
+              nombre &&
+              nombre.includes(q);
 
-              const centro =
 
-                turf
-                  .centroid(feature)
-                  .geometry
-                  .coordinates;
+            const coincideDocumento =
+              documento &&
+              documento.includes(q);
 
 
-              // =======================================
-              // VALORES ORIGINALES
-              // =======================================
+            const coincideNumeroPredial =
+              numeroPredial &&
+              numeroPredial.includes(q);
 
-              const codTxt =
 
-                (
-                  props.codigo ??
-                  ''
-                )
+            if (
+              !coincideCodigo &&
+              !coincideNombre &&
+              !coincideDocumento &&
+              !coincideNumeroPredial
+            ) {
 
-                  .toString()
-                  .trim();
-
-
-              const nomTxt =
-
-                (
-                  props.NOMBRE ??
-                  ''
-                )
-
-                  .toString()
-                  .trim();
-
-
-              const docTxt =
-
-                (
-                  props.NUMERO_DOCUMENTO ??
-                  ''
-                )
-
-                  .toString()
-                  .trim();
-
-
-              // =======================================
-              // IDENTIFICAR POR QUÉ CAMPO COINCIDIÓ
-              // =======================================
-
-              let matchField =
-                null;
-
-
-              let matchValue =
-                null;
-
-
-              // Código
-              if (
-                codigo &&
-                codigo.includes(q)
-              ) {
-
-                matchField =
-                  'codigo';
-
-                matchValue =
-                  codTxt;
-
-              }
-
-
-              // Documento
-              else if (
-                documento &&
-                documento.includes(q)
-              ) {
-
-                matchField =
-                  'NUMERO_DOCUMENTO';
-
-                matchValue =
-                  docTxt;
-
-              }
-
-
-              // Nombre
-              else if (
-                nombre &&
-                nombre.includes(q)
-              ) {
-
-                matchField =
-                  'NOMBRE';
-
-                matchValue =
-                  nomTxt;
-
-              }
-
-
-              // =======================================
-              // COPIAR PROPIEDADES
-              // =======================================
-
-              const props2 = {
-
-                ...props,
-
-                __matchField:
-                  matchField,
-
-                __matchValue:
-                  matchValue
-
-              };
-
-
-              // =======================================
-              // AGREGAR RESULTADO
-              // =======================================
-
-              matchingFeatures.push({
-
-                type:
-                  'Feature',
-
-                geometry:
-                  feature.geometry,
-
-                properties:
-                  props2,
-
-
-                // Texto que aparece en los resultados
-                place_name:
-
-                  `Código: ${
-                    codTxt || 'N/A'
-                  } | ` +
-
-                  `Nombre: ${
-                    nomTxt || 'N/A'
-                  } | ` +
-
-                  `Doc: ${
-                    docTxt || 'N/A'
-                  }`,
-
-
-                text:
-
-                  codTxt ||
-
-                  nomTxt ||
-
-                  docTxt ||
-
-                  'Resultado',
-
-
-                center:
-                  centro,
-
-
-                place_type:
-                  ['place']
-
-              });
+              return;
 
             }
 
-          }
 
+            // =========================================
+            // CENTRO
+            // =========================================
+
+            let centro;
+
+
+            try {
+
+              centro =
+                turf
+                  .centroid(
+                    feature
+                  )
+                  .geometry
+                  .coordinates;
+
+            }
+
+            catch (e) {
+
+              centro = [
+                -73.79724,
+                5.04463
+              ];
+
+            }
+
+
+            // =========================================
+            // IDENTIFICAR CAMPO QUE COINCIDIÓ
+            // =========================================
+
+            let matchField =
+              null;
+
+
+            let matchValue =
+              null;
+
+
+            if (
+              coincideCodigo
+            ) {
+
+              matchField =
+                'codigo';
+
+              matchValue =
+                props.codigo;
+
+            }
+
+            else if (
+              coincideDocumento
+            ) {
+
+              matchField =
+                'NUMERO_DOCUMENTO';
+
+              matchValue =
+                props.NUMERO_DOCUMENTO;
+
+            }
+
+            else if (
+              coincideNumeroPredial
+            ) {
+
+              matchField =
+                'NUMERO_PREDIAL';
+
+              matchValue =
+                props.NUMERO_PREDIAL;
+
+            }
+
+            else if (
+              coincideNombre
+            ) {
+
+              matchField =
+                'NOMBRE';
+
+              matchValue =
+                props.NOMBRE;
+
+            }
+
+
+            // =========================================
+            // COPIAR PROPIEDADES
+            // =========================================
+
+            const propsResultado = {
+
+              ...props,
+
+              __matchField:
+                matchField,
+
+              __matchValue:
+                matchValue
+
+            };
+
+
+            // =========================================
+            // TEXTO DEL RESULTADO
+            // =========================================
+
+            const codigoTexto =
+              props.codigo ??
+              'N/A';
+
+
+            const nombreTexto =
+              props.NOMBRE ??
+              'N/A';
+
+
+            const estadoTexto =
+              props.__ESTADO_NOMBRE ??
+              'Sin clasificar';
+
+
+            // =========================================
+            // AGREGAR RESULTADO
+            // =========================================
+
+            resultados.push({
+
+              type:
+                'Feature',
+
+              geometry:
+                feature.geometry,
+
+              properties:
+                propsResultado,
+
+              center:
+                centro,
+
+              place_name:
+
+                `Código: ${codigoTexto} | ` +
+
+                `${nombreTexto} | ` +
+
+                `${estadoTexto}`,
+
+              text:
+                codigoTexto
+                  .toString(),
+
+              place_type:
+                ['place']
+
+            });
+
+          }
         );
 
 
@@ -1280,9 +2988,9 @@ const geocoder =
         // MÁXIMO 10 RESULTADOS
         // =============================================
 
-        return (
-          matchingFeatures
-            .slice(0, 10)
+        return resultados.slice(
+          0,
+          10
         );
 
       }
@@ -1291,413 +2999,575 @@ const geocoder =
 
 
 // =====================================================
-// AGREGAR BUSCADOR AL MAPA
+// AGREGAR BUSCADOR
 // =====================================================
 
 map.addControl(
+
   geocoder,
+
   'top-left'
+
 );
 
 
 // =====================================================
-// CONTROLES DE NAVEGACIÓN
+// RESULTADO DEL BUSCADOR
 // =====================================================
 
-map.addControl(
-  new mapboxgl.NavigationControl()
-);
-// =====================================================
-// AL SELECCIONAR UN RESULTADO DEL BUSCADOR
-// =====================================================
-
-geocoder.on('result', (e) => {
+geocoder.on(
+  'result',
+  (e) => {
 
 
-  // ===================================================
-  // OBTENER RESULTADO
-  // ===================================================
-
-  const result =
-    e.result;
+    const result =
+      e.result;
 
 
-  if (
-    !result ||
-    !result.geometry
-  ) {
+    if (
+      !result ||
+      !result.geometry
+    ) {
 
-    return;
+      return;
 
-  }
-
-
-  // ===================================================
-  // PROPIEDADES DEL RESULTADO
-  // ===================================================
-
-  const properties =
-    result.properties || {};
+    }
 
 
-  const matchField =
-    properties.__matchField;
+    const props =
+      result.properties || {};
 
 
-  const matchValue =
-
-    (
-      properties.__matchValue ??
-      ''
-    )
-
-      .toString()
-      .trim();
+    const matchField =
+      props.__matchField;
 
 
-  // ===================================================
-  // NORMALIZAR VALORES
-  // ===================================================
+    const matchValue =
+      props.__matchValue;
 
-  const normLocal =
-    (v) =>
+
+    // =================================================
+    // TODOS LOS PREDIOS
+    // =================================================
+
+    const features =
 
       (
-        v ??
-        ''
+        PREDIOS_DATA &&
+        Array.isArray(
+          PREDIOS_DATA.features
+        )
       )
 
-        .toString()
-        .toLowerCase()
-        .replace(/\s+/g, '')
-        .trim();
+        ? PREDIOS_DATA.features
+
+        : [];
 
 
-  // ===================================================
-  // OBTENER TODOS LOS PREDIOS
-  // ===================================================
+    // =================================================
+    // PREDIOS A RESALTAR
+    // =================================================
 
-  const features =
+    let toHighlight =
+      [];
 
-    (
-      PREDIOS_DATA &&
-      Array.isArray(
-        PREDIOS_DATA.features
+
+    // =================================================
+    // SI BUSCA POR CÓDIGO, DOCUMENTO O NÚMERO PREDIAL
+    // RESALTAR TODAS LAS COINCIDENCIAS EXACTAS
+    // =================================================
+
+    if (
+
+      (
+        matchField ===
+          'codigo'
+
+        ||
+
+        matchField ===
+          'NUMERO_DOCUMENTO'
+
+        ||
+
+        matchField ===
+          'NUMERO_PREDIAL'
       )
-    )
 
-      ? PREDIOS_DATA.features
+      &&
 
-      : [];
+      matchValue !== null
 
+      &&
 
-  // ===================================================
-  // PREDIOS QUE SE VAN A RESALTAR
-  // ===================================================
+      matchValue !== undefined
 
-  let toHighlight =
-    [];
+      &&
 
+      matchValue !== ''
 
-  // ===================================================
-  // SI LA BÚSQUEDA FUE POR DOCUMENTO O CÓDIGO
-  // BUSCAR TODOS LOS PREDIOS COINCIDENTES
-  // ===================================================
-
-  if (
-
-    (
-      matchField ===
-        'NUMERO_DOCUMENTO'
-
-      ||
-
-      matchField ===
-        'codigo'
-    )
-
-    &&
-
-    matchValue
-
-  ) {
+    ) {
 
 
-    const mv =
-      normLocal(
-        matchValue
+      const valorBuscado =
+
+        matchField ===
+          'NUMERO_PREDIAL'
+
+          ? normalizarNumeroPredial(
+              matchValue
+            )
+
+          : norm(
+              matchValue
+            );
+
+
+      toHighlight =
+        features.filter(
+          (feature) => {
+
+
+            const p =
+              feature.properties || {};
+
+
+            const valor =
+
+              matchField ===
+                'codigo'
+
+                ? p.codigo
+
+                : matchField ===
+                    'NUMERO_DOCUMENTO'
+
+                  ? p.NUMERO_DOCUMENTO
+
+                  : p.NUMERO_PREDIAL;
+
+
+            const valorNormalizado =
+
+              matchField ===
+                'NUMERO_PREDIAL'
+
+                ? normalizarNumeroPredial(
+                    valor
+                  )
+
+                : norm(
+                    valor
+                  );
+
+
+            return (
+              valorNormalizado ===
+              valorBuscado
+            );
+
+          }
+        );
+
+    }
+
+
+    // =================================================
+    // SI NO HAY GRUPO
+    // =================================================
+
+    if (
+      !toHighlight.length
+    ) {
+
+      toHighlight =
+        [result];
+
+    }
+
+
+    // =================================================
+    // FEATURE COLLECTION
+    // =================================================
+
+    const fc = {
+
+      type:
+        'FeatureCollection',
+
+      features:
+        toHighlight
+
+    };
+
+
+    // =================================================
+    // RESALTAR
+    // =================================================
+
+    const source =
+      map.getSource(
+        'predios_highlight'
       );
 
 
-    toHighlight =
+    if (
+      source
+    ) {
 
-      features.filter(
-        (f) => {
-
-
-          const p =
-            f.properties ||
-            {};
-
-
-          const v =
-
-            matchField ===
-              'NUMERO_DOCUMENTO'
-
-              ? p.NUMERO_DOCUMENTO
-
-              : p.codigo;
-
-
-          return (
-            normLocal(v) ===
-            mv
-          );
-
-        }
-      );
-
-  }
-
-
-  // ===================================================
-  // SI NO HAY GRUPO DE PREDIOS
-  // USAR SOLO EL RESULTADO SELECCIONADO
-  // ===================================================
-
-  if (
-    !toHighlight.length
-  ) {
-
-    toHighlight =
-      [result];
-
-  }
-
-
-  // ===================================================
-  // CREAR FEATURE COLLECTION
-  // ===================================================
-
-  const fc = {
-
-    type:
-      'FeatureCollection',
-
-    features:
-      toHighlight
-
-  };
-
-
-  // ===================================================
-  // RESALTAR PREDIO(S) EN AMARILLO
-  // ===================================================
-
-  const hlSource =
-    map.getSource(
-      'predios_highlight'
-    );
-
-
-  if (
-    hlSource
-  ) {
-
-    hlSource.setData(
-      fc
-    );
-
-  }
-
-
-  // ===================================================
-  // ZOOM AUTOMÁTICO AL RESULTADO
-  // ===================================================
-
-  try {
-
-
-    const bounds =
-      turf.bbox(
+      source.setData(
         fc
       );
 
+    }
 
-    map.fitBounds(
 
-      bounds,
+    // =================================================
+    // ZOOM A LA SELECCIÓN
+    // =================================================
 
-      {
+    try {
 
-        padding:
-          40
+
+      const bounds =
+        turf.bbox(
+          fc
+        );
+
+
+      map.fitBounds(
+
+        bounds,
+
+        {
+
+          padding:
+            45,
+
+          maxZoom:
+            18,
+
+          duration:
+            700
+
+        }
+
+      );
+
+
+    }
+
+    catch (error) {
+
+      console.error(
+        'Error haciendo zoom al predio:',
+        error
+      );
+
+    }
+
+
+    // =================================================
+    // POPUP
+    // =================================================
+
+    let center;
+
+
+    try {
+
+      center =
+        result.center ||
+
+        turf
+          .pointOnFeature(
+            result
+          )
+          .geometry
+          .coordinates;
+
+    }
+
+    catch (e) {
+
+      center =
+        result.center ||
+        [-73.79724, 5.04463];
+
+    }
+
+
+    // =================================================
+    // STREET VIEW
+    // =================================================
+
+    let svLngLat;
+
+
+    try {
+
+      const punto =
+        turf
+          .pointOnFeature(
+            fc
+          )
+          .geometry
+          .coordinates;
+
+
+      svLngLat = [
+        punto[0],
+        punto[1]
+      ];
+
+    }
+
+    catch (e) {
+
+      svLngLat =
+        getFeatureLngLat(
+          result
+        );
+
+    }
+
+
+    // =================================================
+    // MOSTRAR POPUP
+    // =================================================
+
+    mostrarPopupPredial(
+
+      result,
+
+      center,
+
+      svLngLat
+
+    );
+
+  }
+);
+// =====================================================
+// PARTE 5 — FINAL
+// CARGA DEL MAPA + ORDEN DE CAPAS
+// =====================================================
+
+
+// =====================================================
+// CUANDO EL ESTILO DEL MAPA ESTÉ LISTO
+// =====================================================
+
+map.on(
+  'style.load',
+  () => {
+
+
+    // =================================================
+    // CARGAR DATOS PREDIALES
+    // =================================================
+    //
+    // Esta función:
+    //
+    // 1. Carga la base predial
+    // 2. Carga predios_exentos.json
+    // 3. Cruza NUMERO_PREDIAL
+    // 4. Clasifica cada predio
+    // 5. Crea las cinco capas
+    // 6. Crea el highlight
+    // 7. Ajusta el mapa a Sesquilé
+    // 8. Crea la leyenda ON/OFF
+    //
+    // =================================================
+
+    cargarDatosPrediales();
+
+  }
+);
+
+
+// =====================================================
+// ASEGURAR ORDEN DE CAPAS
+// =====================================================
+//
+// El highlight amarillo debe quedar siempre
+// por encima de todas las categorías.
+//
+// =====================================================
+
+map.on(
+  'idle',
+  () => {
+
+    try {
+
+
+      // =================================================
+      // HIGHLIGHT — RELLENO
+      // =================================================
+
+      if (
+        map.getLayer(
+          'predios_highlight_fill'
+        )
+      ) {
+
+        map.moveLayer(
+          'predios_highlight_fill'
+        );
 
       }
 
-    );
+
+      // =================================================
+      // HIGHLIGHT — CONTORNO
+      // =================================================
+
+      if (
+        map.getLayer(
+          'predios_highlight_line'
+        )
+      ) {
+
+        map.moveLayer(
+          'predios_highlight_line'
+        );
+
+      }
 
 
-  }
-
-  catch (error) {
-
-
-    console.error(
-      'Error haciendo zoom al predio:',
-      error
-    );
-
-
-  }
-
-
-  // ===================================================
-  // CAMPOS DEL POPUP
-  // ===================================================
-  //
-  // IMPORTANTE:
-  // DESTINO ya NO aparece.
-  //
-  // DIRECCION sí aparece y será procesada
-  // automáticamente por formatearDireccion()
-  // de la Parte 1.
-  // ===================================================
-
-  const popupFields = [
-
-    {
-      label:
-        'Código',
-
-      key:
-        'codigo'
-    },
-
-
-    {
-      label:
-        'Dirección',
-
-      key:
-        'DIRECCION'
-    },
-
-
-    {
-      label:
-        'Nombre',
-
-      key:
-        'NOMBRE'
-    },
-
-
-    {
-      label:
-        'Documento',
-
-      key:
-        'NUMERO_DOCUMENTO'
-    },
-
-
-    {
-      label:
-        'Avalúo 2026',
-
-      key:
-        'AVALUO 2026'
-    },
-
-
-    {
-      label:
-        'Área (㎡)',
-
-      key:
-        'Shape_Area'
     }
 
-  ];
+    catch (error) {
+
+      console.error(
+        'Error organizando capas:',
+        error
+      );
+
+    }
+
+  }
+);
 
 
-  // ===================================================
-  // STREET VIEW
-  // ===================================================
-  //
-  // Calcular el centro del conjunto de predios
-  // seleccionados.
-  // ===================================================
+// =====================================================
+// CERRAR POPUP Y SELECCIÓN
+// AL HACER CLICK FUERA DE LOS PREDIOS
+// =====================================================
 
-  const b =
-    turf.bbox(
-      fc
+map.on(
+  'click',
+  (e) => {
+
+
+    // =================================================
+    // CAPAS PREDIALES DISPONIBLES
+    // =================================================
+
+    const capasExistentes =
+      ORDEN_ESTADOS
+
+        .map(
+          estado =>
+            estado.layerId
+        )
+
+        .filter(
+          layerId =>
+            map.getLayer(
+              layerId
+            )
+        );
+
+
+    if (
+      !capasExistentes.length
+    ) {
+
+      return;
+
+    }
+
+
+    // =================================================
+    // BUSCAR SI EL CLICK TOCÓ ALGÚN PREDIO
+    // =================================================
+
+    const features =
+      map.queryRenderedFeatures(
+
+        e.point,
+
+        {
+          layers:
+            capasExistentes
+        }
+
+      );
+
+
+    // =================================================
+    // SI HIZO CLICK FUERA DE LOS PREDIOS
+    // =================================================
+
+    if (
+      !features.length
+    ) {
+
+      limpiarHighlight();
+
+
+      try {
+
+        popup.remove();
+
+      }
+
+      catch (error) {}
+
+    }
+
+  }
+);
+
+
+// =====================================================
+// RESIZE
+// =====================================================
+//
+// Mantiene el mapa correctamente ajustado si cambia
+// el tamaño de la ventana.
+//
+// =====================================================
+
+window.addEventListener(
+  'resize',
+  () => {
+
+    map.resize();
+
+  }
+);
+
+
+// =====================================================
+// DEBUG GENERAL
+// =====================================================
+
+map.on(
+  'error',
+  (e) => {
+
+    console.error(
+      'Error del mapa:',
+      e
     );
 
-
-  const svCenter = [
-
-    (
-      b[0] +
-      b[2]
-    ) / 2,
-
-    (
-      b[1] +
-      b[3]
-    ) / 2
-
-  ];
+  }
+);
 
 
-  // ===================================================
-  // POSICIÓN DEL POPUP
-  // ===================================================
-
-  const center =
-
-    result.center
-
-    ||
-
-    turf
-      .centroid(
-        result
-      )
-      .geometry
-      .coordinates;
-
-
-  // ===================================================
-  // CREAR FEATURE-LIKE PARA REUTILIZAR
-  // buildPopupFromFields()
-  // ===================================================
-
-  const featureLike = {
-
-    properties:
-      properties
-
-  };
-
-
-  // ===================================================
-  // MOSTRAR POPUP
-  // ===================================================
-
-  buildPopupFromFields(
-
-    featureLike,
-
-    center,
-
-    popupFields,
-
-    svCenter
-
-  );
-
-
-}); // FIN DEL EVENTO geocoder.on('result')
+// =====================================================
+// FIN DEL INDEX.JS
+// =====================================================
