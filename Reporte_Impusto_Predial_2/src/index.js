@@ -1986,6 +1986,13 @@ function prepararExentos(
 // =====================================================
 // POPUP PREDIAL
 // =====================================================
+// Mantiene el diseño actual.
+//
+// CAMBIOS:
+// ✅ Quitar "Número predial"
+// ✅ Mostrar valor de mora cuando exista
+// ✅ Corregir visualización del avalúo
+// =====================================================
 
 function mostrarPopupPredial(
   feature,
@@ -1998,7 +2005,7 @@ function mostrarPopupPredial(
 
 
   // ===================================================
-  // CÓDIGO
+  // CÓDIGO PREDIAL
   // ===================================================
 
   const codigo =
@@ -2008,30 +2015,7 @@ function mostrarPopupPredial(
         'codigo',
         'CODIGO'
       ]
-    )
-
-    ??
-
-    'N/A';
-
-
-  // ===================================================
-  // NÚMERO PREDIAL
-  // ===================================================
-
-  const numeroPredial =
-    obtenerPropiedad(
-      props,
-      [
-        'NUMERO_PREDIAL',
-        'Numero_Predial',
-        'numero_predial'
-      ]
-    )
-
-    ??
-
-    'N/A';
+    ) ?? 'N/A';
 
 
   // ===================================================
@@ -2067,11 +2051,7 @@ function mostrarPopupPredial(
         'NOMBRE',
         'nombre'
       ]
-    )
-
-    ??
-
-    'N/A';
+    ) ?? 'N/A';
 
 
   // ===================================================
@@ -2085,15 +2065,11 @@ function mostrarPopupPredial(
         'NUMERO_DOCUMENTO',
         'numero_documento'
       ]
-    )
-
-    ??
-
-    'N/A';
+    ) ?? 'N/A';
 
 
   // ===================================================
-  // ESTADO PREDIAL
+  // ESTADO
   // ===================================================
 
   const estado =
@@ -2110,7 +2086,8 @@ function mostrarPopupPredial(
   // AVALÚO 2026
   // ===================================================
   //
-  // Soportamos distintas variantes del nombre.
+  // Buscar el nombre real del campo en cualquiera
+  // de sus variantes.
   //
   // ===================================================
 
@@ -2121,19 +2098,182 @@ function mostrarPopupPredial(
         'AVALUO 2026',
         'AVALUO.2026',
         'AVALUO_2026',
-        'AVALUO2026'
+        'AVALUO2026',
+        'avaluo 2026',
+        'avaluo.2026'
       ]
     );
 
 
-  const avaluo =
-    avaluoRaw !== null
+  let avaluo =
+    'N/A';
 
-      ? formatoMoneda(
-          avaluoRaw
+
+  if (
+    avaluoRaw !== null &&
+    avaluoRaw !== undefined &&
+    avaluoRaw !== ''
+  ) {
+
+    // Si GeoJSON ya entrega un número real
+    if (
+      typeof avaluoRaw ===
+      'number'
+    ) {
+
+      avaluo =
+
+        '$ ' +
+
+        Math
+          .round(avaluoRaw)
+          .toLocaleString(
+            'es-CO'
+          );
+
+    }
+
+    // Si viene como texto
+    else {
+
+      let textoAvaluo =
+        String(avaluoRaw)
+          .trim()
+          .replace(/\$/g, '')
+          .replace(/\s/g, '');
+
+
+      // ===============================================
+      // FORMATO COLOMBIANO
+      // 425.000.000
+      // ===============================================
+
+      if (
+        /^\d{1,3}(\.\d{3})+$/.test(
+          textoAvaluo
         )
+      ) {
 
-      : 'N/A';
+        textoAvaluo =
+          textoAvaluo.replace(
+            /\./g,
+            ''
+          );
+
+      }
+
+
+      // ===============================================
+      // 425.000.000,00
+      // ===============================================
+
+      else if (
+        /^\d{1,3}(\.\d{3})+,\d+$/.test(
+          textoAvaluo
+        )
+      ) {
+
+        textoAvaluo =
+          textoAvaluo
+            .replace(/\./g, '')
+            .replace(',', '.');
+
+      }
+
+
+      // ===============================================
+      // 425000000,00
+      // ===============================================
+
+      else if (
+        /^\d+,\d+$/.test(
+          textoAvaluo
+        )
+      ) {
+
+        textoAvaluo =
+          textoAvaluo.replace(
+            ',',
+            '.'
+          );
+
+      }
+
+
+      const numeroAvaluo =
+        Number(
+          textoAvaluo
+        );
+
+
+      if (
+        Number.isFinite(
+          numeroAvaluo
+        )
+      ) {
+
+        avaluo =
+
+          '$ ' +
+
+          Math
+            .round(numeroAvaluo)
+            .toLocaleString(
+              'es-CO'
+            );
+
+      }
+
+    }
+
+  }
+
+
+  // ===================================================
+  // VALOR DE LA MORA
+  // ===================================================
+
+  const moraRaw =
+    obtenerPropiedad(
+      props,
+      [
+        'total.valor.mora',
+        'TOTAL.VALOR.MORA',
+        'total_valor_mora'
+      ]
+    );
+
+
+  const valorMora =
+    numeroSeguro(
+      moraRaw
+    );
+
+
+  // ===================================================
+  // FILA DE MORA
+  // SOLO APARECE SI EL VALOR ES MAYOR A CERO
+  // ===================================================
+
+  const filaMora =
+
+    valorMora > 0
+
+      ? `
+
+        <br>
+
+        <strong>
+          Valor de la mora:
+        </strong>
+
+        $ ${Math
+            .round(valorMora)
+            .toLocaleString('es-CO')}
+
+      `
+
+      : '';
 
 
   // ===================================================
@@ -2162,7 +2302,7 @@ function mostrarPopupPredial(
 
 
   // ===================================================
-  // HTML DEL POPUP
+  // HTML
   // ===================================================
 
   const html = `
@@ -2180,12 +2320,6 @@ function mostrarPopupPredial(
 
     <strong>Código:</strong>
     ${codigo}
-
-    <br>
-
-
-    <strong>Número predial:</strong>
-    ${numeroPredial}
 
     <br>
 
@@ -2216,6 +2350,10 @@ function mostrarPopupPredial(
 
     <strong>Avalúo 2026:</strong>
     ${avaluo}
+
+
+    ${filaMora}
+
 
     <br>
 
@@ -2266,15 +2404,12 @@ function mostrarPopupPredial(
 
 
   popup
-
     .setLngLat(
       lngLatPopup
     )
-
     .setHTML(
       html
     )
-
     .addTo(
       map
     );
