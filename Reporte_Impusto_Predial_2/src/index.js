@@ -2171,204 +2171,241 @@ function mostrarPopupPredial(
 
 
 // =====================================================
-// CARGAR GEOJSON + EXENTOS
+// CARGAR GEOJSON + EXCEL DE EXENTOS
 // =====================================================
 
 function cargarDatosPrediales() {
 
-
   Promise.all([
 
-    // Base predial
-    fetch(
-      PREDIOS_URL
-    )
-      .then(
-        response => {
+    // ===============================================
+    // BASE PREDIAL GEOJSON
+    // ===============================================
 
-          if (
-            !response.ok
-          ) {
+    fetch(PREDIOS_URL)
 
-            throw new Error(
-              `Error cargando predios: ${response.status}`
-            );
+      .then(response => {
 
-          }
+        if (!response.ok) {
 
-
-          return response.json();
+          throw new Error(
+            `Error cargando predios: ${response.status}`
+          );
 
         }
-      ),
+
+        return response.json();
+
+      }),
 
 
-    // Predios exentos
-    fetch(
-      EXENTOS_URL
-    )
-      .then(
-        response => {
+    // ===============================================
+    // EXCEL DE PREDIOS EXENTOS
+    // ===============================================
 
-          if (
-            !response.ok
-          ) {
+    fetch(EXENTOS_URL)
 
-            throw new Error(
-              `Error cargando exentos: ${response.status}`
-            );
+      .then(response => {
 
-          }
+        if (!response.ok) {
 
-
-          return response.json();
+          throw new Error(
+            `Error cargando Excel de exentos: ${response.status}`
+          );
 
         }
-      )
+
+        return response.arrayBuffer();
+
+      })
+
+      .then(buffer => {
+
+        // Leer archivo XLSX
+        const workbook =
+          XLSX.read(
+            buffer,
+            {
+              type: 'array'
+            }
+          );
+
+
+        // Tomar la primera hoja
+        const primeraHoja =
+          workbook.SheetNames[0];
+
+
+        const worksheet =
+          workbook.Sheets[
+            primeraHoja
+          ];
+
+
+        // Convertir Excel a objetos JavaScript
+        const registros =
+          XLSX.utils.sheet_to_json(
+            worksheet,
+            {
+              defval: '',
+              raw: false
+            }
+          );
+
+
+        console.log(
+          'Registros encontrados en Excel de exentos:',
+          registros.length
+        );
+
+
+        return registros;
+
+      })
 
   ])
 
 
-    .then(
-      ([
-        predios,
+  .then(
+    ([
+      predios,
+      exentos
+    ]) => {
+
+
+      // =============================================
+      // GUARDAR EXENTOS
+      // =============================================
+
+      EXENTOS_DATA =
+        exentos;
+
+
+      // =============================================
+      // CREAR SET MEDIANTE NUMERO_PREDIAL
+      // =============================================
+
+      prepararExentos(
         exentos
-      ]) => {
+      );
 
 
-        // =============================================
-        // GUARDAR EXENTOS
-        // =============================================
-
-        EXENTOS_DATA =
-          exentos;
+      console.log(
+        'Números prediales exentos únicos:',
+        EXENTOS_SET.size
+      );
 
 
-        // =============================================
-        // PREPARAR SET DE EXENTOS
-        // =============================================
+      // =============================================
+      // CLASIFICAR TODOS LOS PREDIOS
+      // =============================================
 
-        prepararExentos(
-          exentos
+      const prediosClasificados =
+        clasificarGeoJSON(
+          predios
         );
 
 
-        // =============================================
-        // CLASIFICAR GEOJSON
-        // =============================================
+      PREDIOS_DATA =
+        prediosClasificados;
 
-        const prediosClasificados =
-          clasificarGeoJSON(
-            predios
+
+      // =============================================
+      // MOSTRAR CONTEOS EN CONSOLA
+      // =============================================
+
+      mostrarResumenClasificacion(
+        PREDIOS_DATA
+      );
+
+
+      // =============================================
+      // CREAR SOURCE
+      // =============================================
+
+      crearSourcePredial(
+        PREDIOS_DATA
+      );
+
+
+      // =============================================
+      // CREAR LAS 5 CAPAS
+      // =============================================
+
+      crearCapasPrediales();
+
+
+      // =============================================
+      // HIGHLIGHT
+      // =============================================
+
+      crearHighlight();
+
+
+      // =============================================
+      // HIGHLIGHT ENCIMA DE TODO
+      // =============================================
+
+      try {
+
+        if (
+          map.getLayer(
+            'predios_highlight_fill'
+          )
+        ) {
+
+          map.moveLayer(
+            'predios_highlight_fill'
           );
 
-
-        // =============================================
-        // GUARDAR DATASET
-        // =============================================
-
-        PREDIOS_DATA =
-          prediosClasificados;
+        }
 
 
-        // =============================================
-        // MOSTRAR RESUMEN EN CONSOLA
-        // =============================================
+        if (
+          map.getLayer(
+            'predios_highlight_line'
+          )
+        ) {
 
-        mostrarResumenClasificacion(
-          PREDIOS_DATA
-        );
+          map.moveLayer(
+            'predios_highlight_line'
+          );
 
+        }
 
-        // =============================================
-        // CREAR SOURCE
-        // =============================================
-
-        crearSourcePredial(
-          PREDIOS_DATA
-        );
+      } catch (e) {}
 
 
-        // =============================================
-        // CREAR LAS CINCO CAPAS
-        // =============================================
+      // =============================================
+      // ZOOM INICIAL A SESQUILÉ
+      // =============================================
 
-        crearCapasPrediales();
-
-
-        // =============================================
-        // CREAR HIGHLIGHT
-        // =============================================
-
-        crearHighlight();
+      ajustarVistaMunicipio(
+        PREDIOS_DATA
+      );
 
 
-        // =============================================
-        // ASEGURAR HIGHLIGHT ENCIMA
-        // =============================================
+      // =============================================
+      // LEYENDA ON/OFF
+      // =============================================
 
-        try {
+      crearLeyendaEstados();
 
+    }
 
-          if (
-            map.getLayer(
-              'predios_highlight_fill'
-            )
-          ) {
-
-            map.moveLayer(
-              'predios_highlight_fill'
-            );
-
-          }
+  )
 
 
-          if (
-            map.getLayer(
-              'predios_highlight_line'
-            )
-          ) {
+  .catch(
+    error => {
 
-            map.moveLayer(
-              'predios_highlight_line'
-            );
+      console.error(
+        'Error cargando datos prediales:',
+        error
+      );
 
-          }
-
-
-        } catch (e) {}
-
-
-        // =============================================
-        // ZOOM A TODO SESQUILÉ
-        // =============================================
-
-        ajustarVistaMunicipio(
-          PREDIOS_DATA
-        );
-
-
-        // =============================================
-        // CREAR LEYENDA INTERACTIVA
-        // =============================================
-
-        crearLeyendaEstados();
-
-      }
-
-    )
-
-
-    .catch(
-      error => {
-
-        console.error(
-          'Error cargando datos prediales:',
-          error
-        );
-
-      }
-    );
+    }
+  );
 
 }
 // =====================================================
