@@ -2,8 +2,9 @@
 // COMPARADOR SESQUILÉ 2017 vs 2024
 // =====================================================
 // ✅ Límite municipal en ambos mapas
-// ✅ Zoom automático al límite real de Sesquilé
-// ✅ Misma cámara en ambos lados
+// ✅ Zoom automático al límite REAL de Sesquilé
+// ✅ Municipio centrado y ocupando la pantalla
+// ✅ Misma cámara exacta en ambos mapas
 // ✅ Comparador 2017 / 2024 perfectamente alineado
 // =====================================================
 
@@ -18,6 +19,11 @@ mapboxgl.accessToken =
 
 // =====================================================
 // RUTA DEL LÍMITE MUNICIPAL
+// =====================================================
+//
+// index.js está dentro de src
+// y el GeoJSON está en src/data
+//
 // =====================================================
 
 const LIMITE_URL =
@@ -37,7 +43,7 @@ const beforeMap =
     style:
       'mapbox://styles/effectiveactions9017/cmkhiq4hy007901qq4jw7c79j',
 
-    // Vista temporal
+    // Vista temporal mientras carga el límite
     center:
       [-73.79724, 5.04463],
 
@@ -75,7 +81,7 @@ const afterMap =
     style:
       'mapbox://styles/effectiveactions9017/cmklt68zl006t01ry16zhajul',
 
-    // EXACTAMENTE la misma vista temporal
+    // Misma vista temporal
     center:
       [-73.79724, 5.04463],
 
@@ -101,7 +107,7 @@ const afterMap =
 
 
 // =====================================================
-// VARIABLES
+// VARIABLES DE CONTROL
 // =====================================================
 
 let readyBefore =
@@ -119,6 +125,9 @@ let limiteData =
 let limiteCargado =
   false;
 
+let vistaInicialAplicada =
+  false;
+
 
 // =====================================================
 // CARGAR LÍMITE MUNICIPAL
@@ -129,7 +138,9 @@ fetch(LIMITE_URL)
   .then(
     response => {
 
-      if (!response.ok) {
+      if (
+        !response.ok
+      ) {
 
         throw new Error(
           `No se pudo cargar el límite: ${response.status}`
@@ -145,12 +156,17 @@ fetch(LIMITE_URL)
   .then(
     data => {
 
+      // Guardar GeoJSON
       limiteData =
         data;
 
+
+      // Marcar límite como cargado
       limiteCargado =
         true;
 
+
+      // Intentar inicializar
       intentarInicializar();
 
     }
@@ -169,7 +185,7 @@ fetch(LIMITE_URL)
 
 
 // =====================================================
-// AGREGAR LÍMITE A UN MAPA
+// AGREGAR LÍMITE MUNICIPAL A UN MAPA
 // =====================================================
 
 function agregarLimiteMunicipal(
@@ -215,7 +231,7 @@ function agregarLimiteMunicipal(
 
 
   // ===================================================
-  // CAPA DE LÍNEA
+  // CAPA DEL LÍMITE
   // ===================================================
 
   if (
@@ -237,11 +253,12 @@ function agregarLimiteMunicipal(
 
       paint: {
 
-        // Amarillo para que se vea bien
-        // tanto en 2017 como en 2024
+        // Amarillo para destacar
+        // sobre ambos mapas
         'line-color':
           '#ffd166',
 
+        // Contorno visible pero no exagerado
         'line-width':
           2.5,
 
@@ -255,7 +272,10 @@ function agregarLimiteMunicipal(
   }
 
 
-  // Mantener límite encima
+  // ===================================================
+  // MANTENER LÍMITE ARRIBA
+  // ===================================================
+
   try {
 
     mapa.moveLayer(
@@ -268,10 +288,33 @@ function agregarLimiteMunicipal(
 
 
 // =====================================================
-// AJUSTAR AMBOS MAPAS AL MISMO LÍMITE
+// AJUSTAR VISTA INICIAL AL MUNICIPIO
+// =====================================================
+//
+// IMPORTANTE:
+//
+// Se calcula la extensión directamente desde:
+//
+// Limite_sesquile.geojson
+//
+// No usamos coordenadas aproximadas.
+//
+// Sesquilé ocupará prácticamente toda la pantalla.
+//
 // =====================================================
 
 function ajustarVistaAlMunicipio() {
+
+
+  // Evitar repetir el ajuste inicial
+  if (
+    vistaInicialAplicada
+  ) {
+
+    return;
+
+  }
+
 
   if (
     !limiteData
@@ -286,7 +329,7 @@ function ajustarVistaAlMunicipio() {
 
 
     // =================================================
-    // EXTENSIÓN REAL DEL MUNICIPIO
+    // CALCULAR EXTENSIÓN REAL DEL MUNICIPIO
     // =================================================
 
     const bbox =
@@ -295,13 +338,20 @@ function ajustarVistaAlMunicipio() {
       );
 
 
+    // =================================================
+    // VALIDAR BBOX
+    // =================================================
+
     if (
 
-      !Array.isArray(bbox)
+      !Array.isArray(
+        bbox
+      )
 
       ||
 
-      bbox.length !== 4
+      bbox.length !==
+        4
 
       ||
 
@@ -322,61 +372,54 @@ function ajustarVistaAlMunicipio() {
 
 
     // =================================================
-    // IMPORTANTE
+    // AJUSTAR MAPA 2017
+    // =================================================
     //
-    // Aplicamos EXACTAMENTE:
+    // padding = 8
     //
-    // - mismo bbox
-    // - mismo padding
-    // - mismo bearing
-    // - mismo pitch
-    //
-    // a los dos mapas.
+    // Deja solamente un margen mínimo para que
+    // el contorno municipal no quede cortado.
     //
     // =================================================
 
-    const opciones = {
-
-      padding:
-        35,
-
-      duration:
-        0,
-
-      bearing:
-        0,
-
-      pitch:
-        0,
-
-      maxZoom:
-        15
-
-    };
-
-
-    // MAPA 2017
     beforeMap.fitBounds(
-      bbox,
-      opciones
-    );
 
-
-    // MAPA 2024
-    afterMap.fitBounds(
       bbox,
-      opciones
+
+      {
+
+        padding:
+          8,
+
+        duration:
+          0,
+
+        bearing:
+          0,
+
+        pitch:
+          0,
+
+        maxZoom:
+          16
+
+      }
+
     );
 
 
     // =================================================
-    // FORZAR EXACTAMENTE LA MISMA CÁMARA
+    // OBTENER LA CÁMARA RESULTANTE
     // =================================================
     //
-    // Después del fitBounds tomamos la cámara del
-    // mapa izquierdo y la copiamos al derecho.
+    // Esta será la cámara MAESTRA.
     //
-    // Esto elimina pequeñas diferencias.
+    // El mapa 2024 recibirá exactamente:
+    //
+    // - centro
+    // - zoom
+    // - bearing
+    // - pitch
     //
     // =================================================
 
@@ -388,15 +431,78 @@ function ajustarVistaAlMunicipio() {
       beforeMap.getZoom();
 
 
+    const bearing =
+      beforeMap.getBearing();
+
+
+    const pitch =
+      beforeMap.getPitch();
+
+
+    // =================================================
+    // COPIAR EXACTAMENTE LA CÁMARA AL MAPA 2024
+    // =================================================
+
     afterMap.jumpTo({
 
       center: [
+
         center.lng,
+
         center.lat
+
       ],
 
       zoom:
         zoom,
+
+      bearing:
+        bearing,
+
+      pitch:
+        pitch
+
+    });
+
+
+    // =================================================
+    // FORZAR RESIZE
+    // =================================================
+    //
+    // Importante para que Mapbox calcule correctamente
+    // las dimensiones reales de ambos contenedores.
+    //
+    // =================================================
+
+    beforeMap.resize();
+
+    afterMap.resize();
+
+
+    // =================================================
+    // VOLVER A COPIAR LA CÁMARA DESPUÉS DEL RESIZE
+    // =================================================
+    //
+    // Garantiza que los dos lados queden idénticos.
+    //
+    // =================================================
+
+    const centerFinal =
+      beforeMap.getCenter();
+
+
+    afterMap.jumpTo({
+
+      center: [
+
+        centerFinal.lng,
+
+        centerFinal.lat
+
+      ],
+
+      zoom:
+        beforeMap.getZoom(),
 
       bearing:
         beforeMap.getBearing(),
@@ -405,6 +511,14 @@ function ajustarVistaAlMunicipio() {
         beforeMap.getPitch()
 
     });
+
+
+    // =================================================
+    // MARCAR VISTA COMO APLICADA
+    // =================================================
+
+    vistaInicialAplicada =
+      true;
 
 
   } catch (error) {
@@ -425,17 +539,33 @@ function ajustarVistaAlMunicipio() {
 
 function intentarInicializar() {
 
-  // Esperar:
+
+  // ===================================================
+  // ESPERAR TODO
+  // ===================================================
   //
-  // 1. mapa 2017
-  // 2. mapa 2024
-  // 3. límite municipal
+  // 1. Mapa 2017
+  // 2. Mapa 2024
+  // 3. Limite_sesquile.geojson
+  //
+  // ===================================================
 
   if (
-    !readyBefore ||
-    !readyAfter ||
-    !limiteCargado ||
+
+    !readyBefore
+
+    ||
+
+    !readyAfter
+
+    ||
+
+    !limiteCargado
+
+    ||
+
     !limiteData
+
   ) {
 
     return;
@@ -443,7 +573,10 @@ function intentarInicializar() {
   }
 
 
-  // Evitar inicialización doble
+  // ===================================================
+  // EVITAR INICIALIZACIÓN DOBLE
+  // ===================================================
+
   if (
     compare
   ) {
@@ -454,7 +587,7 @@ function intentarInicializar() {
 
 
   // ===================================================
-  // 1. AGREGAR EL MISMO LÍMITE A LOS DOS MAPAS
+  // 1. AGREGAR EL MISMO LÍMITE AL MAPA 2017
   // ===================================================
 
   agregarLimiteMunicipal(
@@ -462,20 +595,29 @@ function intentarInicializar() {
   );
 
 
+  // ===================================================
+  // 2. AGREGAR EL MISMO LÍMITE AL MAPA 2024
+  // ===================================================
+
   agregarLimiteMunicipal(
     afterMap
   );
 
 
   // ===================================================
-  // 2. CENTRAR LOS DOS AL MISMO MUNICIPIO
+  // 3. CENTRAR Y AJUSTAR AL MUNICIPIO
   // ===================================================
 
   ajustarVistaAlMunicipio();
 
 
   // ===================================================
-  // 3. CREAR EL COMPARADOR
+  // 4. CREAR EL COMPARADOR
+  // ===================================================
+  //
+  // Los mapas ya tienen exactamente la misma cámara
+  // antes de crear el swipe.
+  //
   // ===================================================
 
   compare =
@@ -488,6 +630,57 @@ function intentarInicializar() {
       '#comparison-container'
 
     );
+
+
+  // ===================================================
+  // 5. RESIZE FINAL
+  // ===================================================
+  //
+  // Una vez creado Compare, Mapbox puede modificar
+  // dimensiones internas de los contenedores.
+  //
+  // ===================================================
+
+  requestAnimationFrame(
+    () => {
+
+
+      beforeMap.resize();
+
+      afterMap.resize();
+
+
+      // ===============================================
+      // SINCRONIZAR UNA ÚLTIMA VEZ
+      // ===============================================
+
+      const c =
+        beforeMap.getCenter();
+
+
+      afterMap.jumpTo({
+
+        center: [
+
+          c.lng,
+
+          c.lat
+
+        ],
+
+        zoom:
+          beforeMap.getZoom(),
+
+        bearing:
+          beforeMap.getBearing(),
+
+        pitch:
+          beforeMap.getPitch()
+
+      });
+
+    }
+  );
 
 }
 
@@ -502,6 +695,7 @@ beforeMap.on(
 
     readyBefore =
       true;
+
 
     intentarInicializar();
 
@@ -520,6 +714,7 @@ afterMap.on(
     readyAfter =
       true;
 
+
     intentarInicializar();
 
   }
@@ -527,7 +722,29 @@ afterMap.on(
 
 
 // =====================================================
-// DEBUG
+// REDIMENSIONAMIENTO DE VENTANA
+// =====================================================
+//
+// Si el usuario cambia el tamaño del navegador,
+// rota el celular o entra/sale de pantalla completa,
+// los mapas mantienen sus dimensiones correctamente.
+//
+// =====================================================
+
+window.addEventListener(
+  'resize',
+  () => {
+
+    beforeMap.resize();
+
+    afterMap.resize();
+
+  }
+);
+
+
+// =====================================================
+// DEBUG MAPA 2017
 // =====================================================
 
 beforeMap.on(
@@ -542,6 +759,10 @@ beforeMap.on(
   }
 );
 
+
+// =====================================================
+// DEBUG MAPA 2024
+// =====================================================
 
 afterMap.on(
   'error',
