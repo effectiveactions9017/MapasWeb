@@ -1,28 +1,27 @@
 // =====================================================
 // COMPARADOR SESQUILÉ 2017 vs 2024
 // =====================================================
+// ✅ Límite municipal en ambos mapas
+// ✅ Zoom automático al límite real de Sesquilé
+// ✅ Misma cámara en ambos lados
+// ✅ Comparador 2017 / 2024 perfectamente alineado
+// =====================================================
+
+
+// =====================================================
+// MAPBOX TOKEN
+// =====================================================
 
 mapboxgl.accessToken =
   'pk.eyJ1IjoiZWZmZWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21raGliOTM1MGl3ejNkb25kOWF6ZzRleCJ9.S_kG8hu35MYRvWrNyKdfWA';
 
 
 // =====================================================
-// EXTENSIÓN DEL MUNICIPIO DE SESQUILÉ
-// =====================================================
-//
-// Formato:
-//
-// [oeste, sur]
-// [este, norte]
-//
-// Esta extensión se usa únicamente como vista inicial.
-//
+// RUTA DEL LÍMITE MUNICIPAL
 // =====================================================
 
-const SESQUILE_BOUNDS = [
-  [-73.90, 4.95],
-  [-73.70, 5.15]
-];
+const LIMITE_URL =
+  '../src/data/Limite_sesquile.geojson';
 
 
 // =====================================================
@@ -38,9 +37,9 @@ const beforeMap =
     style:
       'mapbox://styles/effectiveactions9017/cmkhiq4hy007901qq4jw7c79j',
 
-    // Vista temporal mientras carga
+    // Vista temporal
     center:
-      [-73.80, 5.05],
+      [-73.79724, 5.04463],
 
     zoom:
       11,
@@ -49,7 +48,16 @@ const beforeMap =
       6,
 
     maxZoom:
-      18
+      18,
+
+    pitch:
+      0,
+
+    bearing:
+      0,
+
+    antialias:
+      true
 
   });
 
@@ -67,9 +75,9 @@ const afterMap =
     style:
       'mapbox://styles/effectiveactions9017/cmklt68zl006t01ry16zhajul',
 
-    // Vista temporal mientras carga
+    // EXACTAMENTE la misma vista temporal
     center:
-      [-73.80, 5.05],
+      [-73.79724, 5.04463],
 
     zoom:
       11,
@@ -78,39 +86,98 @@ const afterMap =
       6,
 
     maxZoom:
-      18
+      18,
+
+    pitch:
+      0,
+
+    bearing:
+      0,
+
+    antialias:
+      true
 
   });
 
 
 // =====================================================
-// VARIABLES DE CONTROL
+// VARIABLES
 // =====================================================
 
 let readyBefore =
   false;
 
-
 let readyAfter =
   false;
-
 
 let compare =
   null;
 
+let limiteData =
+  null;
 
-let vistaInicialAplicada =
+let limiteCargado =
   false;
 
 
 // =====================================================
-// AJUSTAR VISTA A SESQUILÉ
+// CARGAR LÍMITE MUNICIPAL
 // =====================================================
 
-function ajustarVistaMunicipio() {
+fetch(LIMITE_URL)
+
+  .then(
+    response => {
+
+      if (!response.ok) {
+
+        throw new Error(
+          `No se pudo cargar el límite: ${response.status}`
+        );
+
+      }
+
+      return response.json();
+
+    }
+  )
+
+  .then(
+    data => {
+
+      limiteData =
+        data;
+
+      limiteCargado =
+        true;
+
+      intentarInicializar();
+
+    }
+  )
+
+  .catch(
+    error => {
+
+      console.error(
+        'Error cargando Limite_sesquile.geojson:',
+        error
+      );
+
+    }
+  );
+
+
+// =====================================================
+// AGREGAR LÍMITE A UN MAPA
+// =====================================================
+
+function agregarLimiteMunicipal(
+  mapa
+) {
 
   if (
-    vistaInicialAplicada
+    !limiteData
   ) {
 
     return;
@@ -118,9 +185,96 @@ function ajustarVistaMunicipio() {
   }
 
 
+  // ===================================================
+  // SOURCE
+  // ===================================================
+
   if (
-    !readyBefore ||
-    !readyAfter
+    !mapa.getSource(
+      'limite_sesquile'
+    )
+  ) {
+
+    mapa.addSource(
+
+      'limite_sesquile',
+
+      {
+
+        type:
+          'geojson',
+
+        data:
+          limiteData
+
+      }
+
+    );
+
+  }
+
+
+  // ===================================================
+  // CAPA DE LÍNEA
+  // ===================================================
+
+  if (
+    !mapa.getLayer(
+      'limite_sesquile_line'
+    )
+  ) {
+
+    mapa.addLayer({
+
+      id:
+        'limite_sesquile_line',
+
+      type:
+        'line',
+
+      source:
+        'limite_sesquile',
+
+      paint: {
+
+        // Amarillo para que se vea bien
+        // tanto en 2017 como en 2024
+        'line-color':
+          '#ffd166',
+
+        'line-width':
+          2.5,
+
+        'line-opacity':
+          1
+
+      }
+
+    });
+
+  }
+
+
+  // Mantener límite encima
+  try {
+
+    mapa.moveLayer(
+      'limite_sesquile_line'
+    );
+
+  } catch (e) {}
+
+}
+
+
+// =====================================================
+// AJUSTAR AMBOS MAPAS AL MISMO LÍMITE
+// =====================================================
+
+function ajustarVistaAlMunicipio() {
+
+  if (
+    !limiteData
   ) {
 
     return;
@@ -128,50 +282,139 @@ function ajustarVistaMunicipio() {
   }
 
 
-  vistaInicialAplicada =
-    true;
+  try {
 
 
-  // ===================================================
-  // MAPA 2017
-  // ===================================================
+    // =================================================
+    // EXTENSIÓN REAL DEL MUNICIPIO
+    // =================================================
 
-  beforeMap.fitBounds(
+    const bbox =
+      turf.bbox(
+        limiteData
+      );
 
-    SESQUILE_BOUNDS,
 
-    {
+    if (
+
+      !Array.isArray(bbox)
+
+      ||
+
+      bbox.length !== 4
+
+      ||
+
+      !bbox.every(
+        Number.isFinite
+      )
+
+    ) {
+
+      console.error(
+        'BBox municipal inválido:',
+        bbox
+      );
+
+      return;
+
+    }
+
+
+    // =================================================
+    // IMPORTANTE
+    //
+    // Aplicamos EXACTAMENTE:
+    //
+    // - mismo bbox
+    // - mismo padding
+    // - mismo bearing
+    // - mismo pitch
+    //
+    // a los dos mapas.
+    //
+    // =================================================
+
+    const opciones = {
 
       padding:
         35,
 
       duration:
-        0
+        0,
 
-    }
+      bearing:
+        0,
 
-  );
+      pitch:
+        0,
+
+      maxZoom:
+        15
+
+    };
 
 
-  // ===================================================
-  // MAPA 2024
-  // ===================================================
+    // MAPA 2017
+    beforeMap.fitBounds(
+      bbox,
+      opciones
+    );
 
-  afterMap.fitBounds(
 
-    SESQUILE_BOUNDS,
+    // MAPA 2024
+    afterMap.fitBounds(
+      bbox,
+      opciones
+    );
 
-    {
 
-      padding:
-        35,
+    // =================================================
+    // FORZAR EXACTAMENTE LA MISMA CÁMARA
+    // =================================================
+    //
+    // Después del fitBounds tomamos la cámara del
+    // mapa izquierdo y la copiamos al derecho.
+    //
+    // Esto elimina pequeñas diferencias.
+    //
+    // =================================================
 
-      duration:
-        0
+    const center =
+      beforeMap.getCenter();
 
-    }
 
-  );
+    const zoom =
+      beforeMap.getZoom();
+
+
+    afterMap.jumpTo({
+
+      center: [
+        center.lng,
+        center.lat
+      ],
+
+      zoom:
+        zoom,
+
+      bearing:
+        beforeMap.getBearing(),
+
+      pitch:
+        beforeMap.getPitch()
+
+    });
+
+
+  } catch (error) {
+
+    console.error(
+      'Error ajustando vista al municipio:',
+      error
+    );
+
+  }
 
 }
 
@@ -180,38 +423,71 @@ function ajustarVistaMunicipio() {
 // INICIALIZAR COMPARADOR
 // =====================================================
 
-function initCompare() {
+function intentarInicializar() {
+
+  // Esperar:
+  //
+  // 1. mapa 2017
+  // 2. mapa 2024
+  // 3. límite municipal
 
   if (
-    readyBefore &&
-    readyAfter &&
-    !compare
+    !readyBefore ||
+    !readyAfter ||
+    !limiteCargado ||
+    !limiteData
   ) {
 
-
-    // ===============================================
-    // PRIMERO AJUSTAR LA VISTA
-    // ===============================================
-
-    ajustarVistaMunicipio();
-
-
-    // ===============================================
-    // DESPUÉS CREAR EL SWIPE
-    // ===============================================
-
-    compare =
-      new mapboxgl.Compare(
-
-        beforeMap,
-
-        afterMap,
-
-        '#comparison-container'
-
-      );
+    return;
 
   }
+
+
+  // Evitar inicialización doble
+  if (
+    compare
+  ) {
+
+    return;
+
+  }
+
+
+  // ===================================================
+  // 1. AGREGAR EL MISMO LÍMITE A LOS DOS MAPAS
+  // ===================================================
+
+  agregarLimiteMunicipal(
+    beforeMap
+  );
+
+
+  agregarLimiteMunicipal(
+    afterMap
+  );
+
+
+  // ===================================================
+  // 2. CENTRAR LOS DOS AL MISMO MUNICIPIO
+  // ===================================================
+
+  ajustarVistaAlMunicipio();
+
+
+  // ===================================================
+  // 3. CREAR EL COMPARADOR
+  // ===================================================
+
+  compare =
+    new mapboxgl.Compare(
+
+      beforeMap,
+
+      afterMap,
+
+      '#comparison-container'
+
+    );
 
 }
 
@@ -227,7 +503,7 @@ beforeMap.on(
     readyBefore =
       true;
 
-    initCompare();
+    intentarInicializar();
 
   }
 );
@@ -244,7 +520,7 @@ afterMap.on(
     readyAfter =
       true;
 
-    initCompare();
+    intentarInicializar();
 
   }
 );
@@ -256,7 +532,7 @@ afterMap.on(
 
 beforeMap.on(
   'error',
-  (e) => {
+  e => {
 
     console.error(
       'BEFORE map error:',
@@ -269,7 +545,7 @@ beforeMap.on(
 
 afterMap.on(
   'error',
-  (e) => {
+  e => {
 
     console.error(
       'AFTER map error:',
