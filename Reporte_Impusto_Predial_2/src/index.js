@@ -21,13 +21,16 @@
 // FUNCIONES:
 //
 // ✅ Mapa satelital
-// ✅ Zoom automático a todo Sesquilé
+// ✅ Excel de predios exentos
+// ✅ Cruce por NUMERO_PREDIAL
+// ✅ Zoom automático a Sesquilé
 // ✅ Leyenda ON / OFF
-// ✅ Buscador por código, nombre y documento
+// ✅ Buscador
 // ✅ Highlight amarillo
 // ✅ Popup corregido
 // ✅ Dirección formateada
 // ✅ Street View
+//
 // =====================================================
 
 
@@ -40,7 +43,7 @@ mapboxgl.accessToken =
 
 
 // =====================================================
-// RUTAS
+// RUTAS DE DATOS
 // =====================================================
 
 const DATA_PATH =
@@ -65,11 +68,12 @@ const map =
     container:
       'map',
 
+    // Mapa satelital
     style:
       'mapbox://styles/mapbox/satellite-streets-v12',
 
     // Vista temporal.
-    // Luego se ajusta automáticamente a todo Sesquilé.
+    // Luego se ajustará automáticamente a Sesquilé.
     center:
       [-73.79724, 5.04463],
 
@@ -89,7 +93,7 @@ const map =
 
 
 // =====================================================
-// CONTROLES
+// CONTROLES DEL MAPA
 // =====================================================
 
 map.addControl(
@@ -121,7 +125,7 @@ const popup =
 
 
 // =====================================================
-// DATASETS EN MEMORIA
+// DATOS EN MEMORIA
 // =====================================================
 
 let PREDIOS_DATA =
@@ -132,17 +136,23 @@ let EXENTOS_DATA =
   null;
 
 
-// Set con números prediales exentos.
-// Esto permite búsquedas rápidas.
+// Aquí se guardarán los NUMERO_PREDIAL
+// encontrados en el Excel de exentos.
+
 let EXENTOS_SET =
   new Set();
 
 
 // =====================================================
-// CONFIGURACIÓN DE ESTADOS
+// CONFIGURACIÓN DE LAS CINCO CATEGORÍAS
 // =====================================================
 
 const ESTADOS = {
+
+
+  // ===================================================
+  // PÚBLICOS
+  // ===================================================
 
   PUBLICO: {
 
@@ -161,6 +171,10 @@ const ESTADOS = {
   },
 
 
+  // ===================================================
+  // EXENTOS
+  // ===================================================
+
   EXENTO: {
 
     codigo:
@@ -177,6 +191,10 @@ const ESTADOS = {
 
   },
 
+
+  // ===================================================
+  // MORA
+  // ===================================================
 
   MORA: {
 
@@ -195,6 +213,10 @@ const ESTADOS = {
   },
 
 
+  // ===================================================
+  // AL DÍA
+  // ===================================================
+
   AL_DIA: {
 
     codigo:
@@ -211,6 +233,10 @@ const ESTADOS = {
 
   },
 
+
+  // ===================================================
+  // POSIBLES SIN PAGAR
+  // ===================================================
 
   POSIBLE_SIN_PAGAR: {
 
@@ -259,8 +285,10 @@ function norm(
 ) {
 
   return (
+
     value ??
     ''
+
   )
 
     .toString()
@@ -278,15 +306,15 @@ function norm(
 
 
 // =====================================================
-// NORMALIZAR NÚMERO PREDIAL
+// NORMALIZAR NUMERO_PREDIAL
 // =====================================================
 //
-// MUY IMPORTANTE:
+// IMPORTANTE:
 //
-// NUMERO_PREDIAL debe tratarse como TEXTO.
+// Se mantiene como TEXTO.
 //
-// No lo convertimos a Number porque puede contener
-// ceros iniciales.
+// No lo convertimos a número porque un número predial
+// puede contener ceros iniciales.
 //
 // =====================================================
 
@@ -295,8 +323,13 @@ function normalizarNumeroPredial(
 ) {
 
   if (
-    value === null ||
+
+    value === null
+
+    ||
+
     value === undefined
+
   ) {
 
     return '';
@@ -319,17 +352,7 @@ function normalizarNumeroPredial(
 
 
 // =====================================================
-// CONVERTIR VALOR A NÚMERO
-// =====================================================
-//
-// Soporta:
-//
-// 123456
-// "123456"
-// "123.456"
-// "$ 123.456"
-// "1,234.56"
-//
+// CONVERTIR VALORES A NÚMERO
 // =====================================================
 
 function numeroSeguro(
@@ -337,9 +360,17 @@ function numeroSeguro(
 ) {
 
   if (
-    value === null ||
-    value === undefined ||
+
+    value === null
+
+    ||
+
+    value === undefined
+
+    ||
+
     value === ''
+
   ) {
 
     return 0;
@@ -347,13 +378,16 @@ function numeroSeguro(
   }
 
 
+  // Ya es número
   if (
     typeof value ===
     'number'
   ) {
 
     return Number.isFinite(value)
+
       ? value
+
       : 0;
 
   }
@@ -361,8 +395,15 @@ function numeroSeguro(
 
   let texto =
     value
+
       .toString()
-      .trim();
+
+      .trim()
+
+      .replace(
+        /[$\s]/g,
+        ''
+      );
 
 
   if (
@@ -374,18 +415,15 @@ function numeroSeguro(
   }
 
 
-  // Eliminar símbolo monetario y espacios
-  texto =
-    texto.replace(
-      /[$\s]/g,
-      ''
-    );
-
-
-  // Formato colombiano:
+  // ===================================================
+  // FORMATO COLOMBIANO:
   // 1.234.567
+  // ===================================================
+
   if (
-    /^\d{1,3}(\.\d{3})+$/.test(texto)
+    /^\d{1,3}(\.\d{3})+$/.test(
+      texto
+    )
   ) {
 
     texto =
@@ -397,17 +435,25 @@ function numeroSeguro(
   }
 
 
+  // ===================================================
+  // FORMATO:
   // 1.234.567,89
+  // ===================================================
+
   else if (
-    /^\d{1,3}(\.\d{3})+,\d+$/.test(texto)
+    /^\d{1,3}(\.\d{3})+,\d+$/.test(
+      texto
+    )
   ) {
 
     texto =
       texto
+
         .replace(
           /\./g,
           ''
         )
+
         .replace(
           ',',
           '.'
@@ -416,9 +462,15 @@ function numeroSeguro(
   }
 
 
+  // ===================================================
+  // FORMATO:
   // 1234,56
+  // ===================================================
+
   else if (
-    /^\d+,\d+$/.test(texto)
+    /^\d+,\d+$/.test(
+      texto
+    )
   ) {
 
     texto =
@@ -430,8 +482,7 @@ function numeroSeguro(
   }
 
 
-  // Eliminar cualquier carácter restante
-  // que no corresponda a número.
+  // Limpiar cualquier otro carácter
   texto =
     texto.replace(
       /[^0-9.-]/g,
@@ -439,81 +490,118 @@ function numeroSeguro(
     );
 
 
-  const n =
-    Number(texto);
+  const numero =
+    Number(
+      texto
+    );
 
 
-  return Number.isFinite(n)
-    ? n
+  return Number.isFinite(
+    numero
+  )
+
+    ? numero
+
     : 0;
 
 }
 
 
 // =====================================================
-// FORMATEAR MONEDA
+// FORMATO MONEDA
 // =====================================================
 
 function formatoMoneda(
   value
 ) {
 
-  const n =
+  const numero =
     numeroSeguro(
       value
     );
 
 
-  if (
-    !Number.isFinite(n)
-  ) {
+  return (
 
-    return 'N/A';
+    '$ ' +
 
-  }
-
-
-  return '$ ' +
-
-    Math.round(n)
-
+    Math
+      .round(numero)
       .toLocaleString(
         'es-CO'
-      );
+      )
+
+  );
 
 }
 
 
 // =====================================================
-// FORMATEAR ÁREA
+// FORMATO ÁREA
 // =====================================================
 
 function formatoArea(
   value
 ) {
 
-  const n =
+  const numero =
     numeroSeguro(
       value
     );
 
 
-  if (
-    !Number.isFinite(n)
+  return (
+
+    Math
+      .round(numero)
+      .toLocaleString(
+        'es-CO'
+      )
+
+    +
+
+    ' m²'
+
+  );
+
+}
+
+
+// =====================================================
+// BUSCAR UNA PROPIEDAD ENTRE VARIAS ALTERNATIVAS
+// =====================================================
+
+function obtenerPropiedad(
+  props,
+  alternativas
+) {
+
+  for (
+    const key of alternativas
   ) {
 
-    return 'N/A';
+    if (
+
+      props[key] !== undefined
+
+      &&
+
+      props[key] !== null
+
+      &&
+
+      props[key] !== ''
+
+    ) {
+
+      return props[key];
+
+    }
 
   }
 
 
-  return Math.round(n)
-
-    .toLocaleString(
-      'es-CO'
-    ) +
-
-    ' m²';
+  return null;
 
 }
 
@@ -527,9 +615,17 @@ function formatearDireccion(
 ) {
 
   if (
-    direccion === null ||
-    direccion === undefined ||
+
+    direccion === null
+
+    ||
+
+    direccion === undefined
+
+    ||
+
     direccion === ''
+
   ) {
 
     return 'N/A';
@@ -595,12 +691,10 @@ function formatearDireccion(
 
   // ===================================================
   // NOMENCLATURA
-  // ===================================================
   //
   // Calle 8 3 35
   // →
   // Calle 8 # 3-35
-  //
   // ===================================================
 
   dir =
@@ -654,7 +748,7 @@ function formatearDireccion(
 
 
 // =====================================================
-// OBTENER COORDENADA PARA STREET VIEW
+// COORDENADA PARA STREET VIEW
 // =====================================================
 
 function getFeatureLngLat(
@@ -663,13 +757,17 @@ function getFeatureLngLat(
 ) {
 
 
-  // Si viene del click
+  // Si viene de un click
   if (
 
-    fallbackLngLat &&
+    fallbackLngLat
+
+    &&
 
     typeof fallbackLngLat.lng ===
-      'number' &&
+      'number'
+
+    &&
 
     typeof fallbackLngLat.lat ===
       'number'
@@ -690,7 +788,7 @@ function getFeatureLngLat(
   // Punto representativo del polígono
   try {
 
-    const pt =
+    const punto =
       turf
 
         .pointOnFeature(
@@ -704,15 +802,19 @@ function getFeatureLngLat(
 
     return [
 
-      Number(pt[0]),
+      Number(
+        punto[0]
+      ),
 
-      Number(pt[1])
+      Number(
+        punto[1]
+      )
 
     ];
 
   }
 
-  catch (e) {}
+  catch (error) {}
 
 
   return [
@@ -736,9 +838,13 @@ function streetViewUrl(
 
   return (
 
-    `https://www.google.com/maps/@?api=1` +
+    `https://www.google.com/maps/@?api=1`
 
-    `&map_action=pano` +
+    +
+
+    `&map_action=pano`
+
+    +
 
     `&viewpoint=${lat},${lng}`
 
@@ -758,23 +864,34 @@ function nombreEstado(
   const estado =
     ORDEN_ESTADOS.find(
       item =>
-        item.codigo === codigo
+        item.codigo ===
+        codigo
     );
 
 
   return estado
+
     ? estado.nombre
+
     : 'Sin clasificar';
 
 }
 // =====================================================
-// PARTE 2
-// CARGA DE EXENTOS + CLASIFICACIÓN + CAPAS
+// PARTE 2 DE 5
+// CLASIFICACIÓN PREDIAL
 // =====================================================
 
 
 // =====================================================
-// COMPROBAR SI EL PREDIO ES PÚBLICO
+// 1. IDENTIFICAR PREDIO PÚBLICO
+// =====================================================
+//
+// Regla:
+//
+// NOMBRE = MUNICIPIO DE SESQUILE
+//
+// Tiene prioridad sobre todas las demás categorías.
+//
 // =====================================================
 
 function esPredioPublico(
@@ -796,7 +913,20 @@ function esPredioPublico(
 
 
 // =====================================================
-// COMPROBAR SI EL PREDIO ES EXENTO
+// 2. IDENTIFICAR PREDIO EXENTO
+// =====================================================
+//
+// Cruce:
+//
+// GeoJSON:
+// NUMERO_PREDIAL
+//
+// Excel:
+// NUMERO_PREDIAL
+//
+// Los números del Excel estarán almacenados
+// previamente en EXENTOS_SET.
+//
 // =====================================================
 
 function esPredioExento(
@@ -826,14 +956,19 @@ function esPredioExento(
 
 
 // =====================================================
-// COMPROBAR SI TIENE MORA
+// 3. IDENTIFICAR PREDIO CON MORA
+// =====================================================
+//
+// Regla:
+//
+// total.valor.mora > 0
+//
 // =====================================================
 
 function predioTieneMora(
   props
 ) {
 
-  // Campo principal de la base
   const mora =
     numeroSeguro(
       props?.['total.valor.mora']
@@ -848,26 +983,31 @@ function predioTieneMora(
 
 
 // =====================================================
-// COMPROBAR SI TIENE ALGÚN PAGO
+// 4. IDENTIFICAR PREDIO CON ALGÚN PAGO
+// =====================================================
+//
+// Un predio se considera AL DÍA si:
+//
+// valor.ultimo.pago > 0
+//
+// O
+//
+// pago.marzo > 0
+//
+// siempre que NO haya sido clasificado previamente
+// como público, exento o con mora.
+//
 // =====================================================
 
 function predioTienePago(
   props
 ) {
 
-  // ===================================================
-  // VALOR ÚLTIMO PAGO
-  // ===================================================
-
   const ultimoPago =
     numeroSeguro(
       props?.['valor.ultimo.pago']
     );
 
-
-  // ===================================================
-  // PAGO MARZO
-  // ===================================================
 
   const pagoMarzo =
     numeroSeguro(
@@ -892,7 +1032,7 @@ function predioTienePago(
 // CLASIFICAR UN PREDIO
 // =====================================================
 //
-// PRIORIDAD:
+// PRIORIDAD OBLIGATORIA:
 //
 // 1. PÚBLICO
 // 2. EXENTO
@@ -900,7 +1040,7 @@ function predioTienePago(
 // 4. AL DÍA
 // 5. POSIBLE SIN PAGAR
 //
-// Cada predio queda en UNA SOLA categoría.
+// Así cada polígono queda en UNA SOLA categoría.
 //
 // =====================================================
 
@@ -982,7 +1122,19 @@ function clasificarPredio(
 
 
 // =====================================================
-// PREPARAR GEOJSON CLASIFICADO
+// CLASIFICAR TODO EL GEOJSON
+// =====================================================
+//
+// A cada feature se le agregan dos propiedades:
+//
+// __ESTADO_PREDIAL
+// __ESTADO_NOMBRE
+//
+// Ejemplo:
+//
+// __ESTADO_PREDIAL = "MORA"
+// __ESTADO_NOMBRE  = "Predios con mora"
+//
 // =====================================================
 
 function clasificarGeoJSON(
@@ -990,10 +1142,15 @@ function clasificarGeoJSON(
 ) {
 
   if (
-    !data ||
+
+    !data
+
+    ||
+
     !Array.isArray(
       data.features
     )
+
   ) {
 
     return data;
@@ -1014,10 +1171,6 @@ function clasificarGeoJSON(
 
       }
 
-
-      // ===============================================
-      // ASIGNAR ESTADO
-      // ===============================================
 
       const estado =
         clasificarPredio(
@@ -1044,7 +1197,12 @@ function clasificarGeoJSON(
 
 
 // =====================================================
-// CONTAR CLASIFICACIÓN
+// RESUMEN DE CLASIFICACIÓN
+// =====================================================
+//
+// Nos permitirá comprobar en la consola del navegador
+// cuántos predios quedaron en cada categoría.
+//
 // =====================================================
 
 function mostrarResumenClasificacion(
@@ -1072,14 +1230,21 @@ function mostrarResumenClasificacion(
 
 
   if (
-    data &&
+
+    data
+
+    &&
+
     Array.isArray(
       data.features
     )
+
   ) {
+
 
     data.features.forEach(
       (feature) => {
+
 
         const estado =
           feature
@@ -1105,52 +1270,76 @@ function mostrarResumenClasificacion(
   }
 
 
+  // ===================================================
+  // TOTAL
+  // ===================================================
+
+  const total =
+    Object
+
+      .values(
+        resumen
+      )
+
+      .reduce(
+        (a, b) =>
+          a + b,
+        0
+      );
+
+
+  // ===================================================
+  // MOSTRAR EN CONSOLA
+  // ===================================================
+
   console.log(
-    '=============================='
+    '========================================'
   );
+
 
   console.log(
     'RESUMEN PREDIAL SESQUILÉ'
   );
 
+
   console.log(
-    'Públicos:',
+    '🔵 Predios públicos:',
     resumen.PUBLICO
   );
 
+
   console.log(
-    'Exentos:',
+    '🟣 Predios exentos:',
     resumen.EXENTO
   );
 
+
   console.log(
-    'Con mora:',
+    '🔴 Predios con mora:',
     resumen.MORA
   );
 
+
   console.log(
-    'Al día:',
+    '🟢 Predios al día:',
     resumen.AL_DIA
   );
 
+
   console.log(
-    'Posibles sin pagar:',
+    '🟠 Posibles sin pagar:',
     resumen.POSIBLE_SIN_PAGAR
   );
 
-  console.log(
-    'Total:',
-    Object
-      .values(resumen)
-      .reduce(
-        (a, b) =>
-          a + b,
-        0
-      )
-  );
 
   console.log(
-    '=============================='
+    'TOTAL:',
+    total
+  );
+
+
+  console.log(
+    '========================================'
   );
 
 }
@@ -1178,6 +1367,7 @@ function crearSourcePredial(
         data
       );
 
+
     return;
 
   }
@@ -1203,7 +1393,7 @@ function crearSourcePredial(
 
 
 // =====================================================
-// CREAR CAPA PARA UN ESTADO
+// CREAR CAPA PARA CADA ESTADO
 // =====================================================
 
 function crearCapaEstado(
@@ -1234,7 +1424,7 @@ function crearCapaEstado(
 
 
     // =================================================
-    // FILTRAR POR ESTADO
+    // FILTRAR POR CATEGORÍA
     // =================================================
 
     filter: [
@@ -1253,8 +1443,9 @@ function crearCapaEstado(
 
     paint: {
 
+
       // ===============================================
-      // COLOR DE LA CATEGORÍA
+      // COLOR
       // ===============================================
 
       'fill-color':
@@ -1265,7 +1456,7 @@ function crearCapaEstado(
       // TRANSPARENCIA
       // ===============================================
       //
-      // Se conserva visible el mapa satelital.
+      // Permite seguir viendo la imagen satelital.
       //
       // ===============================================
 
@@ -1274,7 +1465,7 @@ function crearCapaEstado(
 
 
       // ===============================================
-      // BORDE FINO BLANCO
+      // BORDE BLANCO
       // ===============================================
 
       'fill-outline-color':
@@ -1328,7 +1519,7 @@ function crearCapaEstado(
 
 
   // ===================================================
-  // CLICK EN EL PREDIO
+  // CLICK SOBRE PREDIO
   // ===================================================
 
   map.on(
@@ -1342,7 +1533,9 @@ function crearCapaEstado(
 
       const feature =
 
-        e.features &&
+        e.features
+
+        &&
 
         e.features[0];
 
@@ -1357,20 +1550,20 @@ function crearCapaEstado(
 
 
       // ===============================================
-      // RESALTAR EL PREDIO
+      // RESALTAR PREDIO
       // ===============================================
 
-      const source =
+      const highlightSource =
         map.getSource(
           'predios_highlight'
         );
 
 
       if (
-        source
+        highlightSource
       ) {
 
-        source.setData({
+        highlightSource.setData({
 
           type:
             'FeatureCollection',
@@ -1398,7 +1591,11 @@ function crearCapaEstado(
 
 
       // ===============================================
-      // MOSTRAR POPUP
+      // POPUP
+      // ===============================================
+      //
+      // Esta función se define en la Parte 3.
+      //
       // ===============================================
 
       mostrarPopupPredial(
@@ -1517,7 +1714,7 @@ function crearHighlight() {
 
 
   // ===================================================
-  // BORDE AMARILLO
+  // CONTORNO AMARILLO
   // ===================================================
 
   if (
@@ -1594,11 +1791,19 @@ function ajustarVistaMunicipio(
 ) {
 
   if (
-    !data ||
+
+    !data
+
+    ||
+
     !Array.isArray(
       data.features
-    ) ||
+    )
+
+    ||
+
     !data.features.length
+
   ) {
 
     return;
@@ -1617,11 +1822,14 @@ function ajustarVistaMunicipio(
 
     if (
 
-      Array.isArray(bounds)
+      Array.isArray(
+        bounds
+      )
 
       &&
 
-      bounds.length === 4
+      bounds.length ===
+        4
 
       &&
 
@@ -1637,8 +1845,8 @@ function ajustarVistaMunicipio(
 
         {
 
-          // Margen pequeño para que Sesquilé
-          // ocupe la mayor parte de la pantalla.
+          // Margen pequeño para que el municipio
+          // ocupe casi toda la pantalla.
           padding:
             12,
 
@@ -1655,7 +1863,9 @@ function ajustarVistaMunicipio(
     }
 
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
 
@@ -1669,56 +1879,25 @@ function ajustarVistaMunicipio(
 
 }
 // =====================================================
-// PARTE 3
-// CARGA DE DATOS + CLASIFICACIÓN + POPUP
+// PARTE 3 DE 5
+// EXCEL DE EXENTOS + POPUP + CARGA DE DATOS
 // =====================================================
 
 
 // =====================================================
-// OBTENER UNA PROPIEDAD ENTRE VARIAS ALTERNATIVAS
+// PREPARAR PREDIOS EXENTOS
 // =====================================================
 //
-// Esto nos ayuda porque algunas versiones de la base
-// pueden tener:
+// El Excel contiene la columna:
 //
-// AVALUO 2026
-// AVALUO.2026
+// NUMERO_PREDIAL
 //
-// =====================================================
-
-function obtenerPropiedad(
-  props,
-  alternativas
-) {
-
-  for (
-    const key of alternativas
-  ) {
-
-    if (
-      props[key] !== undefined &&
-      props[key] !== null &&
-      props[key] !== ''
-    ) {
-
-      return props[key];
-
-    }
-
-  }
-
-
-  return null;
-
-}
-
-
-// =====================================================
-// CREAR SET DE PREDIOS EXENTOS
+// Cada valor se guarda en EXENTOS_SET.
+//
 // =====================================================
 
 function prepararExentos(
-  data
+  registros
 ) {
 
   EXENTOS_SET =
@@ -1726,149 +1905,78 @@ function prepararExentos(
 
 
   if (
-    !data
+    !Array.isArray(
+      registros
+    )
   ) {
+
+    console.error(
+      'El archivo de exentos no produjo una lista válida.'
+    );
 
     return;
 
   }
 
 
-  // ===================================================
-  // FORMATO 1:
-  //
-  // [
-  //   "25736...",
-  //   "25736..."
-  // ]
-  // ===================================================
-
-  if (
-    Array.isArray(data)
-  ) {
-
-    data.forEach(
-      (item) => {
+  registros.forEach(
+    (fila) => {
 
 
-        // Si es directamente un string/número
-        if (
-          typeof item === 'string' ||
-          typeof item === 'number'
-        ) {
+      if (
+        !fila ||
+        typeof fila !== 'object'
+      ) {
 
-          const numero =
-            normalizarNumeroPredial(
-              item
-            );
-
-
-          if (
-            numero
-          ) {
-
-            EXENTOS_SET.add(
-              numero
-            );
-
-          }
-
-
-          return;
-
-        }
-
-
-        // Si es objeto
-        if (
-          item &&
-          typeof item === 'object'
-        ) {
-
-          const numero =
-            normalizarNumeroPredial(
-
-              item.NUMERO_PREDIAL ??
-
-              item.numero_predial ??
-
-              item.Numero_Predial ??
-
-              ''
-
-            );
-
-
-          if (
-            numero
-          ) {
-
-            EXENTOS_SET.add(
-              numero
-            );
-
-          }
-
-        }
+        return;
 
       }
-    );
-
-  }
 
 
-  // ===================================================
-  // FORMATO 2:
-  //
-  // {
-  //   "exentos": [...]
-  // }
-  // ===================================================
+      // ===============================================
+      // BUSCAR NUMERO_PREDIAL
+      // ===============================================
 
-  else if (
-    Array.isArray(
-      data.exentos
-    )
-  ) {
+      const numeroPredial =
+        normalizarNumeroPredial(
 
-    data.exentos.forEach(
-      (item) => {
+          fila.NUMERO_PREDIAL
 
+          ??
 
-        const numero =
-          normalizarNumeroPredial(
+          fila.numero_predial
 
-            typeof item === 'object'
+          ??
 
-              ? (
-                  item.NUMERO_PREDIAL ??
-                  item.numero_predial ??
-                  ''
-                )
+          fila.Numero_Predial
 
-              : item
+          ??
 
-          );
+          ''
+
+        );
 
 
-        if (
-          numero
-        ) {
+      // ===============================================
+      // AGREGAR AL SET
+      // ===============================================
 
-          EXENTOS_SET.add(
-            numero
-          );
+      if (
+        numeroPredial
+      ) {
 
-        }
+        EXENTOS_SET.add(
+          numeroPredial
+        );
 
       }
-    );
 
-  }
+    }
+  );
 
 
   console.log(
-    'Predios exentos cargados:',
+    '🟣 Números prediales exentos únicos:',
     EXENTOS_SET.size
   );
 
@@ -1900,7 +2008,11 @@ function mostrarPopupPredial(
         'codigo',
         'CODIGO'
       ]
-    ) ?? 'N/A';
+    )
+
+    ??
+
+    'N/A';
 
 
   // ===================================================
@@ -1915,7 +2027,11 @@ function mostrarPopupPredial(
         'Numero_Predial',
         'numero_predial'
       ]
-    ) ?? 'N/A';
+    )
+
+    ??
+
+    'N/A';
 
 
   // ===================================================
@@ -1928,8 +2044,8 @@ function mostrarPopupPredial(
       [
         'DIRECCION',
         'direccion',
-        'Dirección',
-        'DIRECCIÓN'
+        'DIRECCIÓN',
+        'Dirección'
       ]
     );
 
@@ -1951,7 +2067,11 @@ function mostrarPopupPredial(
         'NOMBRE',
         'nombre'
       ]
-    ) ?? 'N/A';
+    )
+
+    ??
+
+    'N/A';
 
 
   // ===================================================
@@ -1965,27 +2085,33 @@ function mostrarPopupPredial(
         'NUMERO_DOCUMENTO',
         'numero_documento'
       ]
-    ) ?? 'N/A';
+    )
+
+    ??
+
+    'N/A';
 
 
   // ===================================================
-  // ESTADO
+  // ESTADO PREDIAL
   // ===================================================
 
-  const estadoCodigo =
-    props.__ESTADO_PREDIAL ??
-    '';
+  const estado =
+    props.__ESTADO_NOMBRE
 
+    ??
 
-  const estadoNombre =
-    props.__ESTADO_NOMBRE ??
     nombreEstado(
-      estadoCodigo
+      props.__ESTADO_PREDIAL
     );
 
 
   // ===================================================
   // AVALÚO 2026
+  // ===================================================
+  //
+  // Soportamos distintas variantes del nombre.
+  //
   // ===================================================
 
   const avaluoRaw =
@@ -2052,65 +2178,49 @@ function mostrarPopupPredial(
     </div>
 
 
-    <strong>
-      Código:
-    </strong>
+    <strong>Código:</strong>
     ${codigo}
 
     <br>
 
 
-    <strong>
-      Número predial:
-    </strong>
+    <strong>Número predial:</strong>
     ${numeroPredial}
 
     <br>
 
 
-    <strong>
-      Dirección:
-    </strong>
+    <strong>Dirección:</strong>
     ${direccion}
 
     <br>
 
 
-    <strong>
-      Nombre:
-    </strong>
+    <strong>Nombre:</strong>
     ${nombre}
 
     <br>
 
 
-    <strong>
-      Documento:
-    </strong>
+    <strong>Documento:</strong>
     ${documento}
 
     <br>
 
 
-    <strong>
-      Estado:
-    </strong>
-    ${estadoNombre}
+    <strong>Estado:</strong>
+    ${estado}
 
     <br>
 
 
-    <strong>
-      Avalúo 2026:
-    </strong>
+    <strong>Avalúo 2026:</strong>
     ${avaluo}
 
     <br>
 
 
-    <strong>
-      Área:
-    </strong>
+    <strong>Área:</strong>
     ${area}
 
 
@@ -2165,262 +2275,451 @@ function mostrarPopupPredial(
       html
     )
 
-    .addTo(map);
+    .addTo(
+      map
+    );
 
 }
 
 
 // =====================================================
-// CARGAR GEOJSON + EXCEL DE EXENTOS
+// LEER EXCEL DE PREDIOS EXENTOS
 // =====================================================
 
-function cargarDatosPrediales() {
+function cargarExcelExentos() {
 
-  Promise.all([
 
-    // ===============================================
-    // BASE PREDIAL GEOJSON
-    // ===============================================
+  return fetch(
+    EXENTOS_URL
+  )
 
-    fetch(PREDIOS_URL)
 
-      .then(response => {
+    .then(
+      (response) => {
 
-        if (!response.ok) {
+
+        if (
+          !response.ok
+        ) {
 
           throw new Error(
-            `Error cargando predios: ${response.status}`
+
+            `No se pudo cargar PREDIOS EXCENTOS.xlsx. ` +
+
+            `HTTP ${response.status}`
+
           );
 
         }
 
-        return response.json();
-
-      }),
-
-
-    // ===============================================
-    // EXCEL DE PREDIOS EXENTOS
-    // ===============================================
-
-    fetch(EXENTOS_URL)
-
-      .then(response => {
-
-        if (!response.ok) {
-
-          throw new Error(
-            `Error cargando Excel de exentos: ${response.status}`
-          );
-
-        }
 
         return response.arrayBuffer();
 
-      })
+      }
+    )
 
-      .then(buffer => {
 
-        // Leer archivo XLSX
+    .then(
+      (buffer) => {
+
+
+        // =============================================
+        // COMPROBAR QUE SHEETJS ESTÉ CARGADO
+        // =============================================
+
+        if (
+          typeof XLSX ===
+          'undefined'
+        ) {
+
+          throw new Error(
+
+            'SheetJS no está cargado. ' +
+
+            'Debes incluir xlsx.full.min.js antes de index.js.'
+
+          );
+
+        }
+
+
+        // =============================================
+        // LEER WORKBOOK
+        // =============================================
+
         const workbook =
           XLSX.read(
+
             buffer,
+
             {
-              type: 'array'
+              type:
+                'array'
             }
+
           );
 
 
-        // Tomar la primera hoja
-        const primeraHoja =
+        // =============================================
+        // VALIDAR HOJAS
+        // =============================================
+
+        if (
+          !workbook.SheetNames.length
+        ) {
+
+          throw new Error(
+            'El Excel de exentos no contiene hojas.'
+          );
+
+        }
+
+
+        // =============================================
+        // PRIMERA HOJA
+        // =============================================
+
+        const nombreHoja =
           workbook.SheetNames[0];
 
 
-        const worksheet =
+        const hoja =
           workbook.Sheets[
-            primeraHoja
+            nombreHoja
           ];
 
 
-        // Convertir Excel a objetos JavaScript
+        // =============================================
+        // CONVERTIR A OBJETOS JAVASCRIPT
+        // =============================================
+
         const registros =
           XLSX.utils.sheet_to_json(
-            worksheet,
+
+            hoja,
+
             {
-              defval: '',
-              raw: false
+
+              // Si una celda está vacía
+              defval:
+                '',
+
+              // Mantener valores como texto cuando sea posible
+              raw:
+                false
+
             }
+
           );
 
 
         console.log(
-          'Registros encontrados en Excel de exentos:',
+          'Hoja Excel de exentos:',
+          nombreHoja
+        );
+
+
+        console.log(
+          'Filas leídas del Excel:',
           registros.length
         );
 
 
+        // =============================================
+        // DIAGNÓSTICO DE COLUMNAS
+        // =============================================
+
+        if (
+          registros.length
+        ) {
+
+          console.log(
+            'Columnas encontradas en Excel:',
+            Object.keys(
+              registros[0]
+            )
+          );
+
+        }
+
+
         return registros;
 
-      })
+      }
+    );
+
+}
+
+
+// =====================================================
+// CARGAR BASE PREDIAL
+// =====================================================
+
+function cargarGeoJSONPredial() {
+
+
+  return fetch(
+    PREDIOS_URL
+  )
+
+
+    .then(
+      (response) => {
+
+
+        if (
+          !response.ok
+        ) {
+
+          throw new Error(
+
+            `No se pudo cargar la base predial. ` +
+
+            `HTTP ${response.status}`
+
+          );
+
+        }
+
+
+        return response.json();
+
+      }
+    );
+
+}
+
+
+// =====================================================
+// CARGAR TODOS LOS DATOS
+// =====================================================
+//
+// Primero se cargan:
+//
+// 1. GeoJSON predial
+// 2. Excel de exentos
+//
+// Después:
+//
+// 3. Se crea EXENTOS_SET
+// 4. Se clasifican los predios
+// 5. Se crean las capas
+// 6. Se crea el highlight
+// 7. Se ajusta la vista
+// 8. Se crea la leyenda
+//
+// =====================================================
+
+function cargarDatosPrediales() {
+
+
+  Promise.all([
+
+    cargarGeoJSONPredial(),
+
+    cargarExcelExentos()
 
   ])
 
 
-  .then(
-    ([
-      predios,
-      exentos
-    ]) => {
-
-
-      // =============================================
-      // GUARDAR EXENTOS
-      // =============================================
-
-      EXENTOS_DATA =
-        exentos;
-
-
-      // =============================================
-      // CREAR SET MEDIANTE NUMERO_PREDIAL
-      // =============================================
-
-      prepararExentos(
+    .then(
+      ([
+        predios,
         exentos
-      );
+      ]) => {
 
 
-      console.log(
-        'Números prediales exentos únicos:',
-        EXENTOS_SET.size
-      );
+        // =============================================
+        // GUARDAR EXCEL
+        // =============================================
+
+        EXENTOS_DATA =
+          exentos;
 
 
-      // =============================================
-      // CLASIFICAR TODOS LOS PREDIOS
-      // =============================================
+        // =============================================
+        // PREPARAR LISTADO DE EXENTOS
+        // =============================================
 
-      const prediosClasificados =
-        clasificarGeoJSON(
-          predios
+        prepararExentos(
+          exentos
         );
 
 
-      PREDIOS_DATA =
-        prediosClasificados;
+        // =============================================
+        // CLASIFICAR GEOJSON
+        // =============================================
 
-
-      // =============================================
-      // MOSTRAR CONTEOS EN CONSOLA
-      // =============================================
-
-      mostrarResumenClasificacion(
-        PREDIOS_DATA
-      );
-
-
-      // =============================================
-      // CREAR SOURCE
-      // =============================================
-
-      crearSourcePredial(
-        PREDIOS_DATA
-      );
-
-
-      // =============================================
-      // CREAR LAS 5 CAPAS
-      // =============================================
-
-      crearCapasPrediales();
-
-
-      // =============================================
-      // HIGHLIGHT
-      // =============================================
-
-      crearHighlight();
-
-
-      // =============================================
-      // HIGHLIGHT ENCIMA DE TODO
-      // =============================================
-
-      try {
-
-        if (
-          map.getLayer(
-            'predios_highlight_fill'
-          )
-        ) {
-
-          map.moveLayer(
-            'predios_highlight_fill'
+        PREDIOS_DATA =
+          clasificarGeoJSON(
+            predios
           );
+
+
+        // =============================================
+        // MOSTRAR CONTEOS
+        // =============================================
+
+        mostrarResumenClasificacion(
+          PREDIOS_DATA
+        );
+
+
+        // =============================================
+        // CREAR SOURCE
+        // =============================================
+
+        crearSourcePredial(
+          PREDIOS_DATA
+        );
+
+
+        // =============================================
+        // CREAR LAS CINCO CAPAS
+        // =============================================
+
+        crearCapasPrediales();
+
+
+        // =============================================
+        // CREAR HIGHLIGHT
+        // =============================================
+
+        crearHighlight();
+
+
+        // =============================================
+        // HIGHLIGHT SIEMPRE ARRIBA
+        // =============================================
+
+        try {
+
+
+          if (
+            map.getLayer(
+              'predios_highlight_fill'
+            )
+          ) {
+
+            map.moveLayer(
+              'predios_highlight_fill'
+            );
+
+          }
+
+
+          if (
+            map.getLayer(
+              'predios_highlight_line'
+            )
+          ) {
+
+            map.moveLayer(
+              'predios_highlight_line'
+            );
+
+          }
+
 
         }
 
+        catch (error) {}
+
+
+        // =============================================
+        // ZOOM INICIAL
+        // =============================================
+
+        ajustarVistaMunicipio(
+          PREDIOS_DATA
+        );
+
+
+        // =============================================
+        // CREAR LEYENDA
+        // =============================================
+        //
+        // Esta función viene en la Parte 4.
+        //
+        // =============================================
+
+        crearLeyendaEstados();
+
+      }
+    )
+
+
+    .catch(
+      (error) => {
+
+
+        console.error(
+          'ERROR CARGANDO VISOR PREDIAL:',
+          error
+        );
+
+
+        // Mostrar un mensaje visible
+        // para facilitar diagnóstico.
+        const infoBox =
+          document.querySelector(
+            '.info-box'
+          );
+
 
         if (
-          map.getLayer(
-            'predios_highlight_line'
-          )
+          infoBox
         ) {
 
-          map.moveLayer(
-            'predios_highlight_line'
-          );
+          infoBox.style.display =
+            'block';
+
+
+          const content =
+            infoBox.querySelector(
+              '.info-content'
+            );
+
+
+          if (
+            content
+          ) {
+
+            content.innerHTML =
+
+              '<strong>Error cargando los datos.</strong><br>' +
+
+              'Revisa la consola del navegador.';
+
+          }
 
         }
 
-      } catch (e) {}
-
-
-      // =============================================
-      // ZOOM INICIAL A SESQUILÉ
-      // =============================================
-
-      ajustarVistaMunicipio(
-        PREDIOS_DATA
-      );
-
-
-      // =============================================
-      // LEYENDA ON/OFF
-      // =============================================
-
-      crearLeyendaEstados();
-
-    }
-
-  )
-
-
-  .catch(
-    error => {
-
-      console.error(
-        'Error cargando datos prediales:',
-        error
-      );
-
-    }
-  );
+      }
+    );
 
 }
 // =====================================================
-// PARTE 4
-// LEYENDA INTERACTIVA + BUSCADOR
+// PARTE 4 DE 5
+// LEYENDA INTERACTIVA + BUSCADOR PREDIAL
 // =====================================================
 
 
 // =====================================================
-// CREAR LEYENDA DE ESTADOS
+// CREAR LEYENDA INTERACTIVA
 // =====================================================
 //
-// Requiere en el HTML:
+// El HTML debe contener:
 //
 // <div id="estado-legend-list"></div>
+//
+// JavaScript insertará automáticamente:
+//
+// 🔵 Predios públicos        ON
+// 🟣 Predios exentos         ON
+// 🔴 Predios con mora        ON
+// 🟢 Predios al día          ON
+// 🟠 Posibles sin pagar      ON
 //
 // =====================================================
 
@@ -2445,7 +2744,7 @@ function crearLeyendaEstados() {
   }
 
 
-  // Limpiar para evitar duplicados
+  // Limpiar contenido anterior
   container.innerHTML =
     '';
 
@@ -2473,7 +2772,7 @@ function crearLeyendaEstados() {
 
 
       // ===============================================
-      // LADO IZQUIERDO
+      // INFORMACIÓN IZQUIERDA
       // ===============================================
 
       const info =
@@ -2523,7 +2822,7 @@ function crearLeyendaEstados() {
 
 
       // ===============================================
-      // ARMAR INFORMACIÓN
+      // ARMAR IZQUIERDA
       // ===============================================
 
       info.appendChild(
@@ -2567,7 +2866,7 @@ function crearLeyendaEstados() {
 
 
       // ===============================================
-      // EVENTO ON / OFF
+      // EVENTO DEL BOTÓN
       // ===============================================
 
       boton.addEventListener(
@@ -2575,16 +2874,16 @@ function crearLeyendaEstados() {
         () => {
 
 
-          const visibleActual =
-
+          const estaVisible =
             boton.dataset.visible ===
             'true';
 
 
           const nuevaVisibilidad =
-            !visibleActual;
+            !estaVisible;
 
 
+          // Guardar estado
           boton.dataset.visible =
             nuevaVisibilidad
               ? 'true'
@@ -2592,7 +2891,7 @@ function crearLeyendaEstados() {
 
 
           // ===========================================
-          // CAMBIAR CAPA
+          // PRENDER / APAGAR CAPA
           // ===========================================
 
           if (
@@ -2617,7 +2916,7 @@ function crearLeyendaEstados() {
 
 
           // ===========================================
-          // CAMBIAR BOTÓN
+          // CAMBIAR TEXTO
           // ===========================================
 
           boton.textContent =
@@ -2625,6 +2924,10 @@ function crearLeyendaEstados() {
               ? 'ON'
               : 'OFF';
 
+
+          // ===========================================
+          // CLASE VISUAL
+          // ===========================================
 
           boton.classList.toggle(
             'activo',
@@ -2649,14 +2952,16 @@ function crearLeyendaEstados() {
 
             popup.remove();
 
-          } catch (e) {}
+          }
+
+          catch (error) {}
 
         }
       );
 
 
       // ===============================================
-      // ARMAR FILA
+      // ARMAR FILA COMPLETA
       // ===============================================
 
       item.appendChild(
@@ -2680,7 +2985,7 @@ function crearLeyendaEstados() {
 
 
 // =====================================================
-// NORMALIZAR TEXTO PARA EL BUSCADOR
+// NORMALIZAR TEXTO PARA BÚSQUEDA
 // =====================================================
 
 function normalizarBusqueda(
@@ -2702,7 +3007,7 @@ function normalizarBusqueda(
 
 
 // =====================================================
-// GEOCODER LOCAL
+// BUSCADOR LOCAL
 // =====================================================
 
 const geocoder =
@@ -2721,11 +3026,11 @@ const geocoder =
       true,
 
     placeholder:
-      'Buscar por código, nombre o documento',
+      'Buscar código, nombre, documento o predial',
 
 
     // =================================================
-    // BÚSQUEDA LOCAL
+    // FUNCIÓN DE BÚSQUEDA
     // =================================================
 
     localGeocoder:
@@ -2754,13 +3059,16 @@ const geocoder =
 
 
         // =============================================
-        // VALIDAR DATASET
+        // OBTENER FEATURES
         // =============================================
 
         const features =
 
           (
-            PREDIOS_DATA &&
+            PREDIOS_DATA
+
+            &&
+
             Array.isArray(
               PREDIOS_DATA.features
             )
@@ -2793,7 +3101,7 @@ const geocoder =
 
 
             // =========================================
-            // CAMPOS
+            // CAMPOS BUSCABLES
             // =========================================
 
             const codigo =
@@ -2821,7 +3129,7 @@ const geocoder =
 
 
             // =========================================
-            // COINCIDENCIA
+            // COINCIDENCIAS
             // =========================================
 
             const coincideCodigo =
@@ -2839,16 +3147,27 @@ const geocoder =
               documento.includes(q);
 
 
-            const coincideNumeroPredial =
+            const coincidePredial =
               numeroPredial &&
               numeroPredial.includes(q);
 
 
             if (
-              !coincideCodigo &&
-              !coincideNombre &&
-              !coincideDocumento &&
-              !coincideNumeroPredial
+
+              !coincideCodigo
+
+              &&
+
+              !coincideNombre
+
+              &&
+
+              !coincideDocumento
+
+              &&
+
+              !coincidePredial
+
             ) {
 
               return;
@@ -2857,7 +3176,7 @@ const geocoder =
 
 
             // =========================================
-            // CENTRO
+            // CENTRO DEL PREDIO
             // =========================================
 
             let centro;
@@ -2867,7 +3186,7 @@ const geocoder =
 
               centro =
                 turf
-                  .centroid(
+                  .pointOnFeature(
                     feature
                   )
                   .geometry
@@ -2875,7 +3194,7 @@ const geocoder =
 
             }
 
-            catch (e) {
+            catch (error) {
 
               centro = [
                 -73.79724,
@@ -2886,7 +3205,7 @@ const geocoder =
 
 
             // =========================================
-            // IDENTIFICAR CAMPO QUE COINCIDIÓ
+            // IDENTIFICAR CAMPO DE COINCIDENCIA
             // =========================================
 
             let matchField =
@@ -2922,7 +3241,7 @@ const geocoder =
             }
 
             else if (
-              coincideNumeroPredial
+              coincidePredial
             ) {
 
               matchField =
@@ -2950,7 +3269,7 @@ const geocoder =
             // COPIAR PROPIEDADES
             // =========================================
 
-            const propsResultado = {
+            const properties = {
 
               ...props,
 
@@ -2964,26 +3283,7 @@ const geocoder =
 
 
             // =========================================
-            // TEXTO DEL RESULTADO
-            // =========================================
-
-            const codigoTexto =
-              props.codigo ??
-              'N/A';
-
-
-            const nombreTexto =
-              props.NOMBRE ??
-              'N/A';
-
-
-            const estadoTexto =
-              props.__ESTADO_NOMBRE ??
-              'Sin clasificar';
-
-
-            // =========================================
-            // AGREGAR RESULTADO
+            // RESULTADO
             // =========================================
 
             resultados.push({
@@ -2995,22 +3295,32 @@ const geocoder =
                 feature.geometry,
 
               properties:
-                propsResultado,
+                properties,
 
               center:
                 centro,
 
               place_name:
 
-                `Código: ${codigoTexto} | ` +
+                `Código: ${
+                  props.codigo ?? 'N/A'
+                } | ` +
 
-                `${nombreTexto} | ` +
+                `${
+                  props.NOMBRE ?? 'N/A'
+                } | ` +
 
-                `${estadoTexto}`,
+                `${
+                  props.__ESTADO_NOMBRE ??
+                  'Sin clasificar'
+                }`,
 
               text:
-                codigoTexto
-                  .toString(),
+                (
+                  props.codigo ??
+                  props.NUMERO_PREDIAL ??
+                  'Resultado'
+                ).toString(),
 
               place_type:
                 ['place']
@@ -3036,7 +3346,7 @@ const geocoder =
 
 
 // =====================================================
-// AGREGAR BUSCADOR
+// AGREGAR BUSCADOR AL MAPA
 // =====================================================
 
 map.addControl(
@@ -3049,7 +3359,7 @@ map.addControl(
 
 
 // =====================================================
-// RESULTADO DEL BUSCADOR
+// AL SELECCIONAR UN RESULTADO
 // =====================================================
 
 geocoder.on(
@@ -3084,13 +3394,16 @@ geocoder.on(
 
 
     // =================================================
-    // TODOS LOS PREDIOS
+    // OBTENER TODOS LOS PREDIOS
     // =================================================
 
     const features =
 
       (
-        PREDIOS_DATA &&
+        PREDIOS_DATA
+
+        &&
+
         Array.isArray(
           PREDIOS_DATA.features
         )
@@ -3110,8 +3423,10 @@ geocoder.on(
 
 
     // =================================================
-    // SI BUSCA POR CÓDIGO, DOCUMENTO O NÚMERO PREDIAL
-    // RESALTAR TODAS LAS COINCIDENCIAS EXACTAS
+    // CÓDIGO / DOCUMENTO / NUMERO_PREDIAL
+    //
+    // Si hay varios predios con el mismo valor,
+    // se resaltan todos.
     // =================================================
 
     if (
@@ -3169,22 +3484,38 @@ geocoder.on(
               feature.properties || {};
 
 
-            const valor =
+            let valor;
 
+
+            if (
               matchField ===
-                'codigo'
+              'codigo'
+            ) {
 
-                ? p.codigo
+              valor =
+                p.codigo;
 
-                : matchField ===
-                    'NUMERO_DOCUMENTO'
+            }
 
-                  ? p.NUMERO_DOCUMENTO
+            else if (
+              matchField ===
+              'NUMERO_DOCUMENTO'
+            ) {
 
-                  : p.NUMERO_PREDIAL;
+              valor =
+                p.NUMERO_DOCUMENTO;
+
+            }
+
+            else {
+
+              valor =
+                p.NUMERO_PREDIAL;
+
+            }
 
 
-            const valorNormalizado =
+            const normalizado =
 
               matchField ===
                 'NUMERO_PREDIAL'
@@ -3199,7 +3530,7 @@ geocoder.on(
 
 
             return (
-              valorNormalizado ===
+              normalizado ===
               valorBuscado
             );
 
@@ -3239,20 +3570,20 @@ geocoder.on(
 
 
     // =================================================
-    // RESALTAR
+    // HIGHLIGHT
     // =================================================
 
-    const source =
+    const highlightSource =
       map.getSource(
         'predios_highlight'
       );
 
 
     if (
-      source
+      highlightSource
     ) {
 
-      source.setData(
+      highlightSource.setData(
         fc
       );
 
@@ -3260,11 +3591,10 @@ geocoder.on(
 
 
     // =================================================
-    // ZOOM A LA SELECCIÓN
+    // ZOOM A RESULTADO
     // =================================================
 
     try {
-
 
       const bounds =
         turf.bbox(
@@ -3291,13 +3621,12 @@ geocoder.on(
 
       );
 
-
     }
 
     catch (error) {
 
       console.error(
-        'Error haciendo zoom al predio:',
+        'Error haciendo zoom al resultado:',
         error
       );
 
@@ -3305,7 +3634,7 @@ geocoder.on(
 
 
     // =================================================
-    // POPUP
+    // CENTRO DEL POPUP
     // =================================================
 
     let center;
@@ -3314,7 +3643,9 @@ geocoder.on(
     try {
 
       center =
-        result.center ||
+        result.center
+
+        ||
 
         turf
           .pointOnFeature(
@@ -3325,10 +3656,13 @@ geocoder.on(
 
     }
 
-    catch (e) {
+    catch (error) {
 
       center =
-        result.center ||
+        result.center
+
+        ||
+
         [-73.79724, 5.04463];
 
     }
@@ -3346,20 +3680,23 @@ geocoder.on(
       const punto =
         turf
           .pointOnFeature(
-            fc
+            result
           )
           .geometry
           .coordinates;
 
 
       svLngLat = [
+
         punto[0],
+
         punto[1]
+
       ];
 
     }
 
-    catch (e) {
+    catch (error) {
 
       svLngLat =
         getFeatureLngLat(
@@ -3370,7 +3707,7 @@ geocoder.on(
 
 
     // =================================================
-    // MOSTRAR POPUP
+    // POPUP
     // =================================================
 
     mostrarPopupPredial(
@@ -3386,8 +3723,8 @@ geocoder.on(
   }
 );
 // =====================================================
-// PARTE 5 — FINAL
-// CARGA DEL MAPA + ORDEN DE CAPAS
+// PARTE 5 DE 5 — FINAL
+// CARGA DEL MAPA + ORDEN DE CAPAS + LIMPIEZA
 // =====================================================
 
 
@@ -3401,19 +3738,33 @@ map.on(
 
 
     // =================================================
-    // CARGAR DATOS PREDIALES
+    // CARGAR TODO
     // =================================================
     //
-    // Esta función:
+    // cargarDatosPrediales() realiza:
     //
-    // 1. Carga la base predial
-    // 2. Carga predios_exentos.json
+    // 1. Carga:
+    //    PREDIOS_MUNICIPIO_SESQUILE_JOIN_4326.geojson
+    //
+    // 2. Carga:
+    //    PREDIOS EXCENTOS.xlsx
+    //
     // 3. Cruza NUMERO_PREDIAL
-    // 4. Clasifica cada predio
+    //
+    // 4. Clasifica:
+    //    PÚBLICO
+    //    EXENTO
+    //    MORA
+    //    AL DÍA
+    //    POSIBLE SIN PAGAR
+    //
     // 5. Crea las cinco capas
-    // 6. Crea el highlight
-    // 7. Ajusta el mapa a Sesquilé
-    // 8. Crea la leyenda ON/OFF
+    //
+    // 6. Crea highlight
+    //
+    // 7. Ajusta zoom a Sesquilé
+    //
+    // 8. Crea leyenda ON/OFF
     //
     // =================================================
 
@@ -3424,24 +3775,20 @@ map.on(
 
 
 // =====================================================
-// ASEGURAR ORDEN DE CAPAS
-// =====================================================
-//
-// El highlight amarillo debe quedar siempre
-// por encima de todas las categorías.
-//
+// MANTENER HIGHLIGHT ENCIMA
 // =====================================================
 
 map.on(
   'idle',
   () => {
 
+
     try {
 
 
-      // =================================================
-      // HIGHLIGHT — RELLENO
-      // =================================================
+      // ===============================================
+      // RELLENO AMARILLO
+      // ===============================================
 
       if (
         map.getLayer(
@@ -3456,9 +3803,9 @@ map.on(
       }
 
 
-      // =================================================
-      // HIGHLIGHT — CONTORNO
-      // =================================================
+      // ===============================================
+      // CONTORNO AMARILLO
+      // ===============================================
 
       if (
         map.getLayer(
@@ -3478,7 +3825,7 @@ map.on(
     catch (error) {
 
       console.error(
-        'Error organizando capas:',
+        'Error organizando highlight:',
         error
       );
 
@@ -3489,8 +3836,19 @@ map.on(
 
 
 // =====================================================
-// CERRAR POPUP Y SELECCIÓN
-// AL HACER CLICK FUERA DE LOS PREDIOS
+// CLICK GENERAL DEL MAPA
+// =====================================================
+//
+// Si el usuario hace click FUERA de cualquier predio:
+//
+// - limpia el highlight
+// - cierra el popup
+//
+// Si hace click SOBRE un predio:
+//
+// - NO limpia la selección
+// - el evento específico de la capa muestra el popup
+//
 // =====================================================
 
 map.on(
@@ -3499,25 +3857,27 @@ map.on(
 
 
     // =================================================
-    // CAPAS PREDIALES DISPONIBLES
+    // OBTENER CAPAS QUE EXISTEN
     // =================================================
 
     const capasExistentes =
+
       ORDEN_ESTADOS
 
         .map(
-          estado =>
+          (estado) =>
             estado.layerId
         )
 
         .filter(
-          layerId =>
+          (layerId) =>
             map.getLayer(
               layerId
             )
         );
 
 
+    // Si las capas todavía no cargaron
     if (
       !capasExistentes.length
     ) {
@@ -3528,7 +3888,7 @@ map.on(
 
 
     // =================================================
-    // BUSCAR SI EL CLICK TOCÓ ALGÚN PREDIO
+    // COMPROBAR SI HIZO CLICK SOBRE ALGÚN PREDIO
     // =================================================
 
     const features =
@@ -3537,24 +3897,29 @@ map.on(
         e.point,
 
         {
+
           layers:
             capasExistentes
+
         }
 
       );
 
 
     // =================================================
-    // SI HIZO CLICK FUERA DE LOS PREDIOS
+    // CLICK FUERA DE LOS PREDIOS
     // =================================================
 
     if (
       !features.length
     ) {
 
+
+      // Limpiar selección
       limpiarHighlight();
 
 
+      // Cerrar popup
       try {
 
         popup.remove();
@@ -3570,11 +3935,16 @@ map.on(
 
 
 // =====================================================
-// RESIZE
+// CAMBIO DE TAMAÑO DE PANTALLA
 // =====================================================
 //
-// Mantiene el mapa correctamente ajustado si cambia
-// el tamaño de la ventana.
+// Importante para:
+//
+// - computador
+// - celular
+// - tablet
+// - rotación de pantalla
+// - cambio de tamaño de ventana
 //
 // =====================================================
 
@@ -3589,7 +3959,7 @@ window.addEventListener(
 
 
 // =====================================================
-// DEBUG GENERAL
+// DEBUG DEL MAPA
 // =====================================================
 
 map.on(
