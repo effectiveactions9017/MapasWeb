@@ -52,7 +52,7 @@ const PREDIOS_URL =
 
 
 const EXENTOS_URL =
-  `${DATA_PATH}predios_exentos.json`;
+  `${DATA_PATH}PREDIOS EXCENTOS.xlsx`;
 
 
 // =====================================================
