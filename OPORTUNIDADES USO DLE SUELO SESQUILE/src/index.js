@@ -1185,11 +1185,11 @@ function cargarPredios() {
         }
 
 
-        // =============================================
-        // CREAR UNA CAPA POR DESTINO
-        // =============================================
+       // =====================================================
+// CREAR UNA CAPA POR DESTINO
+// =====================================================
 
-        ESTINOS.forEach(
+DESTINOS.forEach(
   (destino) => {
 
     crearCapaDestino(
@@ -1199,98 +1199,104 @@ function cargarPredios() {
   }
 );
 
+
+// =====================================================
+// OTROS / SIN INFORMACIÓN
+// =====================================================
+
 crearCapaOtros();
 
-// Crear leyenda interactiva
+
+// =====================================================
+// CREAR LEYENDA INTERACTIVA
+// =====================================================
+
 crearLeyendaDestinos();
 
 
-        // =============================================
-        // OTROS / SIN INFORMACIÓN
-        // =============================================
+// =====================================================
+// ZOOM INICIAL A TODO SESQUILÉ
+// =====================================================
 
-        crearCapaOtros();
-
-
-        // =============================================
-        // ZOOM INICIAL A TODO SESQUILÉ
-        // =============================================
-
-        try {
+try {
 
 
-          const municipioBounds =
-            turf.bbox(
-              data
-            );
+  const municipioBounds =
+    turf.bbox(
+      data
+    );
 
 
-          if (
+  if (
 
-            municipioBounds &&
+    municipioBounds &&
 
-            municipioBounds.length ===
-              4 &&
+    municipioBounds.length ===
+      4 &&
 
-            municipioBounds.every(
-              Number.isFinite
-            )
-
-          ) {
-
-            map.fitBounds(
-
-              municipioBounds,
-
-              {
-
-                padding:
-                  35,
-
-                duration:
-                  1200,
-
-                maxZoom:
-                  16
-
-              }
-
-            );
-
-          }
-
-
-        } catch (error) {
-
-
-          console.error(
-
-            'Error ajustando vista al municipio:',
-
-            error
-
-          );
-
-        }
-
-      }
-
+    municipioBounds.every(
+      Number.isFinite
     )
 
+  ) {
 
-    .catch(
-      (error) => {
+    map.fitBounds(
 
-        console.error(
+      municipioBounds,
 
-          'Error cargando predios:',
+      {
 
-          error
+        padding:
+          35,
 
-        );
+        duration:
+          1200,
+
+        maxZoom:
+          16
 
       }
+
     );
+
+  }
+
+
+} catch (error) {
+
+
+  console.error(
+
+    'Error ajustando vista al municipio:',
+
+    error
+
+  );
+
+}
+
+}
+
+)
+
+
+// =====================================================
+// ERROR CARGANDO LOS PREDIOS
+// =====================================================
+
+.catch(
+  (error) => {
+
+    console.error(
+
+      'Error cargando predios:',
+
+      error
+
+    );
+
+  }
+);
 
 }
 // =====================================================
