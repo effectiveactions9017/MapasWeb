@@ -1,6 +1,13 @@
+/* =====================================================
+   CONFIGURACIÓN GENERAL
+   ===================================================== */
+
+html,
 body {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
     font-family: 'Libre Franklin', sans-serif;
 }
 
@@ -11,163 +18,433 @@ body {
     width: 100%;
 }
 
-/* =========================
-   LEYENDA
-   ========================= */
+
+/* =====================================================
+   LEYENDA — BONOS DE CARBONO
+   ===================================================== */
+
 .legend-container {
     position: absolute;
-    bottom: 25px;
-    right: 5px;
-    z-index: 10;
-    background-color: rgba(0, 0, 0, 0.7);
-    padding: 15px;
+
+    bottom: 20px;
+    right: 10px;
+
+    z-index: 20;
+
+    background-color: rgba(0, 0, 0, 0.78);
+
+    padding: 11px;
+
     border-radius: 8px;
+
     width: 220px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+
+    max-width: calc(100vw - 20px);
+
+    box-sizing: border-box;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.45);
+
     color: white;
+
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
+
+/* =====================================================
+   TÍTULO
+   ===================================================== */
+
 .legend-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 10px;
+    font-size: 13px;
+
+    font-weight: 700;
+
+    margin-bottom: 9px;
+
     text-align: left;
+
     color: white;
+
     line-height: 1.2;
 }
 
+
+/* =====================================================
+   LISTA
+   ===================================================== */
+
 .legend-list {
     list-style: none;
+
     padding: 0;
+
     margin: 0;
 }
 
+
 .legend-list li {
     display: flex;
+
     align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
+
+    gap: 8px;
+
+    margin-bottom: 7px;
+
+    font-size: 11px;
+
+    line-height: 1.2;
+
     color: white;
 }
 
-/* ====== CUADROS DE COLOR (FIX FLEX) ====== */
+
+/* =====================================================
+   CUADROS DE COLOR
+   ===================================================== */
+
 .legend-color {
-    display: inline-block !important;
-    width: 18px !important;
-    height: 18px !important;
-    min-width: 18px !important;
-    min-height: 18px !important;
+    display: inline-block;
+
+    width: 14px;
+    height: 14px;
+
+    min-width: 14px;
+    min-height: 14px;
+
+    flex: 0 0 14px;
+
     border-radius: 3px;
-    border: 1px solid #ffffff;
-    flex: 0 0 18px;
+
+    border: 1px solid rgba(255, 255, 255, 0.9);
+
+    box-sizing: border-box;
 }
 
-/* =========================
-   COLORES BONOS DE CARBONO
-   ========================= */
 
-/* 🟢 Oportunidad de bonos de carbono */
+/* =====================================================
+   OPORTUNIDAD DE CARBONO
+   ===================================================== */
+
 .legend-color.bonos-oportunidad {
     background-color: #2ec4b6;
 }
 
-/* 🔴 Pérdidas de bonos de carbono */
+
+/* =====================================================
+   PÉRDIDA DE BOSQUE / CARBONO
+   ===================================================== */
+
 .legend-color.bonos-perdidas {
     background-color: #ff595e;
 }
 
-/* =========================
-   CLASES ANTIGUAS (SE CONSERVAN)
-   ========================= */
-.legend-color.predios-municipales {
-    background-color: #2ec4b6;
+
+/* =====================================================
+   SÍMBOLOS DE LÍNEA
+   ===================================================== */
+
+.legend-line {
+    display: inline-block;
+
+    width: 22px;
+
+    min-width: 22px;
+
+    height: 0;
+
+    flex: 0 0 22px;
+
+    box-sizing: border-box;
 }
 
-.legend-color.predios-sin-info {
-    background-color: #ffb703;
+
+/* =====================================================
+   LÍMITE MUNICIPAL
+   Debe coincidir con index.js:
+   #ffffff / 2px
+   ===================================================== */
+
+.legend-line.limite-municipal {
+    border-top: 2px solid #ffffff;
 }
 
-.legend-color.predio-seleccionado {
-    background-color: #ffff00;
+
+/* =====================================================
+   LÍMITE URBANO
+   Debe coincidir con index.js:
+   #ffd166 / 2px
+   ===================================================== */
+
+.legend-line.limite-urbano {
+    border-top: 2px solid #ffd166;
 }
 
-.c_viejas { background-color: #AAB7B8; }
-.c_nuevas { background-color: #A569BD; }
-.c_aumento { background-color: #F7DC6F; }
-.dem_p { background-color: #F5B041; }
-.dem_t { background-color: #E74C3C; }
 
-/* =========================
+/* =====================================================
+   CRÉDITO
+   ===================================================== */
+
+.legend-credit {
+    margin-top: 8px;
+
+    padding-top: 6px;
+
+    border-top:
+        1px solid rgba(255, 255, 255, 0.12);
+
+    font-size: 8px;
+
+    color: #00bcd4;
+}
+
+
+/* =====================================================
    CAJA DE INFORMACIÓN
-   ========================= */
+   ===================================================== */
+
 .info-box {
+    position: absolute;
+
     left: 10px;
     top: 310px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 10px;
-    font-family: Arial, sans-serif;
-    font-size: 10px;
-    border-radius: 8px;
-    position: absolute;
+
     z-index: 10;
+
     width: 220px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+
+    padding: 10px;
+
+    background-color:
+        rgba(0, 0, 0, 0.75);
+
+    color: white;
+
+    font-family:
+        'Libre Franklin',
+        sans-serif;
+
+    font-size: 10px;
+
+    border-radius: 8px;
+
+    box-shadow:
+        0 2px 5px rgba(0, 0, 0, 0.5);
+
     display: none;
 }
 
+
 .info-box h3 {
-    margin: 0 0 10px 0;
-    font-weight: bold;
+    margin:
+        0 0 10px 0;
+
+    font-weight: 700;
+
     font-size: 14px;
 }
 
-/* =========================
+
+/* =====================================================
    POPUP PERSONALIZADO
-   ========================= */
+   ===================================================== */
+
 .custom-popup .mapboxgl-popup-content {
-    font-size: 0.8rem;
-    padding: 10px 15px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
+    font-size: 12px;
+
+    line-height: 1.35;
+
+    padding: 10px 14px;
+
+    background-color:
+        rgba(0, 0, 0, 0.86);
+
+    color: #ffffff;
+
     border-radius: 8px;
-    max-width: 260px;
+
+    max-width: 270px;
+
+    font-family:
+        'Libre Franklin',
+        sans-serif;
+
+    box-shadow:
+        0 3px 12px rgba(0, 0, 0, 0.35);
 }
 
-.mapboxgl-popup-content a {
+
+/* =====================================================
+   LINKS DEL POPUP
+   ===================================================== */
+
+.custom-popup .mapboxgl-popup-content a {
     color: #00bcd4;
+
     text-decoration: none;
 }
 
-.mapboxgl-popup-content a:hover {
+
+.custom-popup .mapboxgl-popup-content a:hover {
     text-decoration: underline;
 }
 
-/* Flechas del popup */
-.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
-    border-bottom-color: rgba(0, 0, 0, 0.8);
+
+/* =====================================================
+   BOTÓN CERRAR POPUP
+   ===================================================== */
+
+.custom-popup .mapboxgl-popup-close-button {
+    color: white;
+
+    font-size: 18px;
+
+    padding: 2px 6px;
 }
 
-.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
-.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
-    border-top-color: rgba(0, 0, 0, 0.8);
+
+/* =====================================================
+   FLECHAS DEL POPUP
+   ===================================================== */
+
+.mapboxgl-popup-anchor-top
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-top-left
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-top-right
+.mapboxgl-popup-tip {
+
+    border-bottom-color:
+        rgba(0, 0, 0, 0.86);
 }
 
-.mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
-    border-right-color: rgba(0, 0, 0, 0.8);
+
+.mapboxgl-popup-anchor-bottom
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-bottom-left
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-bottom-right
+.mapboxgl-popup-tip {
+
+    border-top-color:
+        rgba(0, 0, 0, 0.86);
 }
 
-.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
-    border-left-color: rgba(0, 0, 0, 0.8);
+
+.mapboxgl-popup-anchor-left
+.mapboxgl-popup-tip {
+
+    border-right-color:
+        rgba(0, 0, 0, 0.86);
 }
 
-/* =========================
-   GEOCODER (si lo vuelves a usar)
-   ========================= */
+
+.mapboxgl-popup-anchor-right
+.mapboxgl-popup-tip {
+
+    border-left-color:
+        rgba(0, 0, 0, 0.86);
+}
+
+
+/* =====================================================
+   GEOCODER
+   ===================================================== */
+
 .mapboxgl-ctrl-geocoder {
     width: 300px !important;
+
+    max-width:
+        calc(100vw - 70px) !important;
+}
+
+
+/* =====================================================
+   RESPONSIVE — CELULAR
+   ===================================================== */
+
+@media (max-width: 600px) {
+
+    .legend-container {
+        right: 7px;
+
+        bottom: 10px;
+
+        width: 190px;
+
+        max-width:
+            calc(100vw - 14px);
+
+        padding: 9px;
+    }
+
+
+    .legend-title {
+        font-size: 11px;
+
+        margin-bottom: 7px;
+    }
+
+
+    .legend-list li {
+        gap: 6px;
+
+        margin-bottom: 5px;
+
+        font-size: 9.5px;
+    }
+
+
+    .legend-color {
+        width: 11px;
+        height: 11px;
+
+        min-width: 11px;
+        min-height: 11px;
+
+        flex-basis: 11px;
+    }
+
+
+    .legend-line {
+        width: 18px;
+
+        min-width: 18px;
+
+        flex-basis: 18px;
+    }
+
+
+    .legend-credit {
+        margin-top: 5px;
+
+        padding-top: 4px;
+
+        font-size: 7px;
+    }
+
+
+    .custom-popup .mapboxgl-popup-content {
+        max-width: 220px;
+
+        padding: 8px 10px;
+
+        font-size: 11px;
+    }
+
+
+    .mapboxgl-ctrl-geocoder {
+        width: 230px !important;
+
+        max-width:
+            calc(100vw - 70px) !important;
+    }
+
 }
