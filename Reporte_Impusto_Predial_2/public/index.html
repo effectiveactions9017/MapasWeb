@@ -2,115 +2,258 @@
 <html lang="es">
 
 <head>
+
   <meta charset="utf-8">
-  <title>Predial Sesquilé</title>
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+
+  <title>
+    Predial Sesquilé
+  </title>
+
+  <meta
+    name="viewport"
+    content="initial-scale=1,maximum-scale=1,user-scalable=no"
+  >
+
+
+  <!-- ================================================= -->
+  <!-- MAPBOX GL JS -->
+  <!-- ================================================= -->
 
   <link
     href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css"
     rel="stylesheet"
   />
-  <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
-  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+  <script
+    src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js">
+  </script>
+
+
+  <!-- ================================================= -->
+  <!-- MAPBOX GEOCODER -->
+  <!-- ================================================= -->
+
+  <script
+    src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js">
+  </script>
+
   <link
     rel="stylesheet"
     href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css"
   />
 
-  <script src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js"></script>
+
+  <!-- ================================================= -->
+  <!-- TURF.JS -->
+  <!-- ================================================= -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@turf/turf/turf.min.js">
+  </script>
+
+
+  <!-- ================================================= -->
+  <!-- FUENTE -->
+  <!-- ================================================= -->
 
   <link
     href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&display=swap"
     rel="stylesheet"
   >
+
+
+  <!-- ================================================= -->
+  <!-- MAPBOX ASSEMBLY -->
+  <!-- ================================================= -->
+
   <link
     href="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.min.css"
     rel="stylesheet"
   >
-  <script async defer src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js"></script>
 
-  <link rel="stylesheet" href="../src/main.css" />
+  <script
+    async
+    defer
+    src="https://api.mapbox.com/mapbox-assembly/v1.5.1/assembly.js">
+  </script>
+
+
+  <!-- ================================================= -->
+  <!-- CSS PERSONALIZADO -->
+  <!-- ================================================= -->
+
+  <link
+    rel="stylesheet"
+    href="../src/main.css"
+  />
+
+
+  <!-- ================================================= -->
+  <!-- ESTILOS BÁSICOS -->
+  <!-- ================================================= -->
 
   <style>
-    html, body {
+
+    html,
+    body {
+
       margin: 0;
+
       padding: 0;
+
       width: 100%;
+
       height: 100%;
+
     }
 
+
     #map {
+
       position: absolute;
+
       top: 0;
+
       bottom: 0;
+
       width: 100%;
+
     }
+
   </style>
+
 </head>
+
 
 <body>
 
+
+  <!-- ================================================= -->
+  <!-- MAPA -->
+  <!-- ================================================= -->
+
   <div id="map"></div>
 
-  <div class="legend-container">
+
+  <!-- ================================================= -->
+  <!-- LEYENDA PREDIAL -->
+  <!-- ================================================= -->
+  <!--
+       IMPORTANTE:
+
+       Las cinco categorías NO se escriben aquí.
+
+       index.js las crea automáticamente:
+
+       🔵 Predios públicos
+       🟣 Predios exentos
+       🔴 Predios con mora
+       🟢 Predios al día
+       🟠 Posibles sin pagar
+
+       Cada una tendrá su botón ON / OFF.
+  -->
+  <!-- ================================================= -->
+
+  <div
+    class="legend-container"
+    id="predial-legend"
+  >
+
+
+    <!-- =============================================== -->
+    <!-- TÍTULO -->
+    <!-- =============================================== -->
+
     <div class="legend-title">
-      Predial<br>Sesquilé
+
+      Predial
+      <br>
+      Sesquilé
+
     </div>
 
-    <ul class="legend-list">
 
-      <li class="legend-item">
-        <div class="legend-item-left">
-          <span class="legend-color" style="background:#4fc3f7;"></span>
-          <span class="legend-label">Predios públicos</span>
-        </div>
-        <button class="legend-toggle active" data-category="publicos">ON</button>
-      </li>
+    <!-- =============================================== -->
+    <!-- LISTA DINÁMICA -->
+    <!-- =============================================== -->
+    <!--
+         JavaScript insertará aquí automáticamente
+         las cinco categorías.
+    -->
 
-      <li class="legend-item">
-        <div class="legend-item-left">
-          <span class="legend-color" style="background:#9b5de5;"></span>
-          <span class="legend-label">Predios exentos</span>
-        </div>
-        <button class="legend-toggle active" data-category="exentos">ON</button>
-      </li>
+    <div id="estado-legend-list"></div>
 
-      <li class="legend-item">
-        <div class="legend-item-left">
-          <span class="legend-color" style="background:#e63946;"></span>
-          <span class="legend-label">Predios con mora</span>
-        </div>
-        <button class="legend-toggle active" data-category="mora">ON</button>
-      </li>
 
-      <li class="legend-item">
-        <div class="legend-item-left">
-          <span class="legend-color" style="background:#2ec4b6;"></span>
-          <span class="legend-label">Predios al día</span>
-        </div>
-        <button class="legend-toggle active" data-category="aldia">ON</button>
-      </li>
+    <!-- =============================================== -->
+    <!-- CRÉDITO -->
+    <!-- =============================================== -->
 
-      <li class="legend-item">
-        <div class="legend-item-left">
-          <span class="legend-color" style="background:#ffb703;"></span>
-          <span class="legend-label">Posibles sin pagar</span>
-        </div>
-        <button class="legend-toggle active" data-category="sinpago">ON</button>
-      </li>
+    <div class="legend-credit">
 
-    </ul>
-
-    <a class="legend-credit">
       &#9400; EffectiveActions
-    </a>
+
+    </div>
+
+
   </div>
 
-  <!-- LECTOR DE EXCEL -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-<script src="../src/index.js"></script>
+  <!-- ================================================= -->
+  <!-- CAJA DE INFORMACIÓN / ERRORES -->
+  <!-- ================================================= -->
+  <!--
+       Normalmente permanece oculta.
+
+       Si falla la carga del GeoJSON o del Excel,
+       index.js puede mostrar aquí el error.
+  -->
+
+  <div class="info-box">
+
+    <h3>
+      Información
+    </h3>
+
+    <div class="info-content">
+
+      Busca o selecciona un predio para ver detalles.
+
+    </div>
+
+  </div>
+
+
+  <!-- ================================================= -->
+  <!-- SHEETJS -->
+  <!-- ================================================= -->
+  <!--
+       NECESARIO PARA LEER:
+
+       PREDIOS EXCENTOS.xlsx
+
+       directamente desde GitHub.
+  -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js">
+  </script>
+
+
+  <!-- ================================================= -->
+  <!-- JAVASCRIPT PRINCIPAL -->
+  <!-- ================================================= -->
+  <!--
+       IMPORTANTE:
+
+       SheetJS debe aparecer ANTES de index.js.
+  -->
+
+  <script
+    src="../src/index.js">
+  </script>
+
 
 </body>
+
 </html>
