@@ -1453,15 +1453,19 @@ function crearCapaEstado(
 
 
       // ===============================================
-      // TRANSPARENCIA
+      // OPACIDAD UNIFORME
       // ===============================================
       //
-      // Permite seguir viendo la imagen satelital.
+      // Se usa opacidad 1 para evitar que los predios
+      // superpuestos se vean con tonos más intensos.
+      //
+      // Todos los predios de una misma categoría
+      // se verán exactamente del mismo color.
       //
       // ===============================================
 
       'fill-opacity':
-        0.68,
+        1,
 
 
       // ===============================================
@@ -1469,7 +1473,7 @@ function crearCapaEstado(
       // ===============================================
 
       'fill-outline-color':
-        'rgba(255,255,255,0.70)'
+        '#ffffff'
 
     }
 
