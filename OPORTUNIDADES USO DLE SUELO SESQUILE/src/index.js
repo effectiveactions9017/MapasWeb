@@ -1189,15 +1189,20 @@ function cargarPredios() {
         // CREAR UNA CAPA POR DESTINO
         // =============================================
 
-        DESTINOS.forEach(
-          (destino) => {
+        ESTINOS.forEach(
+  (destino) => {
 
-            crearCapaDestino(
-              destino
-            );
+    crearCapaDestino(
+      destino
+    );
 
-          }
-        );
+  }
+);
+
+crearCapaOtros();
+
+// Crear leyenda interactiva
+crearLeyendaDestinos();
 
 
         // =============================================
@@ -2105,7 +2110,239 @@ geocoder.on(
 
 );
 
+// =====================================================
+// LEYENDA INTERACTIVA — DESTINO ECONÓMICO R1
+// =====================================================
 
+function crearLeyendaDestinos() {
+
+  const container =
+    document.getElementById('destino-legend-list');
+
+  const btnTodos =
+    document.getElementById('destino-all');
+
+  const btnNinguno =
+    document.getElementById('destino-none');
+
+
+  if (!container) {
+    console.warn('No existe #destino-legend-list');
+    return;
+  }
+
+
+  // Limpiar para evitar duplicados
+  container.innerHTML = '';
+
+
+  // Todas las categorías
+  const categorias = [
+    ...DESTINOS,
+    DESTINO_OTROS
+  ];
+
+
+  // ===================================================
+  // CREAR ITEMS
+  // ===================================================
+
+  categorias.forEach((destino) => {
+
+    // Fila
+    const item =
+      document.createElement('label');
+
+    item.className =
+      'destino-item';
+
+
+    // Checkbox
+    const checkbox =
+      document.createElement('input');
+
+    checkbox.type =
+      'checkbox';
+
+    checkbox.checked =
+      true;
+
+    checkbox.dataset.layer =
+      destino.layerId;
+
+
+    // Color
+    const color =
+      document.createElement('span');
+
+    color.className =
+      'destino-color';
+
+    color.style.backgroundColor =
+      destino.color;
+
+
+    // Texto
+    const texto =
+      document.createElement('span');
+
+    texto.className =
+      'destino-texto';
+
+
+    if (destino.codigo === 'OTROS') {
+
+      texto.textContent =
+        destino.nombre;
+
+    } else {
+
+      texto.textContent =
+        `${destino.codigo} — ${destino.nombre}`;
+
+    }
+
+
+    // =================================================
+    // PRENDER / APAGAR
+    // =================================================
+
+    checkbox.addEventListener(
+      'change',
+      () => {
+
+        if (
+          map.getLayer(destino.layerId)
+        ) {
+
+          map.setLayoutProperty(
+            destino.layerId,
+            'visibility',
+            checkbox.checked
+              ? 'visible'
+              : 'none'
+          );
+
+        }
+
+
+        // Limpiar selección anterior
+        limpiarHighlight();
+
+        try {
+          popup.remove();
+        } catch (e) {}
+
+      }
+    );
+
+
+    // Agregar elementos
+    item.appendChild(checkbox);
+    item.appendChild(color);
+    item.appendChild(texto);
+
+    container.appendChild(item);
+
+  });
+
+
+  // ===================================================
+  // BOTÓN TODOS
+  // ===================================================
+
+  if (btnTodos) {
+
+    btnTodos.onclick = () => {
+
+      const checks =
+        container.querySelectorAll(
+          'input[type="checkbox"]'
+        );
+
+
+      checks.forEach((checkbox) => {
+
+        checkbox.checked = true;
+
+        const layerId =
+          checkbox.dataset.layer;
+
+
+        if (
+          map.getLayer(layerId)
+        ) {
+
+          map.setLayoutProperty(
+            layerId,
+            'visibility',
+            'visible'
+          );
+
+        }
+
+      });
+
+
+      limpiarHighlight();
+
+      try {
+        popup.remove();
+      } catch (e) {}
+
+    };
+
+  }
+
+
+  // ===================================================
+  // BOTÓN NINGUNO
+  // ===================================================
+
+  if (btnNinguno) {
+
+    btnNinguno.onclick = () => {
+
+      const checks =
+        container.querySelectorAll(
+          'input[type="checkbox"]'
+        );
+
+
+      checks.forEach((checkbox) => {
+
+        checkbox.checked = false;
+
+        const layerId =
+          checkbox.dataset.layer;
+
+
+        if (
+          map.getLayer(layerId)
+        ) {
+
+          map.setLayoutProperty(
+            layerId,
+            'visibility',
+            'none'
+          );
+
+        }
+
+      });
+
+
+      limpiarHighlight();
+
+      try {
+        popup.remove();
+      } catch (e) {}
+
+    };
+
+  }
+
+}
 // =====================================================
 // CARGA FINAL
 // =====================================================
