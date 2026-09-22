@@ -1,13 +1,21 @@
-/* =========================
+/* =====================================================
    BASE
-   ========================= */
-html, body {
+   ===================================================== */
+
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
   font-family: 'Libre Franklin', sans-serif;
+  overflow: hidden;
 }
+
+
+/* =====================================================
+   MAPA
+   ===================================================== */
 
 #map {
   position: absolute;
@@ -16,183 +24,693 @@ html, body {
   width: 100%;
 }
 
-/* =========================
-   LEYENDA (ESTILO PREMIUM)
-   ========================= */
+
+/* =====================================================
+   LEYENDA PREDIAL
+   ===================================================== */
+
 .legend-container {
   position: absolute;
-  right: 18px;
-  bottom: 18px;
+
+  right: 12px;
+  bottom: 15px;
+
   z-index: 9999;
-  width: 290px;
-  padding: 18px 18px 14px 18px;
-  border-radius: 18px;
-  background: rgba(0, 0, 0, 0.80);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.40);
-  color: #ffffff;
+
+  width: 250px;
+  max-width: calc(100vw - 24px);
+
+  padding: 14px;
+
+  box-sizing: border-box;
+
+  border-radius: 14px;
+
+  background:
+    rgba(0, 0, 0, 0.80);
+
+  backdrop-filter:
+    blur(7px);
+
+  -webkit-backdrop-filter:
+    blur(7px);
+
+  box-shadow:
+    0 8px 24px
+    rgba(0, 0, 0, 0.40);
+
+  border:
+    1px solid
+    rgba(255,255,255,0.10);
+
+  color:
+    #ffffff;
 }
 
-/* Título */
+
+/* =====================================================
+   TÍTULO
+   ===================================================== */
+
 .legend-title {
-  font-size: 18px;
+  margin-bottom: 11px;
+
+  font-size: 16px;
   font-weight: 700;
-  line-height: 1.2;
-  margin-bottom: 14px;
+
+  line-height: 1.15;
+
+  color:
+    #ffffff;
 }
 
-/* Lista */
-.legend-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
 
-/* Item */
-.legend-item {
+/* =====================================================
+   LISTA DINÁMICA
+   ===================================================== */
+
+#estado-legend-list {
   display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+  width: 100%;
+}
+
+
+/* =====================================================
+   CADA FILA
+   ===================================================== */
+
+.estado-item {
+  display: flex;
+
   justify-content: space-between;
+
   align-items: center;
-  margin-bottom: 12px;
+
+  gap: 8px;
+
+  width: 100%;
+
+  min-height: 25px;
 }
 
-/* Parte izquierda */
-.legend-item-left {
+
+/* =====================================================
+   PARTE IZQUIERDA
+   ===================================================== */
+
+.estado-info {
   display: flex;
+
   align-items: center;
-  gap: 10px;
+
+  gap: 8px;
+
+  min-width: 0;
+
+  flex: 1;
 }
 
-/* Cuadrito color */
-.legend-color {
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  border: 1px solid rgba(255,255,255,0.5);
-}
 
-/* Texto */
-.legend-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #ffffff;
-}
+/* =====================================================
+   CUADRO DE COLOR
+   ===================================================== */
 
-/* Botón ON/OFF */
-.legend-toggle {
-  min-width: 55px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: none;
-  background: #2ec4b6;
-  color: #000;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.legend-toggle:hover {
-  transform: scale(1.05);
-}
-
-/* Estado apagado */
-.legend-toggle.inactive {
-  background: #5f6368;
-  color: #ffffff;
-}
-
-/* Divider */
-.legend-divider {
-  height: 1px;
-  background: rgba(255,255,255,0.2);
-  margin: 10px 0;
-}
-
-/* Crédito */
-.legend-credit {
+.estado-color {
   display: inline-block;
-  font-size: 11px;
-  color: #00bcd4;
-  text-decoration: none;
+
+  width: 15px;
+  height: 15px;
+
+  min-width: 15px;
+  min-height: 15px;
+
+  flex:
+    0 0 15px;
+
+  border-radius:
+    4px;
+
+  border:
+    1px solid
+    rgba(255,255,255,0.75);
+
+  box-sizing:
+    border-box;
 }
 
-/* =========================
+
+/* =====================================================
+   TEXTO
+   ===================================================== */
+
+.estado-texto {
+  min-width: 0;
+
+  font-size:
+    12px;
+
+  font-weight:
+    600;
+
+  line-height:
+    1.15;
+
+  color:
+    #ffffff;
+}
+
+
+/* =====================================================
+   BOTÓN ON / OFF
+   ===================================================== */
+
+.estado-toggle {
+  flex-shrink: 0;
+
+  min-width: 44px;
+
+  padding:
+    4px 8px;
+
+  border:
+    none;
+
+  border-radius:
+    999px;
+
+  font-family:
+    'Libre Franklin',
+    sans-serif;
+
+  font-size:
+    10px;
+
+  font-weight:
+    700;
+
+  cursor:
+    pointer;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease;
+}
+
+
+/* =====================================================
+   BOTÓN ENCENDIDO
+   ===================================================== */
+
+.estado-toggle.activo {
+  background:
+    #2ec4b6;
+
+  color:
+    #000000;
+}
+
+
+/* =====================================================
+   BOTÓN APAGADO
+   ===================================================== */
+
+.estado-toggle.inactivo {
+  background:
+    #5f6368;
+
+  color:
+    #ffffff;
+}
+
+
+/* =====================================================
+   HOVER
+   ===================================================== */
+
+.estado-toggle:hover {
+  transform:
+    scale(1.04);
+}
+
+
+.estado-toggle:active {
+  transform:
+    scale(1);
+}
+
+
+/* =====================================================
+   CRÉDITO
+   ===================================================== */
+
+.legend-credit {
+  display: block;
+
+  margin-top:
+    10px;
+
+  padding-top:
+    7px;
+
+  border-top:
+    1px solid
+    rgba(255,255,255,0.12);
+
+  font-size:
+    8px;
+
+  color:
+    #00bcd4;
+
+  text-decoration:
+    none;
+}
+
+
+/* =====================================================
    CAJA DE INFORMACIÓN
-   ========================= */
-/* Se deja oculta porque ya no la quieres mostrar */
+   ===================================================== */
+/*
+   Se mantiene oculta normalmente.
+
+   El JavaScript puede mostrarla si ocurre un error
+   cargando el GeoJSON o el Excel.
+*/
+
 .info-box {
-  display: none !important;
+  position: absolute;
+
+  left: 10px;
+  top: 110px;
+
+  z-index: 100;
+
+  width: 220px;
+
+  padding: 10px;
+
+  box-sizing: border-box;
+
+  background:
+    rgba(0,0,0,0.82);
+
+  color:
+    #ffffff;
+
+  border-radius:
+    8px;
+
+  font-size:
+    11px;
+
+  box-shadow:
+    0 4px 12px
+    rgba(0,0,0,0.35);
+
+  display:
+    none;
 }
 
-.info-box h3,
-.info-content {
-  display: none !important;
+
+.info-box h3 {
+  margin:
+    0 0 7px 0;
+
+  font-size:
+    13px;
 }
 
-/* =========================
-   POPUP MAPBOX (OSCURA)
-   ========================= */
+
+/* =====================================================
+   POPUP MAPBOX
+   ===================================================== */
+
 .mapboxgl-popup {
-  max-width: 330px !important;
+  max-width:
+    330px !important;
 }
 
-.mapboxgl-popup-content {
-  font-family: 'Libre Franklin', sans-serif;
-  background: rgba(16, 24, 32, 0.96);
-  color: #ffffff;
-  border-radius: 16px;
-  padding: 16px 16px 14px 16px;
-  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
-  border: 1px solid rgba(255,255,255,0.08);
-  line-height: 1.45;
-  font-size: 14px;
 
-  /* evita que textos largos como el código se salgan */
-  word-break: break-word;
-  overflow-wrap: anywhere;
+.custom-popup .mapboxgl-popup-content {
+  font-family:
+    'Libre Franklin',
+    sans-serif;
+
+  background:
+    rgba(16, 24, 32, 0.96);
+
+  color:
+    #ffffff;
+
+  border-radius:
+    12px;
+
+  padding:
+    14px 15px;
+
+  box-shadow:
+    0 8px 24px
+    rgba(0,0,0,0.38);
+
+  border:
+    1px solid
+    rgba(255,255,255,0.08);
+
+  line-height:
+    1.45;
+
+  font-size:
+    12px;
+
+  word-break:
+    break-word;
+
+  overflow-wrap:
+    anywhere;
 }
 
+
+/* =====================================================
+   TEXTO DEL POPUP
+   ===================================================== */
+
+.custom-popup
 .mapboxgl-popup-content strong {
-  color: #ffffff;
-  font-weight: 700;
+  color:
+    #ffffff;
+
+  font-weight:
+    700;
 }
 
+
+/* =====================================================
+   LINKS DEL POPUP
+   ===================================================== */
+
+.custom-popup
+.mapboxgl-popup-content a {
+  color:
+    #00bcd4;
+
+  text-decoration:
+    none;
+}
+
+
+.custom-popup
+.mapboxgl-popup-content a:hover {
+  text-decoration:
+    underline;
+}
+
+
+/* =====================================================
+   CERRAR POPUP
+   ===================================================== */
+
+.custom-popup
 .mapboxgl-popup-close-button {
-  color: #ffffff;
-  font-size: 18px;
-  padding: 6px 8px;
+  color:
+    #ffffff;
+
+  font-size:
+    18px;
+
+  padding:
+    4px 7px;
 }
 
+
+.custom-popup
 .mapboxgl-popup-close-button:hover {
-  background: transparent;
-  color: #00bcd4;
+  background:
+    transparent;
+
+  color:
+    #00bcd4;
 }
 
+
+/* =====================================================
+   FLECHAS POPUP
+   ===================================================== */
+
+.mapboxgl-popup-anchor-top
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-top-left
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-top-right
 .mapboxgl-popup-tip {
-  border-top-color: rgba(16, 24, 32, 0.96) !important;
-  border-bottom-color: rgba(16, 24, 32, 0.96) !important;
+
+  border-bottom-color:
+    rgba(16, 24, 32, 0.96) !important;
 }
 
-/* =========================
-   GEOCODER (BUSCADOR)
-   ========================= */
+
+.mapboxgl-popup-anchor-bottom
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-bottom-left
+.mapboxgl-popup-tip,
+
+.mapboxgl-popup-anchor-bottom-right
+.mapboxgl-popup-tip {
+
+  border-top-color:
+    rgba(16, 24, 32, 0.96) !important;
+}
+
+
+.mapboxgl-popup-anchor-left
+.mapboxgl-popup-tip {
+
+  border-right-color:
+    rgba(16, 24, 32, 0.96) !important;
+}
+
+
+.mapboxgl-popup-anchor-right
+.mapboxgl-popup-tip {
+
+  border-left-color:
+    rgba(16, 24, 32, 0.96) !important;
+}
+
+
+/* =====================================================
+   GEOCODER
+   ===================================================== */
+
 .mapboxgl-ctrl-geocoder {
-  min-width: 260px;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+  width:
+    300px !important;
+
+  max-width:
+    calc(100vw - 80px) !important;
+
+  border-radius:
+    8px;
+
+  overflow:
+    hidden;
+
+  box-shadow:
+    0 6px 18px
+    rgba(0,0,0,0.18);
 }
 
-/* =========================
-   SCROLL BONITO (OPCIONAL)
-   ========================= */
+
+/* =====================================================
+   SCROLL
+   ===================================================== */
+
 ::-webkit-scrollbar {
-  width: 6px;
+  width:
+    5px;
 }
+
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.3);
-  border-radius: 10px;
+  background:
+    rgba(0,0,0,0.35);
+
+  border-radius:
+    10px;
+}
+
+
+/* =====================================================
+   RESPONSIVE — CELULAR
+   ===================================================== */
+
+@media
+(max-width: 600px) {
+
+
+  /* ===================================================
+     LEYENDA
+     =================================================== */
+
+  .legend-container {
+    right:
+      7px;
+
+    bottom:
+      8px;
+
+    width:
+      205px;
+
+    max-width:
+      calc(100vw - 14px);
+
+    padding:
+      10px;
+
+    border-radius:
+      11px;
+  }
+
+
+  /* ===================================================
+     TÍTULO
+     =================================================== */
+
+  .legend-title {
+    margin-bottom:
+      8px;
+
+    font-size:
+      13px;
+  }
+
+
+  /* ===================================================
+     ITEMS
+     =================================================== */
+
+  #estado-legend-list {
+    gap:
+      5px;
+  }
+
+
+  .estado-item {
+    min-height:
+      21px;
+
+    gap:
+      5px;
+  }
+
+
+  .estado-info {
+    gap:
+      5px;
+  }
+
+
+  /* ===================================================
+     COLOR
+     =================================================== */
+
+  .estado-color {
+    width:
+      12px;
+
+    height:
+      12px;
+
+    min-width:
+      12px;
+
+    min-height:
+      12px;
+
+    flex-basis:
+      12px;
+  }
+
+
+  /* ===================================================
+     TEXTO
+     =================================================== */
+
+  .estado-texto {
+    font-size:
+      9.5px;
+  }
+
+
+  /* ===================================================
+     ON / OFF
+     =================================================== */
+
+  .estado-toggle {
+    min-width:
+      37px;
+
+    padding:
+      3px 6px;
+
+    font-size:
+      8px;
+  }
+
+
+  /* ===================================================
+     CRÉDITO
+     =================================================== */
+
+  .legend-credit {
+    margin-top:
+      7px;
+
+    padding-top:
+      5px;
+
+    font-size:
+      7px;
+  }
+
+
+  /* ===================================================
+     BUSCADOR
+     =================================================== */
+
+  .mapboxgl-ctrl-geocoder {
+    width:
+      230px !important;
+
+    max-width:
+      calc(100vw - 70px) !important;
+  }
+
+
+  /* ===================================================
+     POPUP
+     =================================================== */
+
+  .custom-popup
+  .mapboxgl-popup-content {
+    max-width:
+      220px;
+
+    padding:
+      10px 11px;
+
+    font-size:
+      10.5px;
+  }
+
 }
