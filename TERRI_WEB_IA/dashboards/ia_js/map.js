@@ -1,6 +1,6 @@
 /* ==========================================================
    TERRI+ MAP ENGINE
-   Motor geoespacial
+   Motor geoespacial...
 ========================================================== */
 
 let terriMap = null;
