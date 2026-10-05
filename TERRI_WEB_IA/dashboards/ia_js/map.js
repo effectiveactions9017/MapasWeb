@@ -3605,7 +3605,7 @@ function construirIdCapaExternaTerri(
         );
 
 
-    /*
+        /*
      * Para resultados temáticos usamos primero
      * servicio + tema + territorio.
      *
@@ -3677,6 +3677,239 @@ function construirNombreCapaExternaTerri(
     fuente
 ) {
 
+    const fuenteNormalizada =
+        normalizarCampoMapaTerri(
+            fuente || ""
+        );
+
+
+    /* ======================================================
+       GEOBOUNDARIES
+    ====================================================== */
+
+    if (
+        fuenteNormalizada ===
+        "geoboundaries"
+    ) {
+
+        const pais =
+            respuesta.nombre ||
+            respuesta.pais ||
+            respuesta.codigo_iso3 ||
+            "Territorio";
+
+
+        const nivel =
+            String(
+                respuesta.nivel || ""
+            )
+                .trim()
+                .toUpperCase();
+
+
+        const consulta =
+            normalizarCampoMapaTerri(
+                respuesta.consulta ||
+                respuesta.pregunta ||
+                ""
+            );
+
+
+        /* ==================================================
+           RESULTADO DE ANÁLISIS DE ÁREA
+
+           Ejemplos:
+           - Cañar
+           - Pastaza
+        ================================================== */
+
+        if (
+            respuesta.nombre_division
+        ) {
+
+            return String(
+                respuesta.nombre_division
+            );
+
+        }
+
+
+        /* ==================================================
+           ADM0 - PAÍS
+
+           Ejemplos:
+           - Ecuador
+           - España
+           - México
+        ================================================== */
+
+        if (
+            nivel === "ADM0"
+        ) {
+
+            return String(
+                pais
+            );
+
+        }
+
+
+        /* ==================================================
+           ADM1
+
+           Ejemplos:
+           - Provincias de Ecuador
+           - Departamentos de Colombia
+           - Estados de México
+        ================================================== */
+
+        if (
+            nivel === "ADM1"
+        ) {
+
+            if (
+                consulta.includes(
+                    "provincia"
+                )
+            ) {
+
+                return (
+                    `Provincias de ${pais}`
+                );
+
+            }
+
+
+            if (
+                consulta.includes(
+                    "departamento"
+                )
+            ) {
+
+                return (
+                    `Departamentos de ${pais}`
+                );
+
+            }
+
+
+            if (
+                consulta.includes(
+                    "estado"
+                )
+            ) {
+
+                return (
+                    `Estados de ${pais}`
+                );
+
+            }
+
+
+            if (
+                consulta.includes(
+                    "region"
+                )
+            ) {
+
+                return (
+                    `Regiones de ${pais}`
+                );
+
+            }
+
+
+            return (
+                `Divisiones administrativas de ${pais}`
+            );
+
+        }
+
+
+        /* ==================================================
+           ADM2
+
+           Ejemplos:
+           - Municipios
+           - Condados
+           - Distritos
+           - Comunas
+        ================================================== */
+
+        if (
+            nivel === "ADM2"
+        ) {
+
+            if (
+                consulta.includes(
+                    "municipio"
+                )
+            ) {
+
+                return (
+                    `Municipios de ${pais}`
+                );
+
+            }
+
+
+            if (
+                consulta.includes(
+                    "condado"
+                )
+            ) {
+
+                return (
+                    `Condados de ${pais}`
+                );
+
+            }
+
+
+            if (
+                consulta.includes(
+                    "distrito"
+                )
+            ) {
+
+                return (
+                    `Distritos de ${pais}`
+                );
+
+            }
+
+
+            if (
+                consulta.includes(
+                    "comuna"
+                )
+            ) {
+
+                return (
+                    `Comunas de ${pais}`
+                );
+
+            }
+
+
+            return (
+                `Divisiones administrativas de ${pais}`
+            );
+
+        }
+
+
+        return String(
+            pais
+        );
+
+    }
+
+
+    /* ======================================================
+       NOMBRE ENVIADO DIRECTAMENTE POR EL BACKEND
+    ====================================================== */
+
     if (
         respuesta.nombre
     ) {
@@ -3687,6 +3920,10 @@ function construirNombreCapaExternaTerri(
 
     }
 
+
+    /* ======================================================
+       TEMA
+    ====================================================== */
 
     const tema =
         normalizarCampoMapaTerri(
@@ -3815,10 +4052,6 @@ function construirNombreCapaExternaTerri(
 
     /*
      * Si hay un tema, ese tema debe prevalecer.
-     *
-     * Esto corrige el comportamiento anterior,
-     * donde cualquier resultado IGAC con municipio
-     * se llamaba "Límite oficial de ...".
      */
 
     if (
@@ -3844,12 +4077,14 @@ function construirNombreCapaExternaTerri(
 
     /*
      * Solo usamos "Límite oficial" cuando
-     * realmente no hay tema cartográfico
-     * y la respuesta corresponde a un límite.
+     * realmente corresponde al IGAC.
      */
 
     if (
-        fuente
+        String(
+            fuente || ""
+        )
+            .trim()
             .toUpperCase() ===
             "IGAC" &&
         municipio
@@ -3863,7 +4098,10 @@ function construirNombreCapaExternaTerri(
 
 
     if (
-        fuente
+        String(
+            fuente || ""
+        )
+            .trim()
             .toUpperCase() ===
             "IGAC" &&
         departamento
@@ -3883,7 +4121,6 @@ function construirNombreCapaExternaTerri(
     );
 
 }
-
 
 /**
  * Devuelve un color diferente según el tema.
