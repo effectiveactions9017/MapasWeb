@@ -2,7 +2,7 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoiZWZmZWN0aXZlYWN0aW9uczkwMTciLCJhIjoiY21iOWY1eGtiMGQ2cjJqcG9xbTRjZnQxMiJ9.8p55iS2R45-p8lxTerDL9Q';
 const map = new mapboxgl.Map({
     style: 'mapbox://styles/mapbox/dark-v11',
-    center: [-75.42788000, 5.79024200], 
+    center: [-75.73059000, 5.33770000], 
     zoom: 14,
     pitch: 0,
     bearing: 0,
@@ -23,7 +23,7 @@ map.on('style.load', () => {
         (layer) => layer.type === 'symbol' && layer.layout['text-field']
     ).id;
 
-    fetch('../src/data/resultado_completo_final.geojson')
+    fetch('../src/data/quinchia_construcciones.geojson')
         .then(response => response.json())
         .then(data => {
             geojsonData = data;
